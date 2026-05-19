@@ -1091,7 +1091,7 @@ const DEF_RUTINAS=[
 // DB Gym
 const GYM_RUTINAS_VERSION = 3; // incrementar cuando cambien las rutinas por defecto
 function gLoad(k,def){try{const v=localStorage.getItem('hub_gym_'+k);return v?JSON.parse(v):def;}catch(e){return def;}}
-function gSave(k,v){try{localStorage.setItem('hub_gym_'+k,JSON.stringify(v));}catch(e){}}
+function gSave(k,v){try{const s=JSON.stringify(v);localStorage.setItem('hub_gym_'+k,s);dbSet('hub_gym_'+k,v);}catch(e){}}
 
 // Si la versión de rutinas cambió, resetear solo las rutinas (no los logs ni pesos)
 const savedVersion = parseInt(localStorage.getItem('hub_gym_rutinas_version')||'0');
@@ -1117,7 +1117,7 @@ const DEF_HABITS=[
   {id:'h6',nombre:'Dormir antes de las 12',emoji:'🌙'},
 ];
 function hLoad(k,def){try{const v=localStorage.getItem('hub_hab_'+k);return v?JSON.parse(v):def;}catch(e){return def;}}
-function hSave(k,v){try{localStorage.setItem('hub_hab_'+k,JSON.stringify(v));}catch(e){}}
+function hSave(k,v){try{const s=JSON.stringify(v);localStorage.setItem('hub_hab_'+k,s);dbSet('hub_hab_'+k,v);}catch(e){}}
 
 let HAB_LIST=hLoad('list',DEF_HABITS);
 let HAB_LOG=hLoad('log',{}); // {YYYY-MM-DD: {h1:true, h2:false...}}
@@ -1128,7 +1128,7 @@ function saveHab(){hSave('list',HAB_LIST);hSave('log',HAB_LOG);}
 //  GRATITUD DATA
 // ═══════════════════════════════════════════════════════
 function gratLoad(){try{return JSON.parse(localStorage.getItem('hub_grat')||'[]');}catch(e){return[];}}
-function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));}catch(e){}}
+function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));dbSet('hub_grat',d);}catch(e){}}
 let GRAT_LOG=gratLoad(); // [{fecha:'YYYY-MM-DD', texto:'...'}]
 
 // ═══════════════════════════════════════════════════════
@@ -2359,7 +2359,7 @@ const GRAT_CONFIG={
 };
 
 function gratLoad(){try{return JSON.parse(localStorage.getItem('hub_grat')||'[]');}catch(e){return[];}}
-function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));}catch(e){}}
+function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));dbSet('hub_grat',d);}catch(e){}}
 
 function rGrat(){
   const root=document.getElementById('grat-root');
@@ -4126,7 +4126,7 @@ function saveMedida(){
 //  NUTRICIÓN
 // ═══════════════════════════════════════════════════════
 function nutLoad(){try{return JSON.parse(localStorage.getItem('hub_nut')||'{}');}catch(e){return{};}}
-function nutSave(d){try{localStorage.setItem('hub_nut',JSON.stringify(d));}catch(e){}}
+function nutSave(d){try{localStorage.setItem('hub_nut',JSON.stringify(d));dbSet('hub_nut',d);}catch(e){}}
 // {YYYY-MM-DD: [{nombre, cal, prot, carbs, grasas, cantidad, emoji}]}
 
 const ALIMENTOS_DB=[
@@ -4663,14 +4663,14 @@ function rNutMes(){
 //  METAS Y AFIRMACIONES
 // ═══════════════════════════════════════════════════════
 function metasLoad(){try{return JSON.parse(localStorage.getItem('hub_metas')||'{}');}catch(e){return{};}}
-function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));}catch(e){}}
+function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));dbSet('hub_metas',d);}catch(e){}}
 // {YYYY-MM: {metas:[{texto,categoria,lograda}], afirmaciones:[texto], cerrado:bool}}
 
 // ═══════════════════════════════════════════════════════
 //  METAS — Mensual + Anual con plan de acción y progreso
 // ═══════════════════════════════════════════════════════
 function metasLoad(){try{return JSON.parse(localStorage.getItem('hub_metas')||'{}');}catch(e){return{};}}
-function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));}catch(e){}}
+function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));dbSet('hub_metas',d);}catch(e){}}
 
 let metasVista='mensual'; // mensual | anual | historial
 
@@ -5074,7 +5074,7 @@ MESES.forEach((_,i)=>setTimeout(()=>{
 },200));
 
 function cuotasLoad(){try{return JSON.parse(localStorage.getItem('hub_cuotas')||'[]');}catch(e){return[];}}
-function cuotasSave(d){try{localStorage.setItem('hub_cuotas',JSON.stringify(d));}catch(e){}}
+function cuotasSave(d){try{localStorage.setItem('hub_cuotas',JSON.stringify(d));dbSet('hub_cuotas',d);}catch(e){}}
 function calcCuota(){
   const total=parseFloat(document.getElementById('cuota-total')?.value)||0;
   const n=parseInt(document.getElementById('cuota-n')?.value)||0;
@@ -5134,23 +5134,44 @@ function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('
 
 save();
 
-// Cargar desde Supabase al abrir
+// Cargar TODOS los datos desde Supabase al abrir
 (async()=>{
   try{
-    const d=await dbGet('hub_fin');
-    if(d){
-      // Supabase tiene datos — usarlos
-      localStorage.setItem('hub_fin',JSON.stringify(d));
-      finLoad();
-      renderAll();
-    } else {
-      // No hay nada en Supabase — subir lo local
-      dbSet('hub_fin',S);
-      renderAll();
-    }
-  }catch(e){
-    renderAll();
-  }
+    // Finanzas
+    const fin=await dbGet('hub_fin');
+    if(fin){localStorage.setItem('hub_fin',JSON.stringify(fin));finLoad();}
+    else dbSet('hub_fin',S);
+
+    // Gym
+    const gymLog=await dbGet('hub_gym_log');
+    if(gymLog){localStorage.setItem('hub_gym_log',JSON.stringify(gymLog));GYM_LOG=gymLog;}
+    const gymW=await dbGet('hub_gym_weights');
+    if(gymW){localStorage.setItem('hub_gym_weights',JSON.stringify(gymW));GYM_WEIGHTS=gymW;}
+
+    // Hábitos
+    const habList=await dbGet('hub_hab_list');
+    if(habList){localStorage.setItem('hub_hab_list',JSON.stringify(habList));HAB_LIST=habList;}
+    const habLog=await dbGet('hub_hab_log');
+    if(habLog){localStorage.setItem('hub_hab_log',JSON.stringify(habLog));HAB_LOG=habLog;}
+
+    // Nutrición
+    const nut=await dbGet('hub_nut');
+    if(nut){localStorage.setItem('hub_nut',JSON.stringify(nut));}
+
+    // Gratitud / Escritura
+    const grat=await dbGet('hub_grat');
+    if(grat){localStorage.setItem('hub_grat',JSON.stringify(grat));GRAT_LOG=grat;}
+
+    // Metas
+    const metas=await dbGet('hub_metas');
+    if(metas){localStorage.setItem('hub_metas',JSON.stringify(metas));}
+
+    // Cuotas
+    const cuotas=await dbGet('hub_cuotas');
+    if(cuotas){localStorage.setItem('hub_cuotas',JSON.stringify(cuotas));}
+
+  }catch(e){}
+  renderAll();
 })();
 
 // ── PWA: Service Worker para funcionar offline ──
