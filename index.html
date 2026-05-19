@@ -8,70 +8,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="HubEuge"/>
-<meta name="theme-color" content="#513229"/>
-
-<!-- Supabase config -->
-<script>
-const SUPA_URL='https://syupcxljrwfbmdgpnzjx.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dXBjeGxqcndmYm1kZ3Buemp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMjUyNTgsImV4cCI6MjA5NDcwMTI1OH0.nEa6UVd1kd7fW-4trlXPZJojiIObrF5xAOaMZJ9VQLM';
-
-// ── SUPABASE SYNC ──
-// Lee un valor de Supabase
-async function supaGet(id){
-  try{
-    const r=await fetch(`${SUPA_URL}/rest/v1/hub_data?id=eq.${id}&select=data`,{
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-    });
-    const d=await r.json();
-    return d&&d[0]?d[0].data:null;
-  }catch(e){return null;}
-}
-
-// Guarda un valor en Supabase (upsert)
-async function supaSet(id,data){
-  try{
-    await fetch(`${SUPA_URL}/rest/v1/hub_data`,{
-      method:'POST',
-      headers:{
-        'apikey':SUPA_KEY,
-        'Authorization':'Bearer '+SUPA_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'resolution=merge-duplicates'
-      },
-      body:JSON.stringify({id,data,updated_at:new Date().toISOString()})
-    });
-  }catch(e){}
-}
-
-// Carga todos los datos del hub desde Supabase al inicio
-async function supaLoadAll(){
-  const keys=['hub_fin','hub_grat','hub_nut','hub_metas','hub_hab_list','hub_hab_log',
-              'hub_gym_log','hub_gym_weights','hub_plataformas','hub_cuotas','hub_plan_inicio'];
-  for(const k of keys){
-    const d=await supaGet(k);
-    if(d!==null){
-      try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
-    }
-  }
-}
-
-// Guarda un key en Supabase (llamar después de cada localStorage.setItem)
-async function supaSave(key,value){
-  try{
-    const parsed=JSON.parse(value);
-    await supaSet(key,parsed);
-  }catch(e){}
-}
-
-let supaReady=false;
-</script>
+<meta name="theme-color" content="#6B1E2E"/>
 <meta name="application-name" content="HubEuge"/>
 
 <!-- Ícono para pantalla de inicio iPhone -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23513229'/%3E%3Ctext x='90' y='110' font-size='80' text-anchor='middle' fill='%23F5F0EA'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E"/>
+<link rel="apple-touch-icon" href="data:image/png;base64,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"/>
 
 <!-- Manifest inline -->
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22HubEuge%22%2C%22short_name%22%3A%22HubEuge%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FAF8F2%22%2C%22theme_color%22%3A%22%23513229%22%2C%22orientation%22%3A%22portrait%22%7D"/>
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22HubEuge%22%2C%22short_name%22%3A%22HubEuge%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%236B1E2E%22%2C%22theme_color%22%3A%22%236B1E2E%22%2C%22orientation%22%3A%22portrait%22%7D"/>
 <title>Hub · Euge 2026</title>
 <style>
 /* Fuentes con fallback seguro para uso offline */
@@ -470,7 +414,7 @@ textarea.fi{height:auto;padding:12px 14px;resize:vertical;min-height:80px;line-h
 .grat-entry-text{font-family:'DM Serif Display',serif;font-size:15px;color:var(--lino);line-height:1.7;white-space:pre-wrap}
 
 /* ── DASHBOARD MODULE ── */
-.dash-modules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.dash-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin-bottom:18px}.dash-modules{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0}
 .dash-mod-card{border-radius:20px;padding:22px;cursor:pointer;transition:transform .2s,box-shadow .2s;border:1.5px solid transparent}
 .dash-mod-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .dash-mod-icon{font-size:28px;margin-bottom:12px;display:block}
@@ -549,7 +493,7 @@ textarea.fi{height:auto;padding:12px 14px;resize:vertical;min-height:80px;line-h
 
   /* Grids → 1 columna */
   .g4{grid-template-columns:repeat(2,1fr);gap:10px}
-  .g2,.g3,.g2nb{grid-template-columns:1fr;gap:12px}
+  .g2,.g3,.g2nb,.dash-layout{grid-template-columns:1fr;gap:12px}
 
   /* Métricas más compactas */
   .met .val{font-size:18px}
@@ -573,7 +517,7 @@ textarea.fi{height:auto;padding:12px 14px;resize:vertical;min-height:80px;line-h
   }
 
   /* Dashboard modules → 1 col */
-  .dash-modules{grid-template-columns:1fr;gap:10px}
+  .dash-modules{grid-template-columns:1fr 1fr;gap:10px}
   .dash-mod-card{padding:16px}
   .dash-mod-icon{font-size:22px;margin-bottom:8px}
   .dash-mod-title{font-size:14px}
@@ -749,7 +693,10 @@ input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
   <!-- DASHBOARD -->
   <div class="view" id="view-dashboard">
     <div id="dash-greeting" style="margin-bottom:18px"></div>
-    <div class="dash-modules" id="dash-modules"></div>
+    <div class="dash-layout">
+      <div id="dash-left"></div>
+      <div id="dash-modules"></div>
+    </div>
     <div class="g2nb" id="dash-bottom"></div>
   </div>
 
@@ -1121,7 +1068,7 @@ const DEF_RUTINAS=[
 // DB Gym
 const GYM_RUTINAS_VERSION = 3; // incrementar cuando cambien las rutinas por defecto
 function gLoad(k,def){try{const v=localStorage.getItem('hub_gym_'+k);return v?JSON.parse(v):def;}catch(e){return def;}}
-function gSave(k,v){try{const s=JSON.stringify(v);localStorage.setItem('hub_gym_'+k,s);supaSave('hub_gym_'+k,s);}catch(e){}}
+function gSave(k,v){try{localStorage.setItem('hub_gym_'+k,JSON.stringify(v));}catch(e){}}
 
 // Si la versión de rutinas cambió, resetear solo las rutinas (no los logs ni pesos)
 const savedVersion = parseInt(localStorage.getItem('hub_gym_rutinas_version')||'0');
@@ -1147,7 +1094,7 @@ const DEF_HABITS=[
   {id:'h6',nombre:'Dormir antes de las 12',emoji:'🌙'},
 ];
 function hLoad(k,def){try{const v=localStorage.getItem('hub_hab_'+k);return v?JSON.parse(v):def;}catch(e){return def;}}
-function hSave(k,v){try{const s=JSON.stringify(v);localStorage.setItem('hub_hab_'+k,s);supaSave('hub_hab_'+k,s);}catch(e){}}
+function hSave(k,v){try{localStorage.setItem('hub_hab_'+k,JSON.stringify(v));}catch(e){}}
 
 let HAB_LIST=hLoad('list',DEF_HABITS);
 let HAB_LOG=hLoad('log',{}); // {YYYY-MM-DD: {h1:true, h2:false...}}
@@ -1158,7 +1105,7 @@ function saveHab(){hSave('list',HAB_LIST);hSave('log',HAB_LOG);}
 //  GRATITUD DATA
 // ═══════════════════════════════════════════════════════
 function gratLoad(){try{return JSON.parse(localStorage.getItem('hub_grat')||'[]');}catch(e){return[];}}
-function gratSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_grat',s);supaSave('hub_grat',s);}catch(e){}}
+function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));}catch(e){}}
 let GRAT_LOG=gratLoad(); // [{fecha:'YYYY-MM-DD', texto:'...'}]
 
 // ═══════════════════════════════════════════════════════
@@ -1342,7 +1289,7 @@ function rDash(){
     if(HAB_LOG[s]&&HAB_LIST.some(h=>HAB_LOG[s][h.id]))habStreak++;else if(i>0)break;
   }
 
-  document.getElementById('dash-modules').innerHTML=`
+  document.getElementById('dash-left').innerHTML=`
 
     <!-- ══ RESUMEN SEMANAL ══ -->
     <div class="card" style="margin-bottom:14px">
@@ -1392,7 +1339,9 @@ function rDash(){
           <div style="font-size:10px;color:#7A5040;margin-top:2px">días con nut.</div>
         </div>
       </div>
-    </div>
+    </div>`;
+
+  document.getElementById('dash-modules').innerHTML=`
 
     <!-- ══ HOY ══ -->
     <div style="font-size:10px;font-weight:700;color:#7A5040;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Hoy</div>
@@ -2387,7 +2336,7 @@ const GRAT_CONFIG={
 };
 
 function gratLoad(){try{return JSON.parse(localStorage.getItem('hub_grat')||'[]');}catch(e){return[];}}
-function gratSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_grat',s);supaSave('hub_grat',s);}catch(e){}}
+function gratSave(d){try{localStorage.setItem('hub_grat',JSON.stringify(d));}catch(e){}}
 
 function rGrat(){
   const root=document.getElementById('grat-root');
@@ -2847,32 +2796,12 @@ const DB={
 
 let S;
 function finLoad(){
-  try{
-    const v=localStorage.getItem('hub_fin');
-    if(v){
-      const p=JSON.parse(v);
-      S={...DB,...p,meses:DB.meses.map((dm,i)=>{
-        const pm=p.meses&&p.meses[i];
-        // Si el DB tiene txns para ese mes, siempre usarlas como base
-        if(dm.txns&&dm.txns.length>0){
-          const extra=pm&&pm.txns?pm.txns.filter(lt=>!dm.txns.some(dt=>dt.desc===lt.desc&&dt.fecha===lt.fecha&&dt.monto===lt.monto)):[];
-          return {...dm,...(pm||{}),txns:[...dm.txns,...extra]};
-        }
-        return pm?{...dm,...pm,txns:pm.txns||dm.txns}:dm;
-      })};
-    }else{
-      S=JSON.parse(JSON.stringify(DB));
-    }
-  }catch(e){S=JSON.parse(JSON.stringify(DB));}
+  try{const v=localStorage.getItem('hub_fin');if(v){const p=JSON.parse(v);
+    S={...DB,...p,meses:DB.meses.map((dm,i)=>{const pm=p.meses&&p.meses[i];return pm?{...dm,...pm,txns:pm.txns||dm.txns}:dm;})};
+  }else S=JSON.parse(JSON.stringify(DB));}
+  catch(e){S=JSON.parse(JSON.stringify(DB));}
 }
-function save(){
-  try{
-    S.updated_at=new Date().toISOString();
-    const v=JSON.stringify(S);
-    localStorage.setItem('hub_fin',v);
-    supaSave('hub_fin',v);
-  }catch(e){}
-}
+function save(){try{localStorage.setItem('hub_fin',JSON.stringify(S));}catch(e){}}
 finLoad();
 
 function calcM(i){
@@ -4168,7 +4097,7 @@ function saveMedida(){
 //  NUTRICIÓN
 // ═══════════════════════════════════════════════════════
 function nutLoad(){try{return JSON.parse(localStorage.getItem('hub_nut')||'{}');}catch(e){return{};}}
-function nutSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_nut',s);supaSave('hub_nut',s);}catch(e){}}
+function nutSave(d){try{localStorage.setItem('hub_nut',JSON.stringify(d));}catch(e){}}
 // {YYYY-MM-DD: [{nombre, cal, prot, carbs, grasas, cantidad, emoji}]}
 
 const ALIMENTOS_DB=[
@@ -4322,7 +4251,7 @@ function getPlanInicio(){
   return localStorage.getItem('hub_plan_inicio')||'';
 }
 function setPlanInicio(fecha){
-  localStorage.setItem('hub_plan_inicio',fecha);supaSave('hub_plan_inicio',JSON.stringify(fecha));
+  localStorage.setItem('hub_plan_inicio',fecha);
 }
 function getPlanDiaActual(){
   const inicio=getPlanInicio();
@@ -4705,14 +4634,14 @@ function rNutMes(){
 //  METAS Y AFIRMACIONES
 // ═══════════════════════════════════════════════════════
 function metasLoad(){try{return JSON.parse(localStorage.getItem('hub_metas')||'{}');}catch(e){return{};}}
-function metasSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_metas',s);supaSave('hub_metas',s);}catch(e){}}
+function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));}catch(e){}}
 // {YYYY-MM: {metas:[{texto,categoria,lograda}], afirmaciones:[texto], cerrado:bool}}
 
 // ═══════════════════════════════════════════════════════
 //  METAS — Mensual + Anual con plan de acción y progreso
 // ═══════════════════════════════════════════════════════
 function metasLoad(){try{return JSON.parse(localStorage.getItem('hub_metas')||'{}');}catch(e){return{};}}
-function metasSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_metas',s);supaSave('hub_metas',s);}catch(e){}}
+function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));}catch(e){}}
 
 let metasVista='mensual'; // mensual | anual | historial
 
@@ -5116,7 +5045,7 @@ MESES.forEach((_,i)=>setTimeout(()=>{
 },200));
 
 function cuotasLoad(){try{return JSON.parse(localStorage.getItem('hub_cuotas')||'[]');}catch(e){return[];}}
-function cuotasSave(d){try{const s=JSON.stringify(d);localStorage.setItem('hub_cuotas',s);supaSave('hub_cuotas',s);}catch(e){}}
+function cuotasSave(d){try{localStorage.setItem('hub_cuotas',JSON.stringify(d));}catch(e){}}
 function calcCuota(){
   const total=parseFloat(document.getElementById('cuota-total')?.value)||0;
   const n=parseInt(document.getElementById('cuota-n')?.value)||0;
@@ -5175,62 +5104,7 @@ function delCuota(i){if(!confirm('Eliminar?'))return;const c=cuotasLoad();c.spli
 function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('|||')[idx]||'';}
 
 save();
-
-// ── SINCRONIZACIÓN SUPABASE ──
-(async()=>{
-  const loader=document.createElement('div');
-  loader.id='supa-loader';
-  loader.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#FAF8F2;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
-  loader.innerHTML='<div style="font-size:32px">✨</div><div style="font-size:15px;font-weight:700;color:#513229">HubEuge</div><div style="font-size:12px;color:#7A5040">Cargando...</div>';
-  document.body.appendChild(loader);
-
-  try{
-    // 1. Cargar hub_fin desde Supabase (el más importante)
-    const finData=await supaGet('hub_fin');
-    if(finData){
-      // Comparar timestamps — usar el más reciente
-      const supaTime=new Date(finData.updated_at||0).getTime();
-      const localRaw=localStorage.getItem('hub_fin');
-      const localTime=localRaw?new Date(JSON.parse(localRaw).updated_at||0).getTime():0;
-      
-      if(supaTime>=localTime){
-        // Supabase es más reciente → usar Supabase
-        localStorage.setItem('hub_fin',JSON.stringify(finData));
-      } else {
-        // Local es más reciente → subir local a Supabase
-        if(localRaw) await supaSave('hub_fin',localRaw);
-      }
-    } else {
-      // No hay nada en Supabase → subir datos locales actuales
-      const localRaw=localStorage.getItem('hub_fin');
-      if(localRaw) await supaSave('hub_fin',localRaw);
-    }
-
-    // 2. Cargar resto de datos
-    const otherKeys=['hub_grat','hub_nut','hub_metas','hub_hab_list','hub_hab_log',
-                     'hub_gym_log','hub_gym_weights','hub_plataformas','hub_cuotas','hub_plan_inicio'];
-    for(const k of otherKeys){
-      const d=await supaGet(k);
-      if(d!==null) try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
-    }
-
-    // 3. Re-inicializar todo con los datos correctos
-    GRAT_LOG=gratLoad();
-    HAB_LIST=hLoad('list');
-    HAB_LOG=hLoad('log');
-    GYM_LOG=gLoad('log');
-    GYM_WEIGHTS=gLoad('weights');
-    finLoad();
-    supaReady=true;
-
-  }catch(e){
-    supaReady=true;
-    console.log('Supabase error:',e);
-  }
-
-  loader.remove();
-  renderAll();
-})();
+renderAll();
 
 // ── PWA: Service Worker para funcionar offline ──
 if('serviceWorker' in navigator){
