@@ -703,6 +703,9 @@ input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
     <span class="hdr-sub">Tu hub de vida</span>
   </div>
   <div class="hdr-actions">
+    <button class="btn-pdf-hdr" onclick="syncTodo()" style="border-color:rgba(81,50,41,0.3)">
+      ☁️ Sincronizar
+    </button>
     <button class="btn-pdf-hdr" id="btn-pdf-top" onclick="exportPDF()" style="display:none">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       PDF mes
@@ -5133,6 +5136,36 @@ function delCuota(i){if(!confirm('Eliminar?'))return;const c=cuotasLoad();c.spli
 function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('|||')[idx]||'';}
 
 save();
+
+// Subir TODOS los datos locales a Supabase de una vez
+async function syncTodo(){
+  showToast('Sincronizando...');
+  try{
+    // Finanzas
+    await dbSet('hub_fin',S);
+    // Gym
+    await dbSet('hub_gym_log',GYM_LOG);
+    await dbSet('hub_gym_weights',GYM_WEIGHTS);
+    await dbSet('hub_gym_rutinas',GYM_RUTINAS);
+    // Hábitos
+    await dbSet('hub_hab_list',HAB_LIST);
+    await dbSet('hub_hab_log',HAB_LOG);
+    // Escritura
+    await dbSet('hub_grat',GRAT_LOG);
+    // Nutrición
+    const nut=nutLoad();
+    await dbSet('hub_nut',nut);
+    // Metas
+    const metas=metasLoad();
+    await dbSet('hub_metas',metas);
+    // Cuotas
+    const cuotas=cuotasLoad();
+    await dbSet('hub_cuotas',cuotas);
+    showToast('✓ Todo sincronizado');
+  }catch(e){
+    showToast('Error al sincronizar');
+  }
+}
 
 // Cargar TODOS los datos desde Supabase al abrir
 (async()=>{
