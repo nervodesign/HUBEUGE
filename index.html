@@ -17,6 +17,29 @@
 <!-- Manifest inline -->
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22HubEuge%22%2C%22short_name%22%3A%22HubEuge%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%236B1E2E%22%2C%22theme_color%22%3A%22%236B1E2E%22%2C%22orientation%22%3A%22portrait%22%7D"/>
 <title>Hub · Euge 2026</title>
+<script>
+const SB='https://syupcxljrwfbmdgpnzjx.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dXBjeGxqcndmYm1kZ3Buemp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMjUyNTgsImV4cCI6MjA5NDcwMTI1OH0.nEa6UVd1kd7fW-4trlXPZJojiIObrF5xAOaMZJ9VQLM';
+const SH={'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'};
+
+async function dbGet(id){
+  try{
+    const r=await fetch(SB+'/rest/v1/hub_data?id=eq.'+id+'&select=data',{headers:SH});
+    const d=await r.json();
+    return d&&d[0]?d[0].data:null;
+  }catch(e){return null;}
+}
+
+async function dbSet(id,data){
+  try{
+    await fetch(SB+'/rest/v1/hub_data',{
+      method:'POST',
+      headers:{...SH,'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({id,data,updated_at:new Date().toISOString()})
+    });
+  }catch(e){}
+}
+</script>
 <style>
 /* Fuentes con fallback seguro para uso offline */
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
@@ -2801,7 +2824,13 @@ function finLoad(){
   }else S=JSON.parse(JSON.stringify(DB));}
   catch(e){S=JSON.parse(JSON.stringify(DB));}
 }
-function save(){try{localStorage.setItem('hub_fin',JSON.stringify(S));}catch(e){}}
+function save(){
+  try{
+    const v=JSON.stringify(S);
+    localStorage.setItem('hub_fin',v);
+    dbSet('hub_fin',S); // sync a Supabase sin bloquear
+  }catch(e){}
+}
 finLoad();
 
 function calcM(i){
@@ -5104,7 +5133,25 @@ function delCuota(i){if(!confirm('Eliminar?'))return;const c=cuotasLoad();c.spli
 function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('|||')[idx]||'';}
 
 save();
-renderAll();
+
+// Cargar desde Supabase al abrir
+(async()=>{
+  try{
+    const d=await dbGet('hub_fin');
+    if(d){
+      // Supabase tiene datos — usarlos
+      localStorage.setItem('hub_fin',JSON.stringify(d));
+      finLoad();
+      renderAll();
+    } else {
+      // No hay nada en Supabase — subir lo local
+      dbSet('hub_fin',S);
+      renderAll();
+    }
+  }catch(e){
+    renderAll();
+  }
+})();
 
 // ── PWA: Service Worker para funcionar offline ──
 if('serviceWorker' in navigator){
