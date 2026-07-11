@@ -65,7 +65,12 @@ async function sbPull(){
   }catch(e){return false;}
 }
 
+// Freno de seguridad temporal: mientras esto sea false, ningún dispositivo puede
+// sobreescribir la nube (solo lectura/pull). Se reactiva a mano una vez migrado
+// con cuidado el celu, para evitar que una pestaña vieja abierta por error pise datos.
+const SYNC_PUSH_ENABLED=false;
 async function sbPush(){
+  if(!SYNC_PUSH_ENABLED)return;
   const data={};
   SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
   data['hub_meta']=localStorage.getItem('hub_meta')||'{}';
