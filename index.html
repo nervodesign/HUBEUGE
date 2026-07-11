@@ -258,6 +258,14 @@ textarea.fi{height:auto;padding:12px 14px;resize:vertical;min-height:80px;line-h
 .stab:hover:not(.on){border-color:rgba(201,102,122,.3);color:#C9667A}
 .ssec{display:none}.ssec.on{display:block}
 
+/* Selector compacto de mes en Finanzas (chip + popover en vez de 12 pestañas) */
+.fin-month-wrap{position:relative;display:inline-flex;flex-shrink:0}
+.fin-month-popover{display:none;position:fixed;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow);padding:8px;z-index:9999;grid-template-columns:repeat(3,1fr);gap:4px;width:180px}
+.fin-month-popover.open{display:grid}
+.fin-month-opt{padding:7px 4px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--lino4);font-size:12px;font-weight:500;cursor:pointer;text-align:center;white-space:nowrap}
+.fin-month-opt:hover{background:var(--accent-dim)}
+.fin-month-opt.on{background:#C9667A;color:#FAF7F5;font-weight:700}
+
 /* TXN */
 .txlist{max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg4) transparent}
 .txrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
@@ -1309,12 +1317,49 @@ function buildMainNav(){
   }
 }
 
-function buildFinSubNav(){
-  const tabs=MESES.map((m,i)=>{
+function finMonthSwitchHTML(cls){
+  const curDone=S.meses[aM]&&S.meses[aM].cerrado;
+  const grid=MESES.map((m,i)=>{
     const done=S.meses[i]&&S.meses[i].cerrado;
-    return`<button class="stab ${aSection==='fin'&&aV==='month'&&aM===i?'on':''}" onclick="goFin('month',${i})" style="flex-shrink:0">${MS[i]}${done?' ✓':''}</button>`;
+    return`<button class="fin-month-opt ${aM===i?'on':''}" onclick="event.stopPropagation();goFin('month',${i});closeFinMonthPopover()">${MS[i]}${done?' ✓':''}</button>`;
   }).join('');
-  return tabs
+  return`<button class="${cls}" onclick="finMonthStep(-1)" aria-label="Mes anterior" style="flex-shrink:0">‹</button>`
+    +`<span class="fin-month-wrap">`
+      +`<button class="${cls} ${aV==='month'?'on':''}" id="fin-month-chip" onclick="toggleFinMonthPopover(event)" style="flex-shrink:0">${MS[aM]}${curDone?' ✓':''} <span style="font-size:9px;opacity:.7">▾</span></button>`
+      +`<div id="fin-month-popover" class="fin-month-popover">${grid}</div>`
+    +`</span>`
+    +`<button class="${cls}" onclick="finMonthStep(1)" aria-label="Mes siguiente" style="flex-shrink:0">›</button>`;
+}
+function finMonthStep(delta){
+  let m=aM+delta;
+  if(m<0)m=0;
+  if(m>11)m=11;
+  goFin('month',m);
+}
+function toggleFinMonthPopover(ev){
+  ev.stopPropagation();
+  const pop=document.getElementById('fin-month-popover');
+  if(!pop)return;
+  const willOpen=!pop.classList.contains('open');
+  if(willOpen){
+    const r=ev.currentTarget.getBoundingClientRect();
+    pop.style.top=(r.bottom+6)+'px';
+    pop.style.left=r.left+'px';
+  }
+  pop.classList.toggle('open',willOpen);
+}
+function closeFinMonthPopover(){
+  document.getElementById('fin-month-popover')?.classList.remove('open');
+}
+document.addEventListener('click',(e)=>{
+  const pop=document.getElementById('fin-month-popover');
+  if(pop&&pop.classList.contains('open')&&!pop.contains(e.target)&&e.target.id!=='fin-month-chip'){
+    pop.classList.remove('open');
+  }
+});
+
+function buildFinSubNav(){
+  return finMonthSwitchHTML('stab')
     +`<button class="stab ${aSection==='fin'&&aV==='anual'?'on':''}" onclick="goFin('anual')" style="flex-shrink:0">Anual</button>`
     +`<button class="stab ${aSection==='fin'&&aV==='inv'?'on':''}" onclick="goFin('inv')" style="flex-shrink:0">Inversiones</button>`
     +`<button class="stab ${aSection==='fin'&&aV==='limits'?'on':''}" onclick="goFin('limits')" style="flex-shrink:0">Alertas</button>`
@@ -1322,12 +1367,8 @@ function buildFinSubNav(){
 }
 
 function buildFinNav(){
-  const tabs=MESES.map((m,i)=>{
-    const done=S.meses[i]&&S.meses[i].cerrado;
-    return`<button class="ntab ${aSection==='fin'&&aV==='month'&&aM===i?'on':''}" onclick="goFin('month',${i})">${MS[i]}${done?' ✓':''}</button>`;
-  }).join('');
   return`<button class="ntab ${aSection==='fin'?'on':''}" onclick="goSection('fin')" style="font-weight:700;color:var(--accent)">💰</button>`
-    +tabs
+    +finMonthSwitchHTML('ntab')
     +`<button class="ntab ${aSection==='fin'&&aV==='anual'?'on':''}" onclick="goFin('anual')">Anual</button>`
     +`<button class="ntab ${aSection==='fin'&&aV==='inv'?'on':''}" onclick="goFin('inv')">Inversiones</button>`
     +`<button class="ntab ${aSection==='fin'&&aV==='limits'?'on':''}" onclick="goFin('limits')">Alertas</button>`
