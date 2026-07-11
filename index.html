@@ -880,6 +880,10 @@ body.theme-dark .card-gold{background:#2E2620}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px" id="an-grid"></div></div>
     <div id="an-new-sections"></div>
   </div>
+  <!-- AHORROS -->
+  <div class="view" id="view-ahorros">
+    <div id="ahorros-content"></div>
+  </div>
   <!-- INV -->
   <div class="view" id="view-inv">
     <div class="g3" id="inv-met"></div>
@@ -1269,7 +1273,7 @@ let GRAT_LOG=gratLoad(); // [{fecha:'YYYY-MM-DD', texto:'...'}]
 // ═══════════════════════════════════════════════════════
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function fmt(n){return'$'+Math.round(n).toLocaleString('es-AR');}
-function fmtU(n){return'U$D '+Number(n).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function fmtU(n){return'U$D '+Math.round(n).toLocaleString('es-AR');}
 function pct(a,b){return b>0?Math.round(a/b*100):0;}
 function dateLabel(s){
   if(!s)return'';
@@ -1361,6 +1365,7 @@ document.addEventListener('click',(e)=>{
 function buildFinSubNav(){
   return finMonthSwitchHTML('stab')
     +`<button class="stab ${aSection==='fin'&&aV==='anual'?'on':''}" onclick="goFin('anual')" style="flex-shrink:0">Anual</button>`
+    +`<button class="stab ${aSection==='fin'&&aV==='ahorros'?'on':''}" onclick="goFin('ahorros')" style="flex-shrink:0">Ahorros</button>`
     +`<button class="stab ${aSection==='fin'&&aV==='inv'?'on':''}" onclick="goFin('inv')" style="flex-shrink:0">Inversiones</button>`
     +`<button class="stab ${aSection==='fin'&&aV==='limits'?'on':''}" onclick="goFin('limits')" style="flex-shrink:0">Alertas</button>`
     +`<button class="stab ${aSection==='fin'&&aV==='search'?'on':''}" onclick="goFin('search')" style="flex-shrink:0">🔎 Buscar</button>`;
@@ -1370,6 +1375,7 @@ function buildFinNav(){
   return`<button class="ntab ${aSection==='fin'?'on':''}" onclick="goSection('fin')" style="font-weight:700;color:var(--accent)">💰</button>`
     +finMonthSwitchHTML('ntab')
     +`<button class="ntab ${aSection==='fin'&&aV==='anual'?'on':''}" onclick="goFin('anual')">Anual</button>`
+    +`<button class="ntab ${aSection==='fin'&&aV==='ahorros'?'on':''}" onclick="goFin('ahorros')">Ahorros</button>`
     +`<button class="ntab ${aSection==='fin'&&aV==='inv'?'on':''}" onclick="goFin('inv')">Inversiones</button>`
     +`<button class="ntab ${aSection==='fin'&&aV==='limits'?'on':''}" onclick="goFin('limits')">Alertas</button>`
     +`<button class="ntab ${aSection==='fin'&&aV==='search'?'on':''}" onclick="goFin('search')">🔎 Buscar</button>`;
@@ -1410,6 +1416,7 @@ function renderAll(){
   else if(aSection==='metas'){document.getElementById('view-metas').classList.add('on');rMetas();}
   else if(aSection==='fin'){
     if(aV==='anual'){document.getElementById('view-anual').classList.add('on');rAnual();}
+    else if(aV==='ahorros'){document.getElementById('view-ahorros').classList.add('on');rAhorros();}
     else if(aV==='inv'){document.getElementById('view-inv').classList.add('on');rInv();}
     else if(aV==='limits'){document.getElementById('view-limits').classList.add('on');rLimits();}
     else if(aV==='search'){document.getElementById('view-search').classList.add('on');rSearch();}
@@ -3031,7 +3038,8 @@ const GRUPOS={
   }},
   ahorros:{label:'Ahorros',cats:{
     ahorro_ars:{l:'Ahorro ARS',c:'#5a9fd4'},
-    dolar_efectivo:{l:'Dólares efectivo',c:'#6a9fd4'},dolar_uala:{l:'Dólares Uala PF',c:'#4a7fb5'}
+    dolar_efectivo:{l:'Dólares efectivo',c:'#6a9fd4'},dolar_uala:{l:'Dólares Uala PF',c:'#4a7fb5'},
+    regalo_usd:{l:'Regalo USD',c:'#3a8a62'},gasto_usd:{l:'Gasto en USD',c:'#c85830'}
   }},
   fijos:{label:'Gastos Fijos',cats:{
     epec:{l:'EPEC',c:'#c9a84c'},ecogas:{l:'Ecogas',c:'#b89040'},
@@ -3062,6 +3070,10 @@ const GRUPOS={
 });
 const IS_ING=new Set(['sueldo_nervo','parque_futura','rendimientos','otros_ing']);
 const IS_AHO=new Set(['ahorro_ars','dolar_efectivo','dolar_uala']);
+// Movimientos en USD puro: no tocan el balance en ARS (no son gasto ni ahorro de pesos),
+// solo suman/restan del pozo total de dólares.
+const IS_USD_MOV=new Set(['regalo_usd','gasto_usd']);
+const USD_COMPRA_CATS=new Set(['ahorro_ars','dolar_efectivo','dolar_uala']);
 const IS_FIJO=new Set(Object.keys(GRUPOS.fijos.cats));
 const IS_VAR=new Set(Object.keys(GRUPOS.variables.cats));
 const IS_PERS=new Set(); // ya no existe grupo personales separado
@@ -3206,6 +3218,7 @@ const GA=[
 
 const DB={
   meta:20,limits:{},inversiones:[],prestamos:[],plataformas:['Balanz','Celesol','Uala','Mercado Pago','Otro'],
+  patrimonio:[],
   meses:[
     {idx:0,usd_mfa:492,tc:0,usd_fecha:'',nota:'',cerrado:true,txns:[
       {fecha:'31/01',monto:2400000,cat:'sueldo_nervo',desc:'Sueldo Nervo'},
@@ -3296,10 +3309,19 @@ finLoad();
 
 function calcM(i){
   const t=S.meses[i].txns;
-  let ing=0,gas=0,aho=0,fijo=0,vari=0,pers=0;
+  let ing=0,gas=0,aho=0,fijo=0,vari=0,pers=0,usdComprado=0,usdRegalo=0,usdGastado=0;
   t.forEach(tx=>{
+    if(IS_USD_MOV.has(tx.cat)){
+      // Movimiento en USD puro: no toca el balance en pesos.
+      if(tx.cat==='regalo_usd')usdRegalo+=tx.monto;
+      else if(tx.cat==='gasto_usd')usdGastado+=tx.monto;
+      return;
+    }
     if(IS_ING.has(tx.cat))ing+=tx.monto;
-    else if(IS_AHO.has(tx.cat))aho+=tx.monto;
+    else if(IS_AHO.has(tx.cat)){
+      aho+=tx.monto;
+      if(USD_COMPRA_CATS.has(tx.cat))usdComprado+=(tx.montoUsd||0);
+    }
     else if(IS_FIJO.has(tx.cat)){gas+=tx.monto;fijo+=tx.monto;}
     else if(IS_VAR.has(tx.cat)){gas+=tx.monto;vari+=tx.monto;
       // track personal/ocio subcats for display
@@ -3310,8 +3332,23 @@ function calcM(i){
   const usd=S.meses[i].usd_mfa||0;
   const tc=S.meses[i].tc||0;
   const usdEnARS=usd>0&&tc>0?usd*tc:0;
-  return{ing,gas,aho,neto:ing-gas-aho,fijo,vari,pers,usd,usdEnARS,tc};
+  return{ing,gas,aho,neto:ing-gas-aho,fijo,vari,pers,usd,usdEnARS,tc,usdComprado,usdRegalo,usdGastado};
 }
+// Pozo total de USD (sueldo MFA + comprado con pesos + regalos - gastado en USD), acumulado en todo el año.
+function totalUSDPool(){
+  let total=0;
+  S.meses.forEach(m=>{
+    total+=m.usd_mfa||0;
+    m.txns.forEach(t=>{
+      if(USD_COMPRA_CATS.has(t.cat))total+=(t.montoUsd||0);
+      else if(t.cat==='regalo_usd')total+=t.monto;
+      else if(t.cat==='gasto_usd')total-=t.monto;
+    });
+  });
+  return total;
+}
+// Total histórico ganado en USD MFA (sueldo), sin mezclar con lo comprado/regalado.
+function totalUSDMFA(){return S.meses.reduce((a,m)=>a+(m.usd_mfa||0),0);}
 function cT(i){const r={};S.meses[i].txns.forEach(t=>{r[t.cat]=(r[t.cat]||0)+t.monto;});return r;}
 function catGrp(i,gk){if(!GRUPOS[gk])return 0;return Object.keys(GRUPOS[gk].cats).reduce((a,ck)=>{const t=cT(i);return a+(t[ck]||0);},0);}
 function catOpts(){
@@ -3346,7 +3383,11 @@ function buildFinViews(){
       <!-- F2: Monto + Categoría -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <input type="number" class="fi" id="mn-${i}" placeholder="Monto $" min="0" style="width:100%"/>
-        <select class="fsel" id="ct-${i}" style="width:100%">${catOpts()}</select>
+        <select class="fsel" id="ct-${i}" style="width:100%" onchange="onCatChange(${i})">${catOpts()}</select>
+      </div>
+      <!-- F2b: Cantidad USD, solo aparece al comprar dólares con pesos -->
+      <div id="usdq-wrap-${i}" style="display:none;margin-bottom:8px">
+        <input type="number" class="fi" id="usdq-${i}" placeholder="Cantidad de USD comprados" min="0" step="0.01" style="width:100%"/>
       </div>
 
       <!-- F3: Fecha (día + mes nativos, sin date picker iOS) + Medio de pago -->
@@ -3493,7 +3534,7 @@ function rMonth(i){
     const mpColors={visa:'#5C3452',master:'#7A2010',uala:'#2A4A8A',mercadopago:'#006EBD',celesol:'#1A5A3A',billetera:'#4A3878',efectivo:'#3B6D11',transferencia:'#C9667A',usd_app:'#854F0B',galicia:'#A32D2D'};
     const mpBg={visa:'#E4D2DE',master:'#F7DCE1',uala:'#E4D2DE',mercadopago:'#E4D2DE',celesol:'#EAF3DE',billetera:'#E8CFC3',efectivo:'#EAF3DE',transferencia:'#F2EDE8',usd_app:'#FAEEDA',galicia:'#FCEBEB'};
     const mpLabel={visa:'Visa',master:'Mastercard',uala:'Ualá',mercadopago:'Mercado Pago',celesol:'Celesol',billetera:'Billetera',efectivo:'Efectivo',transferencia:'Transferencia',usd_app:'USD App',galicia:'Galicia'};
-    txDiv.innerHTML=[...S.meses[i].txns].reverse().map((t,ri)=>{const idx=S.meses[i].txns.length-1-ri;const cv=AC[t.cat]||{l:t.cat,c:'#707070'};const isIng=IS_ING.has(t.cat);const mpBadge=t.mpLabel?`<span style="background:${mpBg[t.mp]||'#F2EDE8'};color:${mpColors[t.mp]||'#C9667A'};font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">${t.mpLabel}</span>`:'';return`<div class="tx-swipe-wrap" data-i="${i}" data-idx="${idx}"><div class="tx-swipe-bg">🗑</div><div class="txrow"><span class="txdate">${t.fecha||'—'}</span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span>${mpBadge}<span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${fmt(t.monto)}</span><button class="btn-del" onclick="delT(${i},${idx})">✕</button></div></div>`;}).join('');
+    txDiv.innerHTML=[...S.meses[i].txns].reverse().map((t,ri)=>{const idx=S.meses[i].txns.length-1-ri;const cv=AC[t.cat]||{l:t.cat,c:'#707070'};const isIng=IS_ING.has(t.cat)||t.cat==='regalo_usd';const isUsdMov=IS_USD_MOV.has(t.cat);const usdqBadge=t.montoUsd?`<span style="background:#EAF3DE;color:#3B6D11;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">≈ ${fmtU(t.montoUsd)}</span>`:'';const mpBadge=t.mpLabel?`<span style="background:${mpBg[t.mp]||'#F2EDE8'};color:${mpColors[t.mp]||'#C9667A'};font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">${t.mpLabel}</span>`:'';const amt=isUsdMov?fmtU(t.monto):fmt(t.monto);return`<div class="tx-swipe-wrap" data-i="${i}" data-idx="${idx}"><div class="tx-swipe-bg">🗑</div><div class="txrow"><span class="txdate">${t.fecha||'—'}</span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span>${mpBadge}${usdqBadge}<span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${amt}</span><button class="btn-del" onclick="delT(${i},${idx})">✕</button></div></div>`;}).join('');
     initSwipeToDelete(txDiv,(wrap)=>delT(parseInt(wrap.dataset.i),parseInt(wrap.dataset.idx)));
   }}
 }
@@ -3847,6 +3888,71 @@ function updatePlataformaSelect(){
   if(!sel)return;
   const plats=getPlataformas();
   sel.innerHTML=plats.map(p=>`<option value="${p}">${p}</option>`).join('');
+}
+
+function addPatrimonio(){
+  const labelEl=document.getElementById('pat-label');
+  const montoEl=document.getElementById('pat-monto');
+  const monedaEl=document.getElementById('pat-moneda');
+  const label=labelEl?.value.trim();
+  const monto=parseFloat(montoEl?.value);
+  const moneda=monedaEl?.value||'ARS';
+  if(!label||isNaN(monto)||monto<=0)return;
+  if(!S.patrimonio)S.patrimonio=[];
+  S.patrimonio.push({label,monto,moneda});
+  if(labelEl)labelEl.value='';
+  if(montoEl)montoEl.value='';
+  save();rAhorros();
+}
+function delPatrimonio(idx){
+  const removed=S.patrimonio[idx];
+  S.patrimonio.splice(idx,1);save();rAhorros();
+  showUndoToast('Eliminado de tu patrimonio',()=>{S.patrimonio.splice(idx,0,removed);save();rAhorros();});
+}
+function rAhorros(){
+  const el=document.getElementById('ahorros-content');
+  if(!el)return;
+  const poolUSD=totalUSDPool();
+  const mfaTotal=totalUSDMFA();
+  let comprado=0,regalado=0,gastado=0;
+  S.meses.forEach(m=>m.txns.forEach(t=>{
+    if(USD_COMPRA_CATS.has(t.cat))comprado+=(t.montoUsd||0);
+    else if(t.cat==='regalo_usd')regalado+=t.monto;
+    else if(t.cat==='gasto_usd')gastado+=t.monto;
+  }));
+  const pat=S.patrimonio||[];
+  const totalARS=pat.filter(p=>p.moneda==='ARS').reduce((a,p)=>a+p.monto,0);
+  const totalUSDPat=pat.filter(p=>p.moneda==='USD').reduce((a,p)=>a+p.monto,0);
+  el.innerHTML=`
+    <div class="card">
+      <p class="st">Total acumulado en USD <span class="stl"></span></p>
+      <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#3B6D11;margin:8px 0">${fmtU(poolUSD)}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:12px">
+        <div class="met"><div class="lbl">Sueldo MFA (histórico)</div><div class="val" style="font-size:16px">${fmtU(mfaTotal)}</div></div>
+        <div class="met"><div class="lbl">Comprado con pesos</div><div class="val" style="font-size:16px">${fmtU(comprado)}</div></div>
+        <div class="met"><div class="lbl">Regalos en USD</div><div class="val" style="font-size:16px;color:#3B6D11">+${fmtU(regalado)}</div></div>
+        <div class="met"><div class="lbl">Gastado en USD</div><div class="val" style="font-size:16px;color:#c85830">-${fmtU(gastado)}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="st">Mi patrimonio actual <span class="stl"></span></p>
+      <p style="font-size:12px;color:var(--lino4);margin-bottom:12px">Cargá a mano lo que tenés en efectivo, cajas de ahorro, etc. — es una foto de tu situación, independiente de los movimientos mensuales.</p>
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:12px">
+        <input type="text" class="fi" id="pat-label" placeholder="Ej: Caja ahorro Galicia"/>
+        <input type="number" class="fi" id="pat-monto" placeholder="Monto" min="0" style="width:110px"/>
+        <select class="fsel" id="pat-moneda" style="width:80px">
+          <option value="ARS">ARS</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+      <button class="btn-p" onclick="addPatrimonio()" style="margin-bottom:16px">+ Agregar</button>
+      ${pat.length?pat.map((p,idx)=>`<div class="txrow"><span class="txdesc">${p.label}</span><span class="txamt">${p.moneda==='USD'?fmtU(p.monto):fmt(p.monto)}</span><button class="btn-del" onclick="delPatrimonio(${idx})">✕</button></div>`).join(''):'<p style="color:var(--lino4);font-size:12px">Todavía no cargaste nada.</p>'}
+      ${pat.length?`<div style="display:flex;gap:20px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div><span style="font-size:11px;color:var(--lino4)">Total ARS</span><div style="font-weight:700">${fmt(totalARS)}</div></div>
+        <div><span style="font-size:11px;color:var(--lino4)">Total USD</span><div style="font-weight:700">${fmtU(totalUSDPat)}</div></div>
+      </div>`:''}
+    </div>
+  `;
 }
 
 function rInv(){
@@ -4488,6 +4594,13 @@ function toggleCuotas(i){
   const wrap=document.getElementById('cuotas-wrap-'+i);
   if(wrap)wrap.style.display=tp==='cuota'?'flex':'none';
 }
+function onCatChange(i){
+  const cat=document.getElementById('ct-'+i)?.value;
+  const usdqWrap=document.getElementById('usdq-wrap-'+i);
+  if(usdqWrap)usdqWrap.style.display=USD_COMPRA_CATS.has(cat)?'block':'none';
+  const mnEl=document.getElementById('mn-'+i);
+  if(mnEl)mnEl.placeholder=IS_USD_MOV.has(cat)?'Monto USD':'Monto $';
+}
 
 function addT(i){
   const cat=document.getElementById('ct-'+i)?.value;
@@ -4508,8 +4621,13 @@ function addT(i){
     descFinal=desc+(desc?' ':'')+'('+cc+'/'+ct2+')';
   }
   const mpLabel={visa:'Visa',master:'Mastercard',uala:'Ualá',mercadopago:'Mercado Pago',celesol:'Celesol',billetera:'Billetera',efectivo:'Efectivo',transferencia:'Transferencia',usd_app:'USD App',galicia:'Galicia'};
-  S.meses[i].txns.push({desc:descFinal,monto,cat,fecha,mp,mpLabel:mpLabel[mp]||''});
-  ['dc-','mn-','cc-','ct2-'].forEach(p=>{const e=document.getElementById(p+i);if(e)e.value='';});
+  const txn={desc:descFinal,monto,cat,fecha,mp,mpLabel:mpLabel[mp]||''};
+  if(USD_COMPRA_CATS.has(cat)){
+    const usdq=parseFloat(document.getElementById('usdq-'+i)?.value);
+    if(!isNaN(usdq)&&usdq>0)txn.montoUsd=usdq;
+  }
+  S.meses[i].txns.push(txn);
+  ['dc-','mn-','cc-','ct2-','usdq-'].forEach(p=>{const e=document.getElementById(p+i);if(e)e.value='';});
   const mpEl=document.getElementById('mp-'+i);if(mpEl)mpEl.value='';
   const tpEl=document.getElementById('tp-'+i);if(tpEl)tpEl.value='unico';
   toggleCuotas(i);
@@ -4537,8 +4655,9 @@ function rSearch(){
   });
   if(!results.length){el.innerHTML='<p style="font-size:12px;color:var(--lino4);padding:8px 0">Sin resultados.</p>';return;}
   el.innerHTML=results.map(({mi,ti,t,cv})=>{
-    const isIng=IS_ING.has(t.cat);
-    return`<div class="txrow"><span class="txdate">${t.fecha||'—'} <span style="opacity:.6">${MS[mi]}</span></span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span><span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${fmt(t.monto)}</span><button class="btn-gh" style="font-size:10px;padding:0 10px;height:26px" onclick="goFin('month',${mi})">Ver</button></div>`;
+    const isIng=IS_ING.has(t.cat)||t.cat==='regalo_usd';
+    const amt=IS_USD_MOV.has(t.cat)?fmtU(t.monto):fmt(t.monto);
+    return`<div class="txrow"><span class="txdate">${t.fecha||'—'} <span style="opacity:.6">${MS[mi]}</span></span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span><span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${amt}</span><button class="btn-gh" style="font-size:10px;padding:0 10px;height:26px" onclick="goFin('month',${mi})">Ver</button></div>`;
   }).join('');
 }
 function repetirMesPasado(i){
