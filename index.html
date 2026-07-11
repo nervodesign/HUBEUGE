@@ -5708,6 +5708,12 @@ async function syncTodo(){
 // Cargar TODOS los datos desde Supabase al abrir (sin pisar datos locales existentes)
 // y subir de inmediato el estado de este dispositivo, para que la nube quede al día.
 async function bootApp(){
+  // ?resync=1: borra el cache local de este dispositivo antes de traer todo de la nube.
+  // Se usa una sola vez cuando un dispositivo quedó con datos viejos que le ganan al pull.
+  if(new URLSearchParams(location.search).get('resync')==='1'){
+    SB_SYNC_KEYS.forEach(k=>localStorage.removeItem(k));
+    localStorage.removeItem('hub_meta');
+  }
   await sbPull();
   GYM_RUTINAS=gLoad('rutinas',DEF_RUTINAS);
   GYM_LOG=gLoad('log',{});
