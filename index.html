@@ -575,6 +575,8 @@ textarea.fi{height:auto;padding:12px 14px;resize:vertical;min-height:80px;line-h
   /* Inputs full-width en mobile */
   .frow{flex-direction:column;align-items:stretch}
   .fg,.fn,.fsm,.fdt,.fxs,.fsel,.fi{width:100% !important;min-width:0 !important}
+  /* Excepción: campos chicos de ancho fijo (emoji, día, etc.) que no deben estirarse */
+  .fi-fixed{width:var(--fi-fixed-w,40px) !important;flex-shrink:0 !important}
   .fi{height:44px;font-size:14px} /* touch target más grande */
   .fsel{height:44px;font-size:14px}
   .btn-p{height:44px;font-size:13px}
@@ -2365,24 +2367,30 @@ function rHabConfig2(){
         ${HAB_LIST.map((h,i)=>`
           <div style="background:#FAF7F5;border-radius:14px;padding:12px 14px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <input class="fi" style="width:40px;height:36px;font-size:20px;text-align:center;padding:0" value="${h.emoji}"
+              <input class="fi fi-fixed" style="height:36px;font-size:20px;text-align:center;padding:0" value="${h.emoji}"
                 onchange="HAB_LIST[${i}].emoji=this.value;saveHab()"/>
-              <input class="fi" style="flex:1;height:36px;font-weight:700;font-size:13px" value="${h.nombre}"
+              <input class="fi" style="flex:1;min-width:0;height:36px;font-weight:700;font-size:13px" value="${h.nombre}"
                 onchange="HAB_LIST[${i}].nombre=this.value;saveHab()"/>
               <button class="btn-del" onclick="delHabit(${i});rHabConfig2()">✕</button>
             </div>
-            <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
               <span style="font-size:11px;color:#8B6B5A;white-space:nowrap">Meta:</span>
-              <input class="fi" style="flex:1;height:32px;font-size:12px" placeholder="Ej: 4 veces por semana" value="${h.meta||''}"
+              <input class="fi" style="flex:1;min-width:0;height:32px;font-size:12px" placeholder="Ej: 4 veces por semana" value="${h.meta||''}"
                 onchange="HAB_LIST[${i}].meta=this.value;saveHab()"/>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:#8B6B5A;white-space:nowrap">Recordatorio:</span>
+              <input type="time" class="fi fi-fixed" style="height:32px;font-size:12px;--fi-fixed-w:100px" value="${h.hora||''}"
+                onchange="HAB_LIST[${i}].hora=this.value;saveHab()"/>
+              <button class="btn-gh" style="font-size:11px;padding:0 10px;height:32px;flex-shrink:0" onclick="descargarRecordatorio(HAB_LIST[${i}].emoji+' '+HAB_LIST[${i}].nombre,HAB_LIST[${i}].hora)">📅 Agregar</button>
             </div>
           </div>`).join('')}
       </div>
       <div style="background:#FFFFFF;border:1.5px dashed rgba(201,102,122,0.25);border-radius:14px;padding:14px">
         <div style="font-size:12px;font-weight:700;color:#8B6B5A;margin-bottom:10px">Nuevo hábito</div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input class="fi" id="new-hab-emoji" style="width:44px;height:40px;font-size:20px;text-align:center;padding:0" placeholder="💧"/>
-          <input class="fi" id="new-hab-name" style="flex:1;height:40px" placeholder="Nombre del hábito"/>
+          <input class="fi fi-fixed" id="new-hab-emoji" style="height:40px;font-size:20px;text-align:center;padding:0;--fi-fixed-w:44px" placeholder="💧"/>
+          <input class="fi" id="new-hab-name" style="flex:1;min-width:0;height:40px" placeholder="Nombre del hábito"/>
         </div>
         <input class="fi" id="new-hab-meta" style="width:100%;height:36px;font-size:12px;margin-bottom:10px" placeholder="Meta (ej: 5 veces por semana, 30 min al día...)"/>
         <button class="btn-p" onclick="addHabit2()" style="width:100%;height:44px">+ Agregar hábito</button>
@@ -2499,23 +2507,29 @@ function rHabSemana(){
     </div>`;
 }
 
-function rHabConfig(){
-  const list=HAB_LIST.map((h,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <input class="fi" style="width:38px;height:30px;font-size:16px;text-align:center" value="${h.emoji}" onchange="HAB_LIST[${i}].emoji=this.value;saveHab()"/>
-      <input class="fi fg" style="height:30px;font-size:12px" value="${h.nombre}" onchange="HAB_LIST[${i}].nombre=this.value;saveHab()"/>
-      <button class="btn-del" onclick="delHabit(${i})">✕</button>
-    </div>`).join('');
-  document.getElementById('hab-config').innerHTML=`
-    <div class="card">
-      <p class="st">Mis hábitos <span class="stl"></span></p>
-      ${list}
-      <div class="frow" style="margin-top:12px">
-        <input class="fi" style="width:40px;height:34px;font-size:18px;text-align:center" id="new-hab-emoji" placeholder="💧"/>
-        <input class="fi fg" id="new-hab-name" placeholder="Nombre del hábito"/>
-        <button class="btn-p" onclick="addHabit()">+ Agregar</button>
-      </div>
-    </div>`;
+// Genera un .ics diario para un recordatorio (hábito, gasto, etc.) y lo dispara para
+// que el sistema (Calendario/Recordatorios) lo agregue con notificación a esa hora.
+function generarICS(titulo,hora){
+  const[hh,mm]=hora.split(':');
+  const now=new Date();
+  const y=now.getFullYear(),mo=String(now.getMonth()+1).padStart(2,'0'),d=String(now.getDate()).padStart(2,'0');
+  const dtstart=`${y}${mo}${d}T${hh}${mm}00`;
+  const uid=Date.now()+'@hubeuge';
+  return[
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HubEuge//Recordatorios//ES',
+    'BEGIN:VEVENT',`UID:${uid}`,`DTSTART:${dtstart}`,'RRULE:FREQ=DAILY',
+    `SUMMARY:${titulo}`,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${titulo}`,'TRIGGER:PT0M','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+}
+function descargarRecordatorio(titulo,hora){
+  if(!hora){showToast('Elegí un horario primero');return;}
+  const blob=new Blob([generarICS(titulo,hora)],{type:'text/calendar'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=titulo.replace(/[^a-z0-9]+/gi,'_')+'.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
 function addHabit(){
