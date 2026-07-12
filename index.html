@@ -5638,9 +5638,7 @@ function renderMetaCard(m,i,key){
   const prio=META_PRIO[m.prio||'media'];
   const subs=m.subs||[];
   const subDone=subs.filter(s=>s.done).length;
-  const progNum=parseFloat(m.progActual)||0;
-  const progMeta=parseFloat(m.progMeta)||0;
-  const progPct=progMeta>0?Math.min(100,Math.round(progNum/progMeta*100)):0;
+  const subPct=subs.length>0?Math.round(subDone/subs.length*100):0;
 
   return`<div style="background:${m.lograda?'rgba(59,109,17,0.04)':'#FFFFFF'};border:1.5px solid ${m.lograda?'rgba(59,109,17,0.3)':'rgba(201,102,122,0.12)'};border-radius:16px;padding:14px">
 
@@ -5687,88 +5685,17 @@ function renderMetaCard(m,i,key){
         </div>
       </div>
 
-      <!-- Progreso medible — simplificado -->
-      <div style="margin-bottom:10px">
-        <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">¿Cómo medís si la lograste?</div>
-        <div style="background:#FAF7F5;border-radius:12px;padding:12px">
-          <!-- Tipo de progreso -->
-          <select style="width:100%;border:none;background:transparent;font-size:12px;color:#C9667A;font-weight:700;margin-bottom:10px;outline:none;cursor:pointer"
-            onchange="metaUpdate(${i},'progTipo',this.value,'${key}');rMetas()">
-            <option value="" ${!m.progTipo?'selected':''}>— Elegí cómo medir el avance —</option>
-            <option value="num" ${m.progTipo==='num'?'selected':''}>📊 Número (ej: $, kg, veces, km)</option>
-            <option value="pct" ${m.progTipo==='pct'?'selected':''}>📈 Porcentaje (0 a 100%)</option>
-            <option value="si" ${m.progTipo==='si'?'selected':''}>✅ Sí o No (lo hice o no)</option>
-            <option value="libre" ${m.progTipo==='libre'?'selected':''}>📝 Lo escribo yo (texto libre)</option>
-          </select>
-
-          ${m.progTipo==='num'?`
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input class="fi" type="text" style="flex:1;min-width:80px;height:36px;font-size:12px" placeholder="¿En qué? (ej: $, kg, días, veces)"
-                value="${m.progUnidad||''}" onchange="metaUpdate(${i},'progUnidad',this.value,'${key}')"/>
-              <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid rgba(201,102,122,0.2);border-radius:10px;padding:4px 10px">
-                <input type="number" style="width:60px;border:none;outline:none;font-size:15px;font-weight:700;color:#C9667A;text-align:center;background:transparent"
-                  placeholder="0" value="${m.progActual||''}" onchange="metaUpdate(${i},'progActual',this.value,'${key}');rMetas()"/>
-                <span style="font-size:12px;color:#B09890">/</span>
-                <input type="number" style="width:60px;border:none;outline:none;font-size:15px;font-weight:700;color:#1A0F0A;text-align:center;background:transparent"
-                  placeholder="meta" value="${m.progMeta||''}" onchange="metaUpdate(${i},'progMeta',this.value,'${key}');rMetas()"/>
-                <span style="font-size:11px;color:#8B6B5A">${m.progUnidad||''}</span>
-              </div>
-            </div>
-            ${progMeta>0?`<div style="margin-top:8px">
-              <div style="display:flex;justify-content:space-between;font-size:11px;color:#8B6B5A;margin-bottom:3px">
-                <span>${progNum} ${m.progUnidad||''} alcanzados</span>
-                <span style="font-weight:700;color:${progPct>=100?'#3B6D11':progPct>=50?'#854F0B':'#C9667A'}">${progPct}%</span>
-              </div>
-              <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden">
-                <div style="height:100%;width:${progPct}%;background:${progPct>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .4s"></div>
-              </div>
-            </div>`:''}`:
-
-          m.progTipo==='pct'?`
-            <div style="display:flex;align-items:center;gap:10px">
-              <input type="range" min="0" max="100" step="5"
-                value="${m.progActual||0}" style="flex:1;accent-color:#C9667A"
-                oninput="this.nextElementSibling.textContent=this.value+'%';metaUpdate(${i},'progActual',this.value,'${key}')"/>
-              <span style="font-size:18px;font-weight:700;color:#C9667A;min-width:48px;text-align:right">${m.progActual||0}%</span>
-            </div>
-            <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden;margin-top:8px">
-              <div style="height:100%;width:${m.progActual||0}%;background:${(m.progActual||0)>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .3s"></div>
-            </div>`:
-
-          m.progTipo==='si'?`
-            <div style="display:flex;gap:10px">
-              <button onclick="metaUpdate(${i},'progActual','si','${key}');rMetas()"
-                style="flex:1;height:44px;border-radius:12px;border:2px solid ${m.progActual==='si'?'#3B6D11':'rgba(201,102,122,0.2)'};background:${m.progActual==='si'?'#3B6D11':'transparent'};color:${m.progActual==='si'?'#fff':'#1A0F0A'};font-size:14px;font-weight:700;cursor:pointer">
-                ✓ Sí, lo logré
-              </button>
-              <button onclick="metaUpdate(${i},'progActual','no','${key}');rMetas()"
-                style="flex:1;height:44px;border-radius:12px;border:2px solid ${m.progActual==='no'?'#c85830':'rgba(201,102,122,0.2)'};background:${m.progActual==='no'?'#c85830':'transparent'};color:${m.progActual==='no'?'#fff':'#1A0F0A'};font-size:14px;font-weight:700;cursor:pointer">
-                ✗ Todavía no
-              </button>
-            </div>`:
-
-          m.progTipo==='libre'?`
-            <textarea class="fi" style="width:100%;height:60px;font-size:12px;resize:vertical;padding:8px 10px;line-height:1.6"
-              placeholder="Escribí cómo va tu avance..."
-              onchange="metaUpdate(${i},'progActual',this.value,'${key}')">${m.progActual||''}</textarea>`:
-          ''}
-        </div>
-      </div>
-
-      <!-- Plan de acción -->
-      <div style="margin-bottom:10px">
-        <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Plan de acción / estrategia</div>
-        <textarea class="fi" style="width:100%;height:70px;font-size:12px;resize:vertical;line-height:1.6;padding:8px 10px"
-          placeholder="¿Cómo vas a lograrlo? Pasos concretos, recursos, frecuencia..."
-          onchange="metaUpdate(${i},'plan',this.value,'${key}')">${m.plan||''}</textarea>
-      </div>
-
       <!-- Subtareas checklist -->
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
           <button onclick="metaAddSub(${i},'${key}')" style="font-size:10px;color:#C9667A;background:none;border:1px solid rgba(201,102,122,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
         </div>
+        ${subs.length>0?`<div style="margin-bottom:8px">
+          <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>`:''}
         ${subs.map((s,si)=>`
           <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
             <div onclick="metaToggleSub(${i},${si},'${key}')"
@@ -5834,7 +5761,7 @@ function metaUpdate(idx,campo,valor,key){
   if(!data[key]||!data[key].metas[idx])return;
   data[key].metas[idx][campo]=valor;
   metasSave(data);
-  if(campo==='lograda'||campo==='progActual'||campo==='progMeta')rMetas();
+  if(campo==='lograda')rMetas();
 }
 function metaDel(idx,key){
   const data=metasLoad();
@@ -5845,7 +5772,7 @@ function metaDel(idx,key){
 function addMetaItem(key,tipo){
   const data=metasLoad();
   if(!data[key])data[key]={metas:[],afirmaciones:['','','']};
-  data[key].metas.push({texto:'',cat:'personal',prio:'media',lograda:false,subs:[],plan:'',progUnidad:'',progActual:'',progMeta:'',fechaInicio:'',fechaFin:'',resultado:''});
+  data[key].metas.push({texto:'',cat:'personal',prio:'media',lograda:false,subs:[],fechaInicio:'',fechaFin:'',resultado:''});
   metasSave(data);rMetas();
   setTimeout(()=>{
     const inputs=document.querySelectorAll('[placeholder="Escribí tu meta..."]');
