@@ -39,6 +39,7 @@ function markUpdated(key){
 // Trae los datos de Supabase. Para cada área, si la nube tiene una versión más
 // nueva que la local (o el dispositivo no tiene esa área todavía), la trae.
 // Si lo local es igual o más nuevo, lo deja intacto (se subirá con el próximo push).
+let sbPulledOnce=false;
 async function sbPull(){
   try{
     const r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026&select=data',{headers:SB_H});
@@ -61,11 +62,15 @@ async function sbPull(){
       }
     });
     if(metaChanged)localStorage.setItem('hub_meta',JSON.stringify(localMeta));
+    sbPulledOnce=true;
     return true;
   }catch(e){return false;}
 }
 
 async function sbPush(){
+  // Nunca empujar antes de haber sincronizado con la nube al menos una vez en esta
+  // sesión — evita pisar datos de otros dispositivos con un estado local todavía no reconciliado.
+  if(!sbPulledOnce)return;
   const data={};
   SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
   data['hub_meta']=localStorage.getItem('hub_meta')||'{}';
@@ -3139,169 +3144,15 @@ const INV_PLATAFORMAS_DEFAULT=['Balanz','Celesol','Galicia','Uala','Mercado Pago
 const TL=Object.fromEntries(Object.entries(INV_TIPOS).map(([k,v])=>[k,v.l]));
 const TC2=Object.fromEntries(Object.entries(INV_TIPOS).map(([k,v])=>[k,v.c]));
 
-const GE=[
-  {fecha:'31/01',monto:16120.25,cat:'epec',desc:'EPEC'},{fecha:'26/01',monto:6037.56,cat:'ecogas',desc:'Ecogas'},
-  {fecha:'25/01',monto:13250,cat:'internet',desc:'Internet'},{fecha:'25/01',monto:116348.16,cat:'expensas',desc:'Expensas Dpto'},
-  {fecha:'21/01',monto:35280,cat:'caja_jub',desc:'Caja Jubilaciones'},{fecha:'25/01',monto:40011.33,cat:'celular',desc:'Celular'},
-  {fecha:'24/01',monto:13250,cat:'mariana',desc:'Mariana'},{fecha:'27/01',monto:24523.96,cat:'rentas_auto',desc:'Rentas Auto'},
-  {fecha:'23/01',monto:48314.63,cat:'muni_auto',desc:'Municipalidad'},{fecha:'18/01',monto:45000,cat:'gimnasio',desc:'Gimnasio'},
-  {fecha:'27/01',monto:10342.5,cat:'verduleria',desc:'Verdulería'},{fecha:'17/01',monto:14000,cat:'verduleria',desc:'Verdulería'},
-  {fecha:'23/01',monto:88791,cat:'carniceria',desc:'Carnicería'},{fecha:'23/01',monto:46000,cat:'polleria',desc:'Pollería'},
-  {fecha:'19/01',monto:33999.97,cat:'diesel',desc:'Nafta'},{fecha:'23/01',monto:136685.52,cat:'super_casa',desc:'Super Casa'},
-  {fecha:'18/01',monto:87177.93,cat:'farmacia',desc:'Rocutan'},{fecha:'23/01',monto:11850,cat:'arreglos_dpto',desc:'Repuesto'},
-  {fecha:'23/01',monto:25923.02,cat:'arreglos_dpto',desc:'Tabla inodoro'},{fecha:'21/01',monto:3500,cat:'arreglos_dpto',desc:'Soporte mueble'},
-  {fecha:'18/01',monto:17500,cat:'arreglos_dpto',desc:'Repuesto'},{fecha:'21/01',monto:5000,cat:'arreglos_dpto',desc:'Repuesto'},
-  {fecha:'21/01',monto:12500,cat:'arreglos_dpto',desc:'Repuesto'},{fecha:'21/01',monto:12500,cat:'arreglos_dpto',desc:'Carpintero'},
-  {fecha:'25/01',monto:34240,cat:'incorp_dpto',desc:'Ollas Essen'},{fecha:'21/01',monto:21500,cat:'dietetica',desc:'Dietética'},
-  {fecha:'23/01',monto:119333.33,cat:'ropa',desc:'Cuota 1/3 Jazmín'},{fecha:'23/01',monto:211738.56,cat:'ropa',desc:'Ropa'},
-  {fecha:'23/01',monto:39833.33,cat:'ropa',desc:'Cuota 3/3 Charme'},{fecha:'23/01',monto:52571.89,cat:'ropa',desc:'Cuota 3/3 Flugge'},
-  {fecha:'17/01',monto:39152,cat:'salidas',desc:'Salidas'},{fecha:'19/01',monto:14652,cat:'salidas',desc:'Campo'},
-  {fecha:'27/01',monto:4500,cat:'salidas',desc:'Estacionamiento'},{fecha:'03/01',monto:3400,cat:'vacaciones',desc:'Brasil'},
-  {fecha:'17/01',monto:2487,cat:'vacaciones',desc:'Uber'},{fecha:'17/01',monto:172952.71,cat:'vacaciones',desc:'Gastos Río'},
-  {fecha:'23/01',monto:5503,cat:'vacaciones',desc:'Uber pre Brasil'},{fecha:'23/01',monto:300000,cat:'vacaciones',desc:'Brasil'},
-  {fecha:'18/01',monto:15500,cat:'regalos',desc:'Pollo'},{fecha:'28/01',monto:10000,cat:'regalos',desc:'Vino'},
-  {fecha:'25/01',monto:25500,cat:'regalos',desc:'Regalos'},{fecha:'19/01',monto:35000,cat:'personales',desc:'Uñas'},
-  {fecha:'23/01',monto:35400,cat:'personales',desc:'Cuota 7/10 Julieraque'},{fecha:'23/01',monto:33268.33,cat:'personales',desc:'Mercado Libre'},
-  {fecha:'23/01',monto:52498,cat:'personales',desc:'Cuota 2/6 Secador'},{fecha:'23/01',monto:156166.33,cat:'personales',desc:'Personales'},
-  {fecha:'22/01',monto:2000,cat:'cafe',desc:'Café'},{fecha:'25/01',monto:18900,cat:'delivery',desc:'Gohan'},
-  {fecha:'25/01',monto:120000,cat:'otros',desc:'Varios'}
-];
-const GF=[
-  {fecha:'05/02',monto:25806.25,cat:'epec',desc:'EPEC'},{fecha:'05/02',monto:5037.14,cat:'ecogas',desc:'Ecogas'},
-  {fecha:'21/02',monto:35280,cat:'caja_jub',desc:'Caja Jubilaciones'},{fecha:'31/01',monto:37850,cat:'celular',desc:'Celular'},
-  {fecha:'21/02',monto:50000,cat:'ingles',desc:'Inglés'},{fecha:'07/02',monto:30000,cat:'psicologa',desc:'Psicóloga'},
-  {fecha:'21/02',monto:30000,cat:'psicologa',desc:'2da sesión'},{fecha:'14/02',monto:13600,cat:'mariana',desc:'Mariana'},
-  {fecha:'28/02',monto:12500,cat:'mariana',desc:'Mariana'},{fecha:'08/02',monto:7750,cat:'verduleria',desc:'Verdulería'},
-  {fecha:'21/02',monto:14250,cat:'verduleria',desc:'Verdulería'},{fecha:'08/02',monto:9500,cat:'verduleria',desc:'Huevos'},
-  {fecha:'19/02',monto:40000,cat:'diesel',desc:'Diesel'},{fecha:'04/02',monto:24471.3,cat:'super_casa',desc:'Super'},
-  {fecha:'21/02',monto:18282.04,cat:'super_casa',desc:'Super'},{fecha:'14/02',monto:4335.03,cat:'super_casa',desc:'Salsa de soja'},
-  {fecha:'21/02',monto:4672.5,cat:'super_casa',desc:'Super'},{fecha:'21/02',monto:6120,cat:'super_casa',desc:'Yerba'},
-  {fecha:'08/02',monto:4500,cat:'super_propio',desc:'Barritas'},{fecha:'19/02',monto:9245.05,cat:'super_propio',desc:'Super'},
-  {fecha:'19/02',monto:13745.05,cat:'super_propio',desc:'Super propio'},{fecha:'21/02',monto:108854.76,cat:'expensas',desc:'Expensas'},
-  {fecha:'19/02',monto:51000,cat:'gimnasio',desc:'Gimnasio'},{fecha:'15/02',monto:82000,cat:'farmacia',desc:'Farmacity'},
-  {fecha:'31/01',monto:87328.75,cat:'farmacia',desc:'Farmacia'},{fecha:'05/02',monto:7796.39,cat:'arreglos_dpto',desc:'Rosca Monocom'},
-  {fecha:'14/02',monto:34240,cat:'arreglos_dpto',desc:'Ollas Essen'},{fecha:'21/02',monto:42036.39,cat:'arreglos_dpto',desc:'Arreglos dpto'},
-  {fecha:'21/02',monto:119333.33,cat:'ropa',desc:'Cuota 2/3 Jazmín'},{fecha:'31/01',monto:35400,cat:'personales',desc:'Cuota 8/10 Julieraque'},
-  {fecha:'31/01',monto:52498.5,cat:'personales',desc:'Cuota 4/6 Jasper'},{fecha:'31/01',monto:36350,cat:'personales',desc:'Cuota 1/3 Peluquería'},
-  {fecha:'31/01',monto:33268.33,cat:'personales',desc:'Mercado Libre'},{fecha:'31/01',monto:192516.83,cat:'personales',desc:'Personales'},
-  {fecha:'09/02',monto:16910,cat:'regalos',desc:'Regalo mamá'},{fecha:'31/01',monto:33333.33,cat:'regalos',desc:'Cuota 1/3 Zara'},
-  {fecha:'31/01',monto:69000,cat:'regalos',desc:'Regalos'},{fecha:'31/01',monto:119243.33,cat:'regalos',desc:'Regalos'},
-  {fecha:'09/02',monto:17750,cat:'salidas',desc:'Merienda con Mel'},{fecha:'15/02',monto:29000,cat:'salidas',desc:'Wake'},
-  {fecha:'21/02',monto:17940,cat:'salidas',desc:'Casa Caro'},{fecha:'28/02',monto:5000,cat:'salidas',desc:'Salidas'},
-  {fecha:'16/02',monto:14500,cat:'salidas',desc:'Salidas'},{fecha:'18/02',monto:10500,cat:'salidas',desc:'Salidas'},
-  {fecha:'05/02',monto:14500,cat:'salidas',desc:'Cafecito'},{fecha:'05/02',monto:3500,cat:'salidas',desc:'Uber'},
-  {fecha:'08/02',monto:27000,cat:'salidas',desc:'Uber'},{fecha:'14/02',monto:8244,cat:'salidas',desc:'Juntada Sofi'},
-  {fecha:'13/02',monto:10650,cat:'salidas',desc:'Helado'},{fecha:'20/02',monto:27000,cat:'salidas',desc:'Río Ceballos'},
-  {fecha:'04/02',monto:21000,cat:'delivery',desc:'Lomito 348'},{fecha:'28/02',monto:18000,cat:'delivery',desc:'Betos'},
-  {fecha:'28/02',monto:19800,cat:'delivery',desc:'Gohan'},{fecha:'14/02',monto:13950,cat:'delivery',desc:'Gohan'},
-  {fecha:'14/02',monto:72750,cat:'delivery',desc:'Delivery'}
-];
-const GM=[
-  {fecha:'29/03',monto:25040.3,cat:'epec',desc:'EPEC'},{fecha:'05/03',monto:5023.98,cat:'ecogas',desc:'Gas'},
-  {fecha:'05/03',monto:10047.96,cat:'ecogas',desc:'Ecogas'},{fecha:'20/03',monto:13250,cat:'internet',desc:'Internet'},
-  {fecha:'05/04',monto:113490.06,cat:'expensas',desc:'Expensas'},{fecha:'04/03',monto:35280,cat:'caja_jub',desc:'Caja Jubilaciones'},
-  {fecha:'03/03',monto:37535.01,cat:'celular',desc:'Celular'},{fecha:'05/03',monto:50000,cat:'ingles',desc:'Inglés'},
-  {fecha:'15/03',monto:25000,cat:'ingles',desc:'Inglés'},{fecha:'05/03',monto:30000,cat:'psicologa',desc:'Psicóloga'},
-  {fecha:'02/03',monto:11750,cat:'mariana',desc:'Mariana'},{fecha:'17/03',monto:12200,cat:'mariana',desc:'Mariana'},
-  {fecha:'02/03',monto:20472.5,cat:'verduleria',desc:'Verdulería'},{fecha:'03/03',monto:6000,cat:'verduleria',desc:'Huevos'},
-  {fecha:'19/03',monto:957.6,cat:'verduleria',desc:'Verdulería'},{fecha:'19/03',monto:48500,cat:'verduleria',desc:'Verdulería'},
-  {fecha:'04/03',monto:30000,cat:'diesel',desc:'Diesel'},{fecha:'04/03',monto:570000,cat:'diesel',desc:'Arreglo auto'},
-  {fecha:'05/04',monto:81796.02,cat:'super_casa',desc:'Super'},{fecha:'14/03',monto:14165,cat:'super_casa',desc:'Super'},
-  {fecha:'14/03',monto:3220,cat:'super_casa',desc:'Super'},{fecha:'25/03',monto:27502,cat:'super_casa',desc:'Super'},
-  {fecha:'05/03',monto:1500,cat:'super_casa',desc:'Pimientos'},{fecha:'05/04',monto:32067.02,cat:'super_propio',desc:'Super'},
-  {fecha:'19/03',monto:64989,cat:'gimnasio',desc:'Gimnasio'},{fecha:'04/03',monto:16600,cat:'farmacia',desc:'Farmacia'},
-  {fecha:'19/03',monto:34240,cat:'incorp_dpto',desc:'Incorporaciones'},
-  {fecha:'04/03',monto:119333.33,cat:'ropa',desc:'3/3 Jazmín Chebar'},{fecha:'02/03',monto:47300,cat:'ropa',desc:'1/3 My Name is Mec'},
-  {fecha:'02/03',monto:39720,cat:'ropa',desc:'1/3 My Name is Me'},{fecha:'06/04',monto:6800,cat:'ropa',desc:'Ropa'},
-  {fecha:'02/03',monto:213153.33,cat:'ropa',desc:'Ropa'},{fecha:'02/03',monto:35400,cat:'personales',desc:'09/10 Julieraque'},
-  {fecha:'02/03',monto:52498.5,cat:'personales',desc:'4/6 Jasper'},{fecha:'02/03',monto:36350,cat:'personales',desc:'2/3 Peluquería'},
-  {fecha:'04/03',monto:38250,cat:'personales',desc:'Rutina gym'},{fecha:'02/03',monto:19999,cat:'personales',desc:'Rutina gym'},
-  {fecha:'02/03',monto:26550,cat:'personales',desc:'Perfume'},{fecha:'02/03',monto:35000,cat:'personales',desc:'Uñas Pao'},
-  {fecha:'02/03',monto:244047.5,cat:'personales',desc:'Personales'},{fecha:'02/03',monto:33333.33,cat:'regalos',desc:'2/3 Zara'},
-  {fecha:'02/03',monto:33333.33,cat:'regalos',desc:'Regalos'},{fecha:'05/03',monto:29700,cat:'salidas',desc:'Salidas'},
-  {fecha:'05/04',monto:29700,cat:'salidas',desc:'Salidas'},{fecha:'02/03',monto:2200,cat:'cafe',desc:'Café'},
-  {fecha:'04/03',monto:15300,cat:'cafe',desc:'Café'},{fecha:'04/03',monto:8800,cat:'cafe',desc:'Café'},
-  {fecha:'05/03',monto:26300,cat:'cafe',desc:'Café/Barcitos'},{fecha:'02/03',monto:18000,cat:'delivery',desc:'Betos'},
-  {fecha:'02/03',monto:17000,cat:'delivery',desc:'Delivery'},{fecha:'02/03',monto:35000,cat:'delivery',desc:'Delivery'},
-  {fecha:'04/03',monto:17800,cat:'otros',desc:'Otros'},{fecha:'05/03',monto:3000,cat:'otros',desc:'Pilas'},
-  {fecha:'04/03',monto:20800,cat:'otros',desc:'Otros'}
-];
-const GA=[
-  {fecha:'13/04',monto:35019.9,cat:'epec',desc:'EPEC'},{fecha:'13/04',monto:6534.12,cat:'ecogas',desc:'Ecogas'},
-  {fecha:'13/04',monto:94754.69,cat:'carniceria',desc:'Carnicería'},{fecha:'13/04',monto:40650,cat:'polleria',desc:'Pollería'},
-  {fecha:'13/04',monto:12250,cat:'polleria',desc:'Pollería'},{fecha:'13/04',monto:4653,cat:'dietetica',desc:'Dietética'},
-  {fecha:'13/04',monto:49767.36,cat:'super_casa',desc:'Super'},{fecha:'13/04',monto:10396,cat:'super_propio',desc:'Super'},
-  {fecha:'13/04',monto:12250,cat:'mariana',desc:'Mariana'},{fecha:'13/04',monto:75000,cat:'ingles',desc:'Inglés 3 clases'},
-  {fecha:'18/04',monto:50000,cat:'ingles',desc:'Inglés saldo'},{fecha:'13/04',monto:90000,cat:'psicologa',desc:'3 sesiones'},
-  {fecha:'15/04',monto:45000,cat:'personales',desc:'Alicia'},{fecha:'13/04',monto:45000,cat:'personales',desc:'Personales'},
-  {fecha:'14/04',monto:18000,cat:'regalos',desc:'Regalo Memi'},{fecha:'16/04',monto:10650,cat:'regalos',desc:'Kinders sobrinas'},
-  {fecha:'13/04',monto:28650,cat:'regalos',desc:'Regalos'}
-];
-
 const DB={
   meta:20,limits:{},inversiones:[],prestamos:[],plataformas:['Balanz','Celesol','Uala','Mercado Pago','Otro'],
   patrimonio:[],
   meses:[
-    {idx:0,usd_mfa:492,tc:0,usd_fecha:'',nota:'',cerrado:true,txns:[
-      {fecha:'31/01',monto:2400000,cat:'sueldo_nervo',desc:'Sueldo Nervo'},
-      {fecha:'30/01',monto:120000,cat:'parque_futura',desc:'Parque Futura'},
-      {fecha:'22/01',monto:13254.7,cat:'rendimientos',desc:'Rendimientos'},
-      {fecha:'01/02',monto:321640,cat:'rendimientos',desc:'Joaco González'},
-      {fecha:'31/01',monto:190000,cat:'rendimientos',desc:'Rendimiento inversión'},
-      ...GE]},
-    {idx:1,usd_mfa:676,tc:0,usd_fecha:'',nota:'',cerrado:true,txns:[
-      {fecha:'28/02',monto:2850000,cat:'sueldo_nervo',desc:'Sueldo Nervo'},
-      {fecha:'08/02',monto:158300,cat:'parque_futura',desc:'Parque Futura'},
-      {fecha:'08/02',monto:180000,cat:'parque_futura',desc:'PF Contrato'},
-      {fecha:'28/02',monto:156000,cat:'rendimientos',desc:'Rendimientos'},
-      {fecha:'28/02',monto:325000,cat:'dolar_efectivo',desc:'Dólares MFA'},
-      ...GF]},
-    {idx:2,usd_mfa:522,tc:0,usd_fecha:'',nota:'',cerrado:true,txns:[
-      {fecha:'31/03',monto:3000000,cat:'sueldo_nervo',desc:'Sueldo Nervo'},
-      {fecha:'05/03',monto:215400,cat:'parque_futura',desc:'Parque Futura'},
-      {fecha:'05/03',monto:395000,cat:'rendimientos',desc:'Rendimientos'},
-      {fecha:'31/03',monto:450000,cat:'dolar_efectivo',desc:'Dólares MFA'},
-      ...GM]},
-    {idx:3,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[
-      {fecha:'13/04',monto:3300000,cat:'sueldo_nervo',desc:'Sueldo Nervo'},
-      {fecha:'13/04',monto:250000,cat:'parque_futura',desc:'Parque Futura'},
-      {fecha:'13/04',monto:420000,cat:'rendimientos',desc:'Rendimientos'},
-      ...GA]},
-    {idx:4,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[
-      {fecha:'18/05',monto:1700000,cat:'sueldo_nervo',desc:'Sueldo Nervo',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'18/05',monto:70000,cat:'ahorro_ars',desc:'Compra 50USD',mp:'uala',mpLabel:'Ualá'},
-      {fecha:'18/05',monto:141000,cat:'ahorro_ars',desc:'Compra 100USD',mp:'uala',mpLabel:'Ualá'},
-      {fecha:'16/05',monto:10500,cat:'super_casa',desc:'La Verona',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'16/05',monto:20500,cat:'delivery',desc:'Gohan',mp:'efectivo',mpLabel:'Efectivo'},
-      {fecha:'16/05',monto:112722,cat:'expenses',desc:'Expensas',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'16/05',monto:14250,cat:'internet',desc:'Arista',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'15/05',monto:568,cat:'dietetica',desc:'Dietetica',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'15/05',monto:5250,cat:'super_casa',desc:'Precabornato de Sodio',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'15/05',monto:100434,cat:'carniceria',desc:'Carniceria',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'15/05',monto:47513,cat:'polleria',desc:'Polleria',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'14/05',monto:25000,cat:'personales',desc:'Uñas'},
-      {fecha:'11/05',monto:9450,cat:'verduleria',desc:'Verduleria',mp:'transferencia',mpLabel:'Transferencia'},
-      {fecha:'11/05',monto:13100,cat:'mariana',desc:'Mariana',mp:'efectivo',mpLabel:'Efectivo'},
-      {fecha:'11/05',monto:7500,cat:'salidas',desc:'Memi',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'11/05',monto:19704,cat:'salidas',desc:'Cine',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'11/05',monto:7167,cat:'salidas',desc:'Coti',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'11/05',monto:63660,cat:'farmacia',desc:'Sanchez Antoniolli',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'11/05',monto:11000,cat:'regalos',desc:'Valen Ciocca',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'05/05',monto:48009,cat:'super_casa',desc:'Yerba Kalena',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'05/05',monto:53672,cat:'super_propio',desc:'Super Propio',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'05/05',monto:20130,cat:'super_casa',desc:'Super Casa',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'05/05',monto:11500,cat:'delivery',desc:'Cami Cuberli',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'05/05',monto:6100,cat:'otros',desc:'Otros',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'04/05',monto:34240,cat:'incorporaciones_dpto',desc:'Ollas Essen (15/18)',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'04/05',monto:6508,cat:'ecogas',desc:'Ecogas',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'04/05',monto:28320,cat:'epec',desc:'EPEC',mp:'billetera',mpLabel:'Billetera'},
-      {fecha:'04/05',monto:16450,cat:'verduleria',desc:'Verduleria',mp:'transferencia',mpLabel:'Transferencia'},
-      {fecha:'04/05',monto:20000,cat:'delivery',desc:'Lomitos Betos',mp:'efectivo',mpLabel:'Efectivo'},
-      {fecha:'03/05',monto:22500,cat:'diesel_auto',desc:'nafta',mp:'galicia',mpLabel:'Galicia'},
-      {fecha:'03/05',monto:3500,cat:'salidas',desc:'carbon',mp:'efectivo',mpLabel:'Efectivo'},
-      {fecha:'03/05',monto:8000,cat:'salidas',desc:'Pan',mp:'efectivo',mpLabel:'Efectivo'},
-      {fecha:'01/05',monto:1750,cat:'super_casa',desc:'Pan',mp:'galicia',mpLabel:'Galicia'},
-    ]},
+    {idx:0,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
+    {idx:1,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
+    {idx:2,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
+    {idx:3,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
+    {idx:4,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
     {idx:5,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
     {idx:6,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
     {idx:7,usd_mfa:0,tc:0,usd_fecha:'',nota:'',cerrado:false,txns:[]},
@@ -6138,12 +5989,11 @@ function delCuota(i){
 // helper revisión semanal template
 function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('|||')[idx]||'';}
 
-save();
-
 // Subir TODOS los datos locales a Supabase de una vez (fuerza el push, sin esperar el debounce)
 async function syncTodo(){
   showToast('Sincronizando...');
   try{
+    if(!sbPulledOnce)await sbPull();
     await sbPush();
     showToast('✓ Todo sincronizado');
   }catch(e){
