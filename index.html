@@ -6015,8 +6015,9 @@ async function bootApp(){
     localStorage.removeItem('hub_meta');
   }
   // ?forcepush=1: modo de recuperación — NO trae nada de la nube (no pisa lo local),
-  // sube directo lo que ya está guardado en este dispositivo. Usar solo cuando este
-  // dispositivo tiene datos buenos y la nube quedó con datos viejos/incompletos.
+  // muestra lo que hay guardado en este dispositivo y pide confirmación explícita
+  // antes de subir nada. Usar solo cuando este dispositivo tiene datos buenos y
+  // la nube quedó con datos viejos/incompletos.
   const forcePush=new URLSearchParams(location.search).get('forcepush')==='1';
   if(!forcePush)await sbPull();
   GYM_RUTINAS=gLoad('rutinas',DEF_RUTINAS);
@@ -6028,13 +6029,31 @@ async function bootApp(){
   finLoad();
   renderAll();
   if(forcePush){
-    SB_SYNC_KEYS.forEach(k=>markUpdated(k));
-    sbPulledOnce=true;
-    await sbPush();
-    showToast('✓ Datos de este dispositivo subidos a la nube');
+    showForcePushBanner();
   }else{
     sbPush();
   }
+}
+
+function showForcePushBanner(){
+  const b=document.createElement('div');
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#C9667A;color:#fff;padding:14px 16px;font-family:"DM Sans",sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+  b.innerHTML=`<div style="margin-bottom:10px;line-height:1.5">⚠️ Modo recuperación: revisá que Finanzas (y el resto) tenga los datos correctos en <b>este dispositivo</b> antes de subir. Esto va a reemplazar lo que está en la nube.</div>
+    <div style="display:flex;gap:8px">
+      <button id="fp-confirm" style="background:#fff;color:#C9667A;border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-size:13px">Sí, subir esto a la nube</button>
+      <button id="fp-cancel" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px">Cancelar</button>
+    </div>`;
+  document.body.appendChild(b);
+  document.getElementById('fp-confirm').onclick=async()=>{
+    b.innerHTML='<div>Subiendo…</div>';
+    SB_SYNC_KEYS.forEach(k=>markUpdated(k));
+    sbPulledOnce=true;
+    await sbPush();
+    b.style.background='#3B6D11';
+    b.innerHTML='<div>✓ Subido a la nube.</div>';
+    setTimeout(()=>b.remove(),3000);
+  };
+  document.getElementById('fp-cancel').onclick=()=>b.remove();
 }
 // Si hay un código configurado, pedirlo antes de arrancar la app.
 if(localStorage.getItem('hub_pin')){showLockScreen('verify');}else{bootApp();}
