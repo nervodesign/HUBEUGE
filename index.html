@@ -1475,9 +1475,9 @@ function rDash(){
   // ── Stats del mes actual ──
   const finM=calcM(aM);
   const finPct=pct(finM.aho,finM.ing);
-  const mesKey=`M-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const metasMes=(metasLoad()[mesKey]||{metas:[]}).metas.filter(m=>m.texto);
-  const metasLog=metasMes.filter(m=>m.lograda).length;
+  const metasTodas=(metasLoad().metasActivas||[]).filter(m=>m.texto);
+  const metasLog=metasTodas.filter(m=>m.cumplida).length;
+  const metasActivasCount=metasTodas.length-metasLog;
   const nutHoy=nutLoad()[today]||[];
   const calHoy=Math.round(nutHoy.reduce((a,b)=>a+b.cal*b.qty,0));
   const protHoy=Math.round(nutHoy.reduce((a,b)=>a+b.prot*b.qty,0));
@@ -1651,15 +1651,15 @@ function rDash(){
       <div class="dash-mod-card dc-met" onclick="goSection('metas')" style="background:#FFFFFF;border:1.5px solid rgba(201,102,122,0.15)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:20px">🎯</span>
-          <span style="background:#F2EDE8;color:#C9667A;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${metasLog}/${metasMes.length}</span>
+          <span style="background:#F2EDE8;color:#C9667A;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${metasActivasCount} activa${metasActivasCount===1?'':'s'}</span>
         </div>
         <div class="dash-mod-title" style="color:#1A0F0A">Metas</div>
         <div class="dash-mod-stat" style="color:#8B6B5A;font-size:11px">
-          <strong style="color:#C9667A">${metasLog}</strong> de ${metasMes.length} logradas
-          <br>${MESES[now.getMonth()]} ${now.getFullYear()}
+          <strong style="color:#C9667A">${metasLog}</strong> cumplida${metasLog===1?'':'s'}
+          <br>${metasActivasCount} en curso
         </div>
         <div style="height:3px;background:#F2EDE8;border-radius:2px;margin-top:10px;overflow:hidden">
-          <div style="height:3px;width:${metasMes.length>0?Math.round(metasLog/metasMes.length*100):0}%;background:#C9667A;border-radius:2px"></div>
+          <div style="height:3px;width:${metasTodas.length>0?Math.round(metasLog/metasTodas.length*100):0}%;background:#C9667A;border-radius:2px"></div>
         </div>
       </div>
 
@@ -1718,9 +1718,8 @@ function exportarPDF(){
   const finPct=pct(finM.aho,finM.ing);
   const habLog=HAB_LOG[todayStr()]||{};
   const habDoneHoy=HAB_LIST.filter(h=>habLog[h.id]).length;
-  const mesKey=`M-${anio}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const metasMes=(metasLoad()[mesKey]||{metas:[]}).metas.filter(m=>m.texto);
-  const metasLog=metasMes.filter(m=>m.lograda).length;
+  const metasTodas=(metasLoad().metasActivas||[]).filter(m=>m.texto);
+  const metasLog=metasTodas.filter(m=>m.cumplida).length;
   const nutData=nutLoad();
   const diasConNut=Object.entries(nutData).filter(([k])=>k.startsWith(`${anio}-${String(now.getMonth()+1).padStart(2,'0')}`)).length;
   const promCal=diasConNut>0?Math.round(Object.entries(nutData).filter(([k])=>k.startsWith(`${anio}-${String(now.getMonth()+1).padStart(2,'0')}`)).reduce((a,[,v])=>a+v.reduce((s,i)=>s+i.cal*i.qty,0),0)/diasConNut):0;
@@ -1793,13 +1792,13 @@ function exportarPDF(){
 
   <!-- METAS -->
   <div class="section">
-    <div class="section-title">&#127919; Metas de ${mes}</div>
+    <div class="section-title">&#127919; Metas</div>
     <div class="grid" style="margin-bottom:14px">
-      <div class="kpi"><div class="lbl">Logradas</div><div class="val" style="color:#3B6D11">${metasLog}</div></div>
-      <div class="kpi"><div class="lbl">Pendientes</div><div class="val">${metasMes.length-metasLog}</div></div>
-      <div class="kpi"><div class="lbl">Avance</div><div class="val">${metasMes.length>0?Math.round(metasLog/metasMes.length*100):0}%</div></div>
+      <div class="kpi"><div class="lbl">Cumplidas</div><div class="val" style="color:#3B6D11">${metasLog}</div></div>
+      <div class="kpi"><div class="lbl">Activas</div><div class="val">${metasTodas.length-metasLog}</div></div>
+      <div class="kpi"><div class="lbl">Avance</div><div class="val">${metasTodas.length>0?Math.round(metasLog/metasTodas.length*100):0}%</div></div>
     </div>
-    ${metasMes.map(m=>`<div class="item"><span style="color:${m.lograda?'#3B6D11':'#B09890'}">${m.lograda?'&#10003;':'&#9675;'}</span><span style="flex:1;text-decoration:${m.lograda?'line-through':'none'};color:${m.lograda?'#8B6B5A':'#1A0F0A'}">${m.texto}</span>${m.resultado?`<span style="font-size:11px;color:#3B6D11">${m.resultado}</span>`:''}</div>`).join('')}
+    ${metasTodas.map(m=>`<div class="item"><span style="color:${m.cumplida?'#3B6D11':'#B09890'}">${m.cumplida?'&#10003;':'&#9675;'}</span><span style="flex:1;text-decoration:${m.cumplida?'line-through':'none'};color:${m.cumplida?'#8B6B5A':'#1A0F0A'}">${m.texto}</span>${m.resultado?`<span style="font-size:11px;color:#3B6D11">${m.resultado}</span>`:''}</div>`).join('')}
   </div>
 
   <!-- ESCRITURA -->
@@ -5393,7 +5392,7 @@ function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));ma
 function metasLoad(){try{return JSON.parse(localStorage.getItem('hub_metas')||'{}');}catch(e){return{};}}
 function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));markUpdated('hub_metas');sbSchedulePush();}catch(e){}}
 
-let metasVista='mensual'; // mensual | anual | historial
+let metasVista='activas'; // activas | anual | ahorro | historial
 
 const META_AREAS={
   gym:     {l:'Gym',      emoji:'🏋️', bg:'#F7DCE1',tc:'#C9667A'},
@@ -5422,7 +5421,7 @@ function rMetas(){
   // ── Tabs ──
   const tabsHtml=`
     <div class="stabs" style="margin-bottom:16px">
-      <button class="stab ${metasVista==='mensual'?'on':''}" onclick="metasVista='mensual';rMetas()">📅 Mensual</button>
+      <button class="stab ${metasVista==='activas'?'on':''}" onclick="metasVista='activas';rMetas()">🎯 Activas</button>
       <button class="stab ${metasVista==='anual'?'on':''}" onclick="metasVista='anual';rMetas()">🗓 Anual</button>
       <button class="stab ${metasVista==='ahorro'?'on':''}" onclick="metasVista='ahorro';rMetas()">💰 Ahorro</button>
       <button class="stab ${metasVista==='historial'?'on':''}" onclick="metasVista='historial';rMetas()">📂 Historial</button>
@@ -5437,7 +5436,7 @@ function rMetas(){
   if(metasVista==='ahorro'){
     el.innerHTML=tabsHtml+renderMetasAhorro(data);return;
   }
-  el.innerHTML=tabsHtml+renderMetasMensual(data,now);
+  el.innerHTML=tabsHtml+renderMetasActivas(data);
 }
 
 // Meta de ahorro con objetivo en dinero (ARS o USD) y rango de meses, con progreso auto-calculado desde Finanzas.
@@ -5531,34 +5530,139 @@ function delMetaAhorro(idx){
   });
 }
 
-function renderMetasMensual(data,now){
-  const key=`M-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const mes=data[key]||{metas:[],afirmaciones:['','','']};
-  const total=mes.metas.filter(m=>m.texto).length;
-  const logradas=mes.metas.filter(m=>m.lograda).length;
-  const pctMes=total>0?Math.round(logradas/total*100):0;
+// Metas activas: viven mientras están en curso (sin importar el mes), y al marcarlas
+// cumplidas pasan a Historial. Reemplaza el viejo sistema de "metas del mes".
+function renderMetasActivas(data){
+  const metas=data.metasActivas||[];
+  const activas=metas.filter(m=>!m.cumplida);
 
   return`
-    <!-- KPIs -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-      <div class="met gg"><div class="lbl">Logradas</div><div class="val" style="color:#3B6D11">${logradas}</div><div class="sub">de ${total}</div><div class="met-bar"></div></div>
-      <div class="met gb"><div class="lbl">Pendientes</div><div class="val">${total-logradas}</div><div class="sub">en curso</div><div class="met-bar"></div></div>
-      <div class="met" style="background:#FAF7F5;border:1.5px solid rgba(201,102,122,0.12)"><div class="lbl">Avance</div><div class="val" style="color:${pctMes>=80?'#3B6D11':pctMes>=40?'#854F0B':'#C9667A'}">${pctMes}%</div><div class="sub">del mes</div><div class="met-bar"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <p class="st" style="margin:0">Metas activas <span class="stl"></span></p>
+      <button class="btn-p" onclick="metaActivaAdd()" style="height:36px;padding:0 14px;font-size:12px;width:auto">+ Nueva meta</button>
     </div>
 
-    <!-- Metas del mes -->
-    <div class="card" style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <p class="st" style="margin:0">Metas de ${MESES[now.getMonth()]} <span class="stl"></span></p>
-        <button class="btn-p" onclick="addMetaItem('${key}','mensual')" style="height:36px;padding:0 14px;font-size:12px;width:auto">+ Nueva meta</button>
-      </div>
+    ${activas.length===0?`<div class="card" style="text-align:center;padding:32px;color:#B09890;font-size:13px">Tocá "+ Nueva meta" para empezar</div>`:''}
 
-      ${mes.metas.length===0?`<div style="text-align:center;padding:20px;color:#B09890;font-size:13px">Tocá "+ Nueva meta" para empezar</div>`:''}
-
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${mes.metas.map((m,i)=>renderMetaCard(m,i,key)).join('')}
-      </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${metas.map((m,i)=>m.cumplida?'':renderMetaActivaCard(m,i)).join('')}
     </div>`;
+}
+function renderMetaActivaCard(m,i){
+  const area=META_AREAS[m.cat]||META_AREAS.personal;
+  const prio=META_PRIO[m.prio||'media'];
+  const subs=m.subs||[];
+  const subDone=subs.filter(s=>s.done).length;
+  const subPct=subs.length>0?Math.round(subDone/subs.length*100):0;
+
+  return`<div class="card" style="padding:14px">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+      <div style="flex:1;min-width:0">
+        <input class="fi" style="width:100%;height:30px;font-size:14px;font-weight:700;color:#1A0F0A;background:transparent;border-color:transparent;padding:0 2px"
+          value="${m.texto}" placeholder="Escribí tu meta..."
+          onchange="metaActivaUpdate(${i},'texto',this.value)"/>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;align-items:center">
+          <select style="background:${area.bg};color:${area.tc};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+            onchange="metaActivaUpdate(${i},'cat',this.value)">
+            ${Object.entries(META_AREAS).map(([k,v])=>`<option value="${k}" ${(m.cat||'personal')===k?'selected':''}>${v.emoji} ${v.l}</option>`).join('')}
+          </select>
+          <select style="background:${prio.c}20;color:${prio.c};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+            onchange="metaActivaUpdate(${i},'prio',this.value)">
+            ${Object.entries(META_PRIO).map(([k,v])=>`<option value="${k}" ${(m.prio||'media')===k?'selected':''}>${v.l}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="btn-del" onclick="metaActivaDel(${i})">✕</button>
+    </div>
+
+    <div style="border-top:1px solid rgba(201,102,122,0.08);padding-top:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inicio</div>
+          <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 01/05"
+            value="${m.fechaInicio||''}" onchange="metaActivaUpdate(${i},'fechaInicio',this.value)"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fin / Deadline</div>
+          <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 31/07"
+            value="${m.fechaFin||''}" onchange="metaActivaUpdate(${i},'fechaFin',this.value)"/>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
+          <button onclick="metaActivaAddSub(${i})" style="font-size:10px;color:#C9667A;background:none;border:1px solid rgba(201,102,122,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
+        </div>
+        ${subs.length>0?`<div style="margin-bottom:8px">
+          <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>`:''}
+        ${subs.map((s,si)=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+            <div onclick="metaActivaToggleSub(${i},${si})"
+              style="width:18px;height:18px;border-radius:5px;border:2px solid ${s.done?'#3B6D11':'rgba(201,102,122,0.3)'};background:${s.done?'#3B6D11':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${s.done?'✓':''}</div>
+            <input style="flex:1;border:none;background:transparent;font-size:12px;color:${s.done?'#B09890':'#1A0F0A'};text-decoration:${s.done?'line-through':'none'};outline:none;padding:0"
+              value="${s.texto}" placeholder="Paso..."
+              onchange="metaActivaUpdateSub(${i},${si},this.value)"/>
+            <button onclick="metaActivaDelSub(${i},${si})" style="background:none;border:none;color:#C8B898;cursor:pointer;font-size:13px;padding:0 2px">✕</button>
+          </div>`).join('')}
+      </div>
+
+      <button class="btn-p" onclick="metaActivaCumplir(${i})" style="width:100%;background:#3B6D11">✓ Cumplida</button>
+    </div>
+  </div>`;
+}
+function metaActivaAdd(){
+  const data=metasLoad();
+  if(!data.metasActivas)data.metasActivas=[];
+  data.metasActivas.push({texto:'',cat:'personal',prio:'media',subs:[],fechaInicio:'',fechaFin:'',cumplida:false,fechaCumplida:'',resultado:''});
+  metasSave(data);rMetas();
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll('[placeholder="Escribí tu meta..."]');
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },80);
+}
+function metaActivaUpdate(idx,campo,valor){
+  const data=metasLoad();
+  if(!data.metasActivas||!data.metasActivas[idx])return;
+  data.metasActivas[idx][campo]=valor;
+  metasSave(data);
+}
+function metaActivaDel(idx){
+  const data=metasLoad();
+  data.metasActivas.splice(idx,1);
+  metasSave(data);rMetas();
+}
+function metaActivaCumplir(idx){
+  const data=metasLoad();
+  const m=data.metasActivas[idx];
+  m.cumplida=true;
+  m.fechaCumplida=todayStr();
+  metasSave(data);rMetas();
+  if(typeof fireConfetti==='function')fireConfetti();
+}
+function metaActivaAddSub(idx){
+  const data=metasLoad();
+  if(!data.metasActivas[idx].subs)data.metasActivas[idx].subs=[];
+  data.metasActivas[idx].subs.push({texto:'',done:false});
+  metasSave(data);rMetas();
+}
+function metaActivaUpdateSub(idx,subIdx,valor){
+  const data=metasLoad();
+  data.metasActivas[idx].subs[subIdx].texto=valor;
+  metasSave(data);
+}
+function metaActivaDelSub(idx,subIdx){
+  const data=metasLoad();
+  data.metasActivas[idx].subs.splice(subIdx,1);
+  metasSave(data);rMetas();
+}
+function metaActivaToggleSub(idx,subIdx){
+  const data=metasLoad();
+  data.metasActivas[idx].subs[subIdx].done=!data.metasActivas[idx].subs[subIdx].done;
+  metasSave(data);rMetas();
 }
 
 function renderMetasAnual(data,now){
@@ -5597,14 +5701,30 @@ function renderMetasAnual(data,now){
 }
 
 function renderMetasHistorial(data,now){
+  const cumplidas=(data.metasActivas||[]).filter(m=>m.cumplida)
+    .sort((a,b)=>(b.fechaCumplida||'').localeCompare(a.fechaCumplida||''));
+  const cumplidasHtml=cumplidas.length?`<div class="card" style="margin-bottom:12px">
+    <p class="st" style="margin-bottom:12px">Metas cumplidas <span class="stl"></span></p>
+    ${cumplidas.map(x=>{
+      const area=META_AREAS[x.cat]||META_AREAS.personal;
+      return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+        <span style="font-size:16px;margin-top:1px">✅</span>
+        <div style="flex:1">
+          <div style="font-size:13px;color:#3B6D11;text-decoration:line-through">${x.texto}</div>
+          ${x.fechaCumplida?`<div style="font-size:11px;color:#8B6B5A;margin-top:2px">${x.fechaCumplida}</div>`:''}
+        </div>
+        <span style="font-size:10px;background:${area.bg};color:${area.tc};padding:2px 7px;border-radius:20px;flex-shrink:0">${area.emoji}</span>
+      </div>`;}).join('')}
+  </div>`:'';
+
   const curMesKey=`M-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const curAnioKey=`A-${now.getFullYear()}`;
   const entries=Object.entries(data)
-    .filter(([k])=>k!==curMesKey&&k!==curAnioKey)
+    .filter(([k])=>k!==curMesKey&&k!==curAnioKey&&k!=='metasActivas'&&k!=='ahorros')
     .sort(([a],[b])=>b.localeCompare(a));
-  if(entries.length===0)return`<div class="card" style="text-align:center;padding:32px;color:#B09890">Sin historial todavía</div>`;
+  if(entries.length===0&&!cumplidasHtml)return`<div class="card" style="text-align:center;padding:32px;color:#B09890">Sin historial todavía</div>`;
 
-  return entries.map(([key,d])=>{
+  return cumplidasHtml+entries.map(([key,d])=>{
     const isMes=key.startsWith('M-');
     const [,y,m]=key.split('-');
     const label=isMes?`${MESES[parseInt(m)-1]} ${y}`:`Anual ${y}`;
