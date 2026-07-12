@@ -3334,17 +3334,21 @@ function calcM(i){
   const usdEnARS=usd>0&&tc>0?usd*tc:0;
   return{ing,gas,aho,neto:ing-gas-aho,fijo,vari,pers,usd,usdEnARS,tc,usdComprado,usdRegalo,usdGastado};
 }
+// Aporte neto de USD de un mes puntual (sueldo MFA + comprado con pesos + regalos - gastado en USD).
+function usdContribM(i){
+  const m=S.meses[i];
+  let total=m.usd_mfa||0;
+  m.txns.forEach(t=>{
+    if(USD_COMPRA_CATS.has(t.cat))total+=(t.montoUsd||0);
+    else if(t.cat==='regalo_usd')total+=t.monto;
+    else if(t.cat==='gasto_usd')total-=t.monto;
+  });
+  return total;
+}
 // Pozo total de USD (sueldo MFA + comprado con pesos + regalos - gastado en USD), acumulado en todo el año.
 function totalUSDPool(){
   let total=0;
-  S.meses.forEach(m=>{
-    total+=m.usd_mfa||0;
-    m.txns.forEach(t=>{
-      if(USD_COMPRA_CATS.has(t.cat))total+=(t.montoUsd||0);
-      else if(t.cat==='regalo_usd')total+=t.monto;
-      else if(t.cat==='gasto_usd')total-=t.monto;
-    });
-  });
+  S.meses.forEach((m,i)=>total+=usdContribM(i));
   return total;
 }
 // Total histórico ganado en USD MFA (sueldo), sin mezclar con lo comprado/regalado.
@@ -5412,6 +5416,7 @@ function rMetas(){
     <div class="stabs" style="margin-bottom:16px">
       <button class="stab ${metasVista==='mensual'?'on':''}" onclick="metasVista='mensual';rMetas()">📅 Mensual</button>
       <button class="stab ${metasVista==='anual'?'on':''}" onclick="metasVista='anual';rMetas()">🗓 Anual</button>
+      <button class="stab ${metasVista==='ahorro'?'on':''}" onclick="metasVista='ahorro';rMetas()">💰 Ahorro</button>
       <button class="stab ${metasVista==='historial'?'on':''}" onclick="metasVista='historial';rMetas()">📂 Historial</button>
     </div>`;
 
@@ -5421,7 +5426,88 @@ function rMetas(){
   if(metasVista==='anual'){
     el.innerHTML=tabsHtml+renderMetasAnual(data,now);return;
   }
+  if(metasVista==='ahorro'){
+    el.innerHTML=tabsHtml+renderMetasAhorro(data);return;
+  }
   el.innerHTML=tabsHtml+renderMetasMensual(data,now);
+}
+
+// Meta de ahorro con objetivo en dinero (ARS o USD) y rango de meses, con progreso auto-calculado desde Finanzas.
+function metaAhorroProgreso(m){
+  let total=0;
+  for(let i=m.mesInicio;i<=m.mesFin;i++)total+=(m.moneda==='USD'?usdContribM(i):calcM(i).aho);
+  return total;
+}
+function renderMetasAhorro(data){
+  const metas=data.ahorros||[];
+  const cards=metas.map((m,idx)=>{
+    const progreso=metaAhorroProgreso(m);
+    const pct=m.monto>0?Math.min(100,Math.round(progreso/m.monto*100)):0;
+    const fmtFn=m.moneda==='USD'?fmtU:fmt;
+    const falta=Math.max(0,m.monto-progreso);
+    const cumplida=progreso>=m.monto;
+    return`<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${m.titulo}</div>
+          <div style="font-size:11px;color:var(--lino4)">${MS[m.mesInicio]} — ${MS[m.mesFin]}</div>
+        </div>
+        <button class="btn-del" onclick="delMetaAhorro(${idx})">✕</button>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin:10px 0 4px">
+        <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${cumplida?'#3B6D11':'#1A0F0A'}">${fmtFn(progreso)}</span>
+        <span style="font-size:12px;color:var(--lino4)">de ${fmtFn(m.monto)}</span>
+      </div>
+      <div class="pbarw"><div class="pbarf" style="width:${pct}%${cumplida?';background:#3B6D11':''}"></div></div>
+      <div style="font-size:11px;color:var(--lino4);margin-top:4px">${cumplida?'¡Meta cumplida! 🎉':`Faltan ${fmtFn(falta)} · ${pct}%`}</div>
+    </div>`;
+  }).join('');
+  const curM=new Date().getMonth();
+  const mesOpts=MESES.map((m,i)=>`<option value="${i}" ${i===curM?'selected':''}>${m}</option>`).join('');
+  return`
+    ${metas.length===0?'<div style="text-align:center;padding:20px;color:#B09890;font-size:13px">Todavía no cargaste ninguna meta de ahorro.</div>':cards}
+    <div class="card">
+      <p class="st">Nueva meta de ahorro <span class="stl"></span></p>
+      <div style="margin-bottom:8px"><input type="text" class="fi" id="ma-titulo" placeholder="Ej: Viaje a Bariloche" style="width:100%"/></div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px">
+        <input type="number" class="fi" id="ma-monto" placeholder="Monto objetivo" min="0" style="width:100%"/>
+        <select class="fsel" id="ma-moneda" style="width:80px">
+          <option value="ARS">ARS</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <select class="fsel" id="ma-inicio" style="width:100%">${mesOpts}</select>
+        <select class="fsel" id="ma-fin" style="width:100%">${mesOpts}</select>
+      </div>
+      <button class="btn-p" onclick="addMetaAhorro()">+ Agregar meta</button>
+    </div>`;
+}
+function addMetaAhorro(){
+  const titulo=document.getElementById('ma-titulo')?.value.trim();
+  const monto=parseFloat(document.getElementById('ma-monto')?.value);
+  const moneda=document.getElementById('ma-moneda')?.value||'ARS';
+  const mesInicio=parseInt(document.getElementById('ma-inicio')?.value);
+  const mesFin=parseInt(document.getElementById('ma-fin')?.value);
+  if(!titulo||isNaN(monto)||monto<=0||isNaN(mesInicio)||isNaN(mesFin)||mesFin<mesInicio)return;
+  const data=metasLoad();
+  if(!data.ahorros)data.ahorros=[];
+  data.ahorros.push({titulo,monto,moneda,mesInicio,mesFin});
+  metasSave(data);
+  rMetas();
+}
+function delMetaAhorro(idx){
+  const data=metasLoad();
+  const removed=data.ahorros[idx];
+  data.ahorros.splice(idx,1);
+  metasSave(data);
+  rMetas();
+  showUndoToast('Meta de ahorro eliminada',()=>{
+    const d2=metasLoad();
+    if(!d2.ahorros)d2.ahorros=[];
+    d2.ahorros.splice(idx,0,removed);
+    metasSave(d2);rMetas();
+  });
 }
 
 function renderMetasMensual(data,now){
