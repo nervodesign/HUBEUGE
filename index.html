@@ -5255,6 +5255,7 @@ function rNutricion(){
     </div>
     <div id="nut-turnos-section">${renderTurnos()}</div>
 
+    <div id="nut-hoy-section" style="display:none">
     <!-- Plan del día -->
     ${(()=>{
       const planInicio=getPlanInicio();
@@ -5302,7 +5303,6 @@ function rNutricion(){
       <button onclick="nutCambiarDia(1)" style="background:none;border:none;font-size:22px;color:${esHoy?'#D4C9B8':'#C9667A'};cursor:pointer;padding:4px 10px;border-radius:10px;line-height:1" ${esHoy?'disabled':''}>›</button>
     </div>
 
-    <div id="nut-hoy-section" style="display:none">
       <div class="g4" style="margin-bottom:16px">
         <div class="met gg"><div class="lbl">Calorías</div><div class="val">${Math.round(totCal)}</div><div class="sub">kcal</div><div class="met-bar"></div></div>
         <div class="met gi"><div class="lbl">Proteína</div><div class="val">${Math.round(totProt)}g</div><div class="sub">${totCal>0?Math.round(totProt*4/totCal*100):0}%</div><div class="met-bar"></div></div>
