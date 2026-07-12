@@ -23,7 +23,7 @@ const SB_KEY='sb_publishable_qMHY4nMt7kwQIoVIIMO0pA_N5m5pMeN';
 const SB_H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
 
 const SB_SYNC_KEYS=['hub_fin','hub_gym_rutinas','hub_gym_log','hub_gym_weights',
-  'hub_hab_list','hub_hab_log','hub_grat','hub_medidas','hub_nut',
+  'hub_hab_list','hub_hab_log','hub_grat','hub_medidas','hub_nut','hub_turnos',
   'hub_metas','hub_plataformas','hub_cuotas','hub_gym_rutinas_version','hub_custom_cats'];
 
 // Marca cuándo se modificó por última vez cada área de datos — la base de la
@@ -1298,7 +1298,7 @@ function buildMainNav(){
   const sections=[
     {id:'fin',emoji:'💰',label:'Finanzas'},
     {id:'gym',emoji:'🏋️',label:'Gym'},
-    {id:'nutricion',emoji:'🥗',label:'Nutrición'},
+    {id:'nutricion',emoji:'🩺',label:'Salud'},
     {id:'dashboard',emoji:'🏠',label:'Inicio'},
     {id:'habits',emoji:'✅',label:'Hábitos'},
     {id:'gratitud',emoji:'✍️',label:'Escritura'},
@@ -1619,13 +1619,13 @@ function rDash(){
         </div>
       </div>
 
-      <!-- Nutrición -->
+      <!-- Salud -->
       <div class="dash-mod-card dc-nut" onclick="goSection('nutricion')" style="background:#FFFFFF;border:1.5px solid rgba(201,102,122,0.15)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:20px">🥗</span>
+          <span style="font-size:20px">🩺</span>
           <span style="background:#E4D2DE;color:#5C3452;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${calHoy>0?calHoy+' kcal':'SIN REG.'}</span>
         </div>
-        <div class="dash-mod-title" style="color:#1A0F0A">Nutrición</div>
+        <div class="dash-mod-title" style="color:#1A0F0A">Salud</div>
         <div class="dash-mod-stat" style="color:#8B6B5A;font-size:11px">
           ${calHoy>0?`<strong style="color:#185FA5">${calHoy} kcal</strong> · P: ${protHoy}g`:'Sin registrar hoy'}
           <br>${nutHoy.length>0?`${nutHoy.length} alimentos`:'Empezá a registrar'}
@@ -4974,6 +4974,105 @@ const ALIMENTOS_DB=[
 let nutBusqueda='';
 let nutDiaActual=todayStr();
 
+// ═══════════════════════════════════════════════════════
+//  TURNOS MÉDICOS (dentro de Salud)
+// ═══════════════════════════════════════════════════════
+function turnosLoad(){try{return JSON.parse(localStorage.getItem('hub_turnos')||'[]');}catch(e){return[];}}
+function turnosSave(d){try{localStorage.setItem('hub_turnos',JSON.stringify(d));markUpdated('hub_turnos');sbSchedulePush();}catch(e){}}
+// Genera un .ics para un evento puntual (no recurrente) en una fecha y hora específicas.
+function generarICSFecha(titulo,fechaISO,hora,notas){
+  const[y,m,d]=fechaISO.split('-');
+  const[hh,mm]=(hora||'09:00').split(':');
+  const dtstart=`${y}${m}${d}T${hh}${mm}00`;
+  const uid=Date.now()+'@hubeuge';
+  return[
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HubEuge//Turnos//ES',
+    'BEGIN:VEVENT',`UID:${uid}`,`DTSTART:${dtstart}`,
+    `SUMMARY:${titulo}`,notas?`DESCRIPTION:${notas.replace(/\n/g,'\\n')}`:'',
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio','TRIGGER:-PT1H','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+}
+function descargarICSFecha(titulo,fechaISO,hora,notas){
+  if(!fechaISO){showToast('Elegí una fecha primero');return;}
+  const blob=new Blob([generarICSFecha(titulo,fechaISO,hora,notas)],{type:'text/calendar'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=titulo.replace(/[^a-z0-9]+/gi,'_')+'.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function addTurno(){
+  const fecha=document.getElementById('turno-fecha')?.value;
+  const hora=document.getElementById('turno-hora')?.value;
+  const especialista=document.getElementById('turno-especialista')?.value.trim();
+  const lugar=document.getElementById('turno-lugar')?.value.trim();
+  const nota=document.getElementById('turno-nota')?.value.trim();
+  if(!fecha||!especialista)return;
+  const turnos=turnosLoad();
+  turnos.push({fecha,hora,especialista,lugar,nota});
+  turnosSave(turnos);
+  renderTurnosSection();
+}
+function delTurno(idx){
+  const turnos=turnosLoad();
+  const removed=turnos[idx];
+  turnos.splice(idx,1);
+  turnosSave(turnos);
+  renderTurnosSection();
+  showUndoToast('Turno eliminado',()=>{
+    const t2=turnosLoad();
+    t2.splice(idx,0,removed);
+    turnosSave(t2);
+    renderTurnosSection();
+  });
+}
+function renderTurnos(){
+  const turnos=turnosLoad()
+    .map((t,i)=>({...t,_i:i}))
+    .sort((a,b)=>(a.fecha+((a.hora)||'00:00')).localeCompare(b.fecha+(b.hora||'00:00')));
+  const hoy=todayStr();
+  const proximos=turnos.filter(t=>t.fecha>=hoy);
+  const pasados=turnos.filter(t=>t.fecha<hoy);
+
+  const card=t=>{
+    const[y,m,d]=t.fecha.split('-');
+    const label=`${d}/${m}/${y}`;
+    return`<div class="card" style="margin-bottom:10px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1A0F0A">${t.especialista}</div>
+          <div style="font-size:12px;color:#8B6B5A;margin-top:2px">📅 ${label}${t.hora?' · 🕐 '+t.hora:''}</div>
+          ${t.lugar?`<div style="font-size:12px;color:#8B6B5A;margin-top:2px">📍 ${t.lugar}</div>`:''}
+          ${t.nota?`<div style="font-size:12px;color:#B09890;margin-top:4px">${t.nota}</div>`:''}
+        </div>
+        <button class="btn-del" onclick="delTurno(${t._i})">✕</button>
+      </div>
+      <button class="btn-gh" style="margin-top:10px;font-size:11px;padding:0 12px;height:32px" onclick="descargarICSFecha('${(t.especialista+(t.lugar?' — '+t.lugar:'')).replace(/'/g,"\\'")}','${t.fecha}','${t.hora||'09:00'}','${(t.nota||'').replace(/'/g,"\\'")}')">📅 Agregar al Calendario</button>
+    </div>`;
+  };
+
+  return`
+    <div class="card" style="margin-bottom:14px">
+      <p class="st">Nuevo turno <span class="stl"></span></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <input type="date" class="fi" id="turno-fecha" style="width:100%"/>
+        <input type="time" class="fi" id="turno-hora" style="width:100%"/>
+      </div>
+      <div style="margin-bottom:8px"><input type="text" class="fi" id="turno-especialista" placeholder="Especialista (ej: Dra. López — Ginecóloga)" style="width:100%"/></div>
+      <div style="margin-bottom:8px"><input type="text" class="fi" id="turno-lugar" placeholder="Lugar / consultorio" style="width:100%"/></div>
+      <div style="margin-bottom:12px"><input type="text" class="fi" id="turno-nota" placeholder="Nota (opcional)" style="width:100%"/></div>
+      <button class="btn-p" onclick="addTurno()">+ Agregar turno</button>
+    </div>
+    ${proximos.length?proximos.map(card).join(''):'<div class="card" style="text-align:center;padding:24px;color:#B09890;font-size:13px">Sin turnos próximos.</div>'}
+    ${pasados.length?`<p class="st" style="margin-top:18px">Pasados <span class="stl"></span></p>${pasados.map(card).join('')}`:''}
+  `;
+}
+function renderTurnosSection(){
+  const el=document.getElementById('nut-turnos-section');
+  if(el)el.innerHTML=renderTurnos();
+}
+
 
 // ── PLAN DE COMIDAS MENSUAL (30 días) ──
 const PLAN_COMIDAS=[
@@ -5150,9 +5249,11 @@ function rNutricion(){
 
   document.getElementById('view-nutricion').innerHTML=`
     <div class="stabs">
-      <button class="stab on" id="nut-tab-hoy">Registro</button>
+      <button class="stab on" id="nut-tab-turnos">🩺 Turnos</button>
+      <button class="stab" id="nut-tab-hoy">Registro</button>
       <button class="stab" id="nut-tab-mes" onclick="rNutMes()">Historial mensual</button>
     </div>
+    <div id="nut-turnos-section">${renderTurnos()}</div>
 
     <!-- Plan del día -->
     ${(()=>{
@@ -5201,7 +5302,7 @@ function rNutricion(){
       <button onclick="nutCambiarDia(1)" style="background:none;border:none;font-size:22px;color:${esHoy?'#D4C9B8':'#C9667A'};cursor:pointer;padding:4px 10px;border-radius:10px;line-height:1" ${esHoy?'disabled':''}>›</button>
     </div>
 
-    <div id="nut-hoy-section">
+    <div id="nut-hoy-section" style="display:none">
       <div class="g4" style="margin-bottom:16px">
         <div class="met gg"><div class="lbl">Calorías</div><div class="val">${Math.round(totCal)}</div><div class="sub">kcal</div><div class="met-bar"></div></div>
         <div class="met gi"><div class="lbl">Proteína</div><div class="val">${Math.round(totProt)}g</div><div class="sub">${totCal>0?Math.round(totProt*4/totCal*100):0}%</div><div class="met-bar"></div></div>
@@ -5265,8 +5366,18 @@ function rNutricion(){
   document.getElementById('nut-tab-hoy')?.addEventListener('click',()=>{
     document.getElementById('nut-hoy-section').style.display='block';
     document.getElementById('nut-mes-section').style.display='none';
+    document.getElementById('nut-turnos-section').style.display='none';
     document.getElementById('nut-tab-hoy').classList.add('on');
     document.getElementById('nut-tab-mes').classList.remove('on');
+    document.getElementById('nut-tab-turnos').classList.remove('on');
+  });
+  document.getElementById('nut-tab-turnos')?.addEventListener('click',()=>{
+    document.getElementById('nut-hoy-section').style.display='none';
+    document.getElementById('nut-mes-section').style.display='none';
+    document.getElementById('nut-turnos-section').style.display='block';
+    document.getElementById('nut-tab-hoy').classList.remove('on');
+    document.getElementById('nut-tab-mes').classList.remove('on');
+    document.getElementById('nut-tab-turnos').classList.add('on');
   });
 
   if(nutBusqueda){setTimeout(()=>{const el=document.getElementById('nut-search');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},50);}
@@ -5344,8 +5455,10 @@ function delNutItem(fecha,idx){
 function rNutMes(){
   document.getElementById('nut-hoy-section').style.display='none';
   document.getElementById('nut-mes-section').style.display='block';
+  document.getElementById('nut-turnos-section').style.display='none';
   document.getElementById('nut-tab-hoy').classList.remove('on');
   document.getElementById('nut-tab-mes').classList.add('on');
+  document.getElementById('nut-tab-turnos').classList.remove('on');
 
   const data=nutLoad();
   const now=new Date();
