@@ -70,12 +70,17 @@ async function sbPush(){
   SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
   data['hub_meta']=localStorage.getItem('hub_meta')||'{}';
   try{
-    await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026',{
+    const r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026',{
       method:'PATCH',
       headers:{...SB_H,'Prefer':'return=minimal'},
       body:JSON.stringify({data,updated_at:new Date().toISOString()})
     });
-  }catch(e){}
+    if(!r.ok&&typeof showToast==='function'){
+      showToast('⚠️ No se pudo sincronizar con la nube. Tus cambios quedaron guardados en este dispositivo.');
+    }
+  }catch(e){
+    if(typeof showToast==='function')showToast('⚠️ Sin conexión — tus cambios quedaron guardados en este dispositivo.');
+  }
 }
 
 let sbTimer=null;
@@ -5964,7 +5969,11 @@ async function syncTodo(){
 async function bootApp(){
   // ?resync=1: borra el cache local de este dispositivo antes de traer todo de la nube.
   // Se usa una sola vez cuando un dispositivo quedó con datos viejos que le ganan al pull.
+  // Antes de borrar, guarda una copia de respaldo por si había cambios sin sincronizar.
   if(new URLSearchParams(location.search).get('resync')==='1'){
+    const backup={};
+    SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)backup[k]=v;});
+    try{localStorage.setItem('hub_resync_backup_'+Date.now(),JSON.stringify(backup));}catch(e){}
     SB_SYNC_KEYS.forEach(k=>localStorage.removeItem(k));
     localStorage.removeItem('hub_meta');
   }
