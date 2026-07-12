@@ -5056,9 +5056,9 @@ function renderTurnos(){
   return`
     <div class="card" style="margin-bottom:14px">
       <p class="st">Nuevo turno <span class="stl"></span></p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <input type="date" class="fi" id="turno-fecha" style="width:100%"/>
-        <input type="time" class="fi" id="turno-hora" style="width:100%"/>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:8px">
+        <input type="date" class="fi" id="turno-fecha" style="width:100%;min-width:0"/>
+        <input type="time" class="fi" id="turno-hora" style="width:100%;min-width:0"/>
       </div>
       <div style="margin-bottom:8px"><input type="text" class="fi" id="turno-especialista" placeholder="Especialista (ej: Dra. López — Ginecóloga)" style="width:100%"/></div>
       <div style="margin-bottom:8px"><input type="text" class="fi" id="turno-lugar" placeholder="Lugar / consultorio" style="width:100%"/></div>
