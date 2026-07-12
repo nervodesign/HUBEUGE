@@ -6014,7 +6014,11 @@ async function bootApp(){
     SB_SYNC_KEYS.forEach(k=>localStorage.removeItem(k));
     localStorage.removeItem('hub_meta');
   }
-  await sbPull();
+  // ?forcepush=1: modo de recuperación — NO trae nada de la nube (no pisa lo local),
+  // sube directo lo que ya está guardado en este dispositivo. Usar solo cuando este
+  // dispositivo tiene datos buenos y la nube quedó con datos viejos/incompletos.
+  const forcePush=new URLSearchParams(location.search).get('forcepush')==='1';
+  if(!forcePush)await sbPull();
   GYM_RUTINAS=gLoad('rutinas',DEF_RUTINAS);
   GYM_LOG=gLoad('log',{});
   GYM_WEIGHTS=gLoad('weights',{});
@@ -6023,7 +6027,14 @@ async function bootApp(){
   GRAT_LOG=gratLoad();
   finLoad();
   renderAll();
-  sbPush();
+  if(forcePush){
+    SB_SYNC_KEYS.forEach(k=>markUpdated(k));
+    sbPulledOnce=true;
+    await sbPush();
+    showToast('✓ Datos de este dispositivo subidos a la nube');
+  }else{
+    sbPush();
+  }
 }
 // Si hay un código configurado, pedirlo antes de arrancar la app.
 if(localStorage.getItem('hub_pin')){showLockScreen('verify');}else{bootApp();}
