@@ -1474,8 +1474,9 @@ function rDash(){
     });
   }
 
-  // ── Stats del mes actual ──
-  const finM=calcM(aM);
+  // ── Stats del mes actual (siempre el mes calendario real, no el que estés navegando en Finanzas) ──
+  const mesActualIdx=new Date().getMonth();
+  const finM=calcM(mesActualIdx);
   const finPct=pct(finM.aho,finM.ing);
   const metasTodas=(metasLoad().metasActivas||[]).filter(m=>m.texto);
   const metasLog=metasTodas.filter(m=>m.cumplida).length;
@@ -1588,10 +1589,10 @@ function rDash(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
 
       <!-- Finanzas -->
-      <div class="dash-mod-card dc-fin" onclick="goSection('fin')" style="background:#FFFFFF;border:1.5px solid rgba(201,102,122,0.15)">
+      <div class="dash-mod-card dc-fin" onclick="aM=${mesActualIdx};goFin('month',${mesActualIdx});goSection('fin')" style="background:#FFFFFF;border:1.5px solid rgba(201,102,122,0.15)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:20px">💰</span>
-          <span style="background:#F7DCE1;color:#C9667A;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${MS[aM]}</span>
+          <span style="background:#F7DCE1;color:#C9667A;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${MS[mesActualIdx]}</span>
         </div>
         <div class="dash-mod-title" style="color:#1A0F0A">Finanzas</div>
         <div class="dash-mod-stat" style="color:#8B6B5A;font-size:11px">
@@ -1716,7 +1717,7 @@ function exportarPDF(){
   const now=new Date();
   const mes=MESES[now.getMonth()];
   const anio=now.getFullYear();
-  const finM=calcM(aM);
+  const finM=calcM(now.getMonth());
   const finPct=pct(finM.aho,finM.ing);
   const habLog=HAB_LOG[todayStr()]||{};
   const habDoneHoy=HAB_LIST.filter(h=>habLog[h.id]).length;
