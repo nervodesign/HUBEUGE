@@ -4736,6 +4736,35 @@ function addPrest(){
 function delP(i){showConfirm('¿Eliminar este préstamo?',()=>{S.prestamos.splice(i,1);save();rInv();});}
 
 // ── PDF ──
+// Genera 2-4 frases de análisis automático del mes para el PDF de Finanzas.
+function analisisFinanzasPDF(i){
+  const m=calcM(i);
+  const finPct=pct(m.aho,m.ing);
+  const insights=[];
+  if(i>0){
+    const ctNow=cT(i),ctPrev=cT(i-1);
+    let subKey=null,subDiff=0,bajKey=null,bajDiff=0;
+    Object.keys({...ctNow,...ctPrev}).forEach(k=>{
+      const prevV=ctPrev[k]||0,curV=ctNow[k]||0;
+      if(prevV>5000&&curV>prevV){const d=Math.round((curV-prevV)/prevV*100);if(d>subDiff){subDiff=d;subKey=k;}}
+      if(prevV>5000&&curV<prevV){const d=Math.round((prevV-curV)/prevV*100);if(d>bajDiff){bajDiff=d;bajKey=k;}}
+    });
+    if(subKey&&subDiff>=20){const cv=AC[subKey]||{l:subKey};insights.push(`📈 Gastaste <strong>${subDiff}% más</strong> en <strong>${cv.l}</strong> que en ${MESES[i-1]}.`);}
+    if(bajKey&&bajDiff>=20){const cv=AC[bajKey]||{l:bajKey};insights.push(`📉 Gastaste <strong>${bajDiff}% menos</strong> en <strong>${cv.l}</strong> que en ${MESES[i-1]}.`);}
+    const mPrev=calcM(i-1);
+    if(mPrev.gas>0){
+      const dGas=Math.round((m.gas-mPrev.gas)/mPrev.gas*100);
+      if(Math.abs(dGas)>=10)insights.push(`${dGas>0?'⬆️':'⬇️'} El gasto total ${dGas>0?'subió':'bajó'} <strong>${Math.abs(dGas)}%</strong> respecto a ${MESES[i-1]}.`);
+    }
+  }
+  if(m.ing>0){
+    if(finPct>=S.meta)insights.push(`💰 Ahorraste el <strong>${finPct}%</strong> de tus ingresos — superás tu meta del ${S.meta}%.`);
+    else insights.push(`⚠️ Ahorraste el <strong>${finPct}%</strong> de tus ingresos — por debajo de tu meta del ${S.meta}%.`);
+  }
+  if(m.usdComprado>0)insights.push(`💵 Compraste <strong>${fmtU(m.usdComprado)}</strong> este mes.`);
+  if(!insights.length)insights.push('Sin datos suficientes todavía para un análisis comparativo este mes.');
+  return insights.slice(0,4);
+}
 function exportPDF(){
   if(aSection!=='fin'||aV!=='month')return;
   const i=aM;
@@ -4749,8 +4778,46 @@ function exportPDF(){
     const items=Object.entries(gv.cats).map(([ck,cv])=>({l:cv.l,v:ct[ck]||0})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
     if(!items.length)return'';
     const total=items.reduce((a,x)=>a+x.v,0);
-    return`<div class="section"><div class="section-title">${gv.label}</div>${items.map(x=>`<div class="item"><span style="flex:1">${x.l}</span><span class="tag">${fmt(x.v)}</span></div>`).join('')}<div class="item" style="font-weight:700;border-bottom:none"><span style="flex:1">Total ${gv.label}</span><span>${fmt(total)}</span></div></div>`;
+    return`<div class="section"><div class="section-title">${gv.label}</div>${items.map(x=>`<div class="item"><span style="flex:1">${x.l}</span><span class="tag">${fmt(x.v)}</span><div class="bar-wrap" style="width:70px;margin-left:8px"><div class="bar" style="width:${pct(x.v,total)}%;background:#C9667A"></div></div></div>`).join('')}<div class="item" style="font-weight:700;border-bottom:none"><span style="flex:1">Total ${gv.label}</span><span>${fmt(total)}</span></div></div>`;
   }).join('');
+
+  // Medios de pago del mes
+  const mpTotales={};
+  S.meses[i].txns.filter(t=>!IS_ING.has(t.cat)&&!IS_AHO.has(t.cat)).forEach(t=>{
+    const mp=t.mp||'otro';
+    mpTotales[mp]=(mpTotales[mp]||0)+t.monto;
+  });
+  const mpEntries=Object.entries(mpTotales).sort(([,a],[,b])=>b-a);
+  const mpTotal=mpEntries.reduce((a,[,v])=>a+v,0);
+  const mpHtml=mpEntries.length?`<div class="section"><div class="section-title">Medios de pago</div>${mpEntries.map(([mp,v])=>{const label=MP[mp]?.l||'Sin método';return`<div class="item"><span style="flex:1">${label}</span><span class="tag">${fmt(v)}</span><div class="bar-wrap" style="width:70px;margin-left:8px"><div class="bar" style="width:${mpTotal>0?Math.round(v/mpTotal*100):0}%;background:${MP[mp]?.c||'#B09890'}"></div></div></div>`;}).join('')}</div>`:'';
+
+  // USD MFA (sueldo en dólares)
+  const usdMfa=S.meses[i].usd_mfa||0;
+  const tc=S.meses[i].tc||0;
+  const usdHtml=usdMfa?`<div class="section"><div class="section-title">Sueldo USD MFA</div><div class="grid">
+    <div class="kpi"><div class="lbl">Monto USD</div><div class="val">${fmtU(usdMfa)}</div></div>
+    <div class="kpi"><div class="lbl">Tipo de cambio</div><div class="val">${tc?fmt(tc):'—'}</div></div>
+    <div class="kpi"><div class="lbl">Equivalente ARS</div><div class="val">${tc?fmt(usdMfa*tc):'—'}</div></div>
+  </div></div>`:'';
+
+  // USD comprado en el mes (ahorro en dólares)
+  const usdCompradoHtml=m.usdComprado>0?`<div class="section"><div class="section-title">Ahorro en USD</div><div class="grid"><div class="kpi"><div class="lbl">USD comprados este mes</div><div class="val">${fmtU(m.usdComprado)}</div></div></div></div>`:'';
+
+  // Análisis automático
+  const analisis=analisisFinanzasPDF(i);
+  const analisisHtml=`<div class="section"><div class="section-title">Análisis del mes</div>${analisis.map(a=>`<div class="item" style="border-bottom:none">${a}</div>`).join('')}</div>`;
+
+  // Comparación vs mes anterior
+  const compHtml=i>0?(()=>{
+    const mPrev=calcM(i-1);
+    const dIng=mPrev.ing>0?Math.round((m.ing-mPrev.ing)/mPrev.ing*100):null;
+    const dGas=mPrev.gas>0?Math.round((m.gas-mPrev.gas)/mPrev.gas*100):null;
+    return`<div class="section"><div class="section-title">Vs. ${MESES[i-1]}</div><div class="grid">
+      <div class="kpi"><div class="lbl">Ingresos</div><div class="val" style="color:${dIng===null?'#8B6B5A':dIng>=0?'#3B6D11':'#c85830'}">${dIng===null?'—':(dIng>0?'+':'')+dIng+'%'}</div></div>
+      <div class="kpi"><div class="lbl">Gastos</div><div class="val" style="color:${dGas===null?'#8B6B5A':dGas<=0?'#3B6D11':'#c85830'}">${dGas===null?'—':(dGas>0?'+':'')+dGas+'%'}</div></div>
+      <div class="kpi"><div class="lbl">Ahorro anterior</div><div class="val">${pct(mPrev.aho,mPrev.ing)}%</div></div>
+    </div></div>`;
+  })():'';
 
   const html=`<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"/>
@@ -4767,6 +4834,8 @@ function exportPDF(){
   .kpi .lbl{font-size:10px;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em}
   .item{padding:8px 0;border-bottom:1px solid rgba(201,102,122,0.08);font-size:13px;display:flex;align-items:center;gap:8px}
   .tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;background:#F7DCE1;color:#C9667A}
+  .bar-wrap{background:#F2EDE8;border-radius:4px;height:6px;overflow:hidden}
+  .bar{height:6px;border-radius:4px}
   @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 </style>
 </head><body><div class="page">
@@ -4779,11 +4848,16 @@ function exportPDF(){
       <div class="kpi"><div class="lbl">Ahorro</div><div class="val" style="color:${finPct>=S.meta?'#3B6D11':'#c85830'}">${finPct}%</div></div>
     </div>
   </div>
+  ${analisisHtml}
+  ${compHtml}
   <div class="section">
     <div class="section-title">Top gastos del mes</div>
     ${top5.map(t=>{const cv=AC[t.cat]||{l:t.cat};return`<div class="item"><span style="flex:1">${t.desc||cv.l}</span><span class="tag">${fmt(t.monto)}</span></div>`;}).join('')||'<p style="font-size:12px;color:#B09890">Sin gastos.</p>'}
   </div>
   ${gruposHtml}
+  ${mpHtml}
+  ${usdHtml}
+  ${usdCompradoHtml}
   <div style="text-align:center;font-size:11px;color:#B09890;margin-top:40px;padding-top:16px;border-top:1px solid #F2EDE8">Hub Euge 2026 &middot; ${mes} ${anio}</div>
 </div></body></html>`;
 
