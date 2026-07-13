@@ -71,10 +71,17 @@ async function sbPush(){
   // Nunca empujar antes de haber sincronizado con la nube al menos una vez en esta
   // sesión — evita pisar datos de otros dispositivos con un estado local todavía no reconciliado.
   if(!sbPulledOnce)return;
-  const data={};
-  SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
-  data['hub_meta']=localStorage.getItem('hub_meta')||'{}';
   try{
+    // Merge sobre el estado ACTUAL de la nube — nunca se reemplaza la fila entera a ciegas.
+    // Así, un dispositivo con storage vacío o parcial (recién instalado, pestaña privada,
+    // cache borrado) jamás puede borrar áreas de datos que no tiene localmente: solo
+    // pisa las claves que sí existen en este dispositivo, y deja el resto tal cual está.
+    const r0=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026&select=data',{headers:SB_H});
+    const d0=await r0.json();
+    const cloud=(d0&&d0[0]&&d0[0].data)?d0[0].data:{};
+    const data={...cloud};
+    SB_SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
+    data['hub_meta']=localStorage.getItem('hub_meta')||cloud['hub_meta']||'{}';
     const r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026',{
       method:'PATCH',
       headers:{...SB_H,'Prefer':'return=minimal'},
