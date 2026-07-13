@@ -1463,6 +1463,7 @@ function rDash(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
       <div style="font-size:12px;color:var(--lino5);font-style:italic">"${frase}"</div>
       <button onclick="exportarPDF()" style="font-size:11px;color:#8B6B5A;background:#FAF7F5;border:1px solid rgba(201,102,122,0.2);border-radius:20px;padding:5px 12px;cursor:pointer;flex-shrink:0;margin-left:10px">&#128196; PDF</button>
+      <button onclick="exportarExcel()" style="font-size:11px;color:#8B6B5A;background:#FAF7F5;border:1px solid rgba(201,102,122,0.2);border-radius:20px;padding:5px 12px;cursor:pointer;flex-shrink:0;margin-left:6px">&#128202; Excel</button>
     </div>`;
 
   rDashAfirmaciones();
@@ -1723,6 +1724,25 @@ function rDash(){
     })()}`;
 
   document.getElementById('dash-bottom').innerHTML='';
+}
+
+function exportarExcel(){
+  const csvSafe=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const filas=[['Mes','Fecha','Categoría','Descripción','Medio de pago','Monto']];
+  S.meses.forEach((m,i)=>{
+    (m.txns||[]).forEach(t=>{
+      const catLabel=(AC[t.cat]&&AC[t.cat].l)||t.cat;
+      filas.push([MS[i],t.fecha||'',catLabel,t.desc||'',t.mpLabel||'',t.monto]);
+    });
+  });
+  const csv='﻿'+filas.map(r=>r.map(csvSafe).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='HubEuge_Finanzas_'+todayStr().replace(/\//g,'-')+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
 function exportarPDF(){
