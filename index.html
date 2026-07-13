@@ -18,13 +18,13 @@
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22HubEuge%22%2C%22short_name%22%3A%22HubEuge%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23C9667A%22%2C%22theme_color%22%3A%22%23C9667A%22%2C%22orientation%22%3A%22portrait%22%7D"/>
 <title>Hub · Euge 2026</title>
 <script>
-const SB_URL='https://syupcxljrwfbmdgpnzjx.supabase.co';
+const SB_URL='http://127.0.0.1:1/blocked-for-testing';
 const SB_KEY='sb_publishable_qMHY4nMt7kwQIoVIIMO0pA_N5m5pMeN';
 const SB_H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
 
 const SB_SYNC_KEYS=['hub_fin','hub_gym_rutinas','hub_gym_log','hub_gym_weights',
   'hub_hab_list','hub_hab_log','hub_grat','hub_medidas','hub_nut','hub_turnos',
-  'hub_metas','hub_plataformas','hub_cuotas','hub_gym_rutinas_version','hub_custom_cats'];
+  'hub_metas','hub_plataformas','hub_cuotas','hub_gym_rutinas_version','hub_custom_cats','hub_custom_mps'];
 
 // Marca cuándo se modificó por última vez cada área de datos — la base de la
 // sincronización "gana el más nuevo" entre dispositivos (compu/celu).
@@ -1065,6 +1065,22 @@ body.theme-dark .card-gold{background:#2E2620}
       <p style="font-size:12px;color:var(--lino4);margin-bottom:13px">Definí un tope mensual — te avisa cuando lo superás.</p>
       <div id="limits-list"></div>
       <button class="btn-p" style="margin-top:12px" onclick="saveLimits()">Guardar límites</button>
+    </div>
+    <div class="card">
+      <p class="st">Cuentas y medios de pago <span class="stl"></span></p>
+      <p style="font-size:12px;color:var(--lino4);margin-bottom:13px">Agregá tus propias tarjetas, billeteras o cuentas — aparecen en "Medio de pago" al cargar un movimiento.</p>
+      <div id="custom-mps-list" style="margin-bottom:12px"></div>
+      <div class="frow">
+        <input type="text" class="fi fg" id="cm-label" placeholder="Nombre (ej: Banco Nación)"/>
+        <select class="fsel fsm" id="cm-group">
+          <option value="tarjetas">Tarjeta</option>
+          <option value="billeteras">Billetera</option>
+          <option value="cuentas" selected>Cuenta</option>
+          <option value="otros">Otro</option>
+        </select>
+        <input type="color" id="cm-color" value="#C9667A" style="width:44px;height:38px;padding:2px;border:1.5px solid var(--border2);border-radius:10px;background:#fff;cursor:pointer"/>
+        <button class="btn-p" onclick="addCustomMp()">+ Agregar</button>
+      </div>
     </div>
     <div class="card">
       <p class="st">Seguridad <span class="stl"></span></p>
@@ -3128,6 +3144,46 @@ const IS_AHO=new Set(['ahorro_ars','dolar_efectivo','dolar_uala']);
 // solo suman/restan del pozo total de dólares.
 const IS_USD_MOV=new Set(['regalo_usd','gasto_usd']);
 const USD_COMPRA_CATS=new Set(['ahorro_ars','dolar_efectivo','dolar_uala']);
+
+// ── Medios de pago / cuentas ──
+const MP_GROUPS={
+  tarjetas:{label:'Tarjetas',items:{
+    visa:{l:'Visa Galicia',c:'#5C3452',bg:'#E4D2DE'},
+    master:{l:'Mastercard Galicia',c:'#7A2010',bg:'#F7DCE1'}
+  }},
+  billeteras:{label:'Billeteras',items:{
+    uala:{l:'Ualá',c:'#2A4A8A',bg:'#E4D2DE'},
+    mercadopago:{l:'Mercado Pago',c:'#006EBD',bg:'#E4D2DE'},
+    celesol:{l:'Celesol',c:'#1A5A3A',bg:'#EAF3DE'},
+    personalpay:{l:'Personal Pay',c:'#0B5FA5',bg:'#DCE9F5'},
+    billetera:{l:'Otra billetera',c:'#4A3878',bg:'#E8CFC3'}
+  }},
+  cuentas:{label:'Cuentas',items:{
+    usd_app:{l:'USD App',c:'#854F0B',bg:'#FAEEDA'},
+    galicia:{l:'Galicia',c:'#A32D2D',bg:'#FCEBEB'},
+    bancocordoba_debito:{l:'Banco de Córdoba Débito',c:'#2D6A4F',bg:'#DCEEE4'},
+    bancocordoba_credito:{l:'Banco de Córdoba Crédito',c:'#1B4332',bg:'#D0E8DC'},
+    transferencia:{l:'Transf.',c:'#C9667A',bg:'#F2EDE8'}
+  }},
+  otros:{label:'Otros',items:{
+    efectivo:{l:'Efectivo',c:'#3B6D11',bg:'#EAF3DE'}
+  }}
+};
+function loadCustomMps(){try{return JSON.parse(localStorage.getItem('hub_custom_mps')||'[]');}catch(e){return[];}}
+function saveCustomMps(d){localStorage.setItem('hub_custom_mps',JSON.stringify(d));markUpdated('hub_custom_mps');sbSchedulePush();}
+function mpAll(){
+  const r={};
+  Object.values(MP_GROUPS).forEach(g=>Object.entries(g.items).forEach(([k,v])=>r[k]=v));
+  loadCustomMps().forEach(c=>{r[c.key]={l:c.label,c:c.color||'#707070',bg:'#F2EDE8'};});
+  return r;
+}
+let MP=mpAll();
+function mpOpts(){
+  const base=Object.values(MP_GROUPS).map(g=>`<optgroup label="${g.label}">${Object.entries(g.items).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</optgroup>`).join('');
+  const custom=loadCustomMps();
+  const customHtml=custom.length?`<optgroup label="Personalizadas">${custom.map(c=>`<option value="${c.key}">${c.label}</option>`).join('')}</optgroup>`:'';
+  return `<option value="">Medio de pago</option>${base}${customHtml}`;
+}
 const IS_FIJO=new Set(Object.keys(GRUPOS.fijos.cats));
 const IS_VAR=new Set(Object.keys(GRUPOS.variables.cats));
 const IS_PERS=new Set(); // ya no existe grupo personales separado
@@ -3302,27 +3358,7 @@ function buildFinViews(){
         <select class="fsel" id="fm-${i}" style="width:76px;padding:0 6px;text-align:center">
           ${msOpts}
         </select>
-        <select class="fsel" id="mp-${i}" style="width:100%;min-width:0">
-          <option value="">Medio de pago</option>
-          <optgroup label="Tarjetas">
-            <option value="visa">💳 Visa</option>
-            <option value="master">💳 Mastercard</option>
-          </optgroup>
-          <optgroup label="Billeteras">
-            <option value="uala">📱 Ualá</option>
-            <option value="mercadopago">📱 Mercado Pago</option>
-            <option value="celesol">📱 Celesol</option>
-            <option value="billetera">📱 Otra billetera</option>
-          </optgroup>
-          <optgroup label="Cuentas">
-            <option value="usd_app">💵 USD App</option>
-            <option value="galicia">🏦 Galicia</option>
-            <option value="transferencia">🏦 Transf.</option>
-          </optgroup>
-          <optgroup label="Otros">
-            <option value="efectivo">💵 Efectivo</option>
-          </optgroup>
-        </select>
+        <select class="fsel" id="mp-${i}" style="width:100%;min-width:0">${mpOpts()}</select>
       </div>
 
       <!-- F4: Tipo pago + cuotas + botón Agregar -->
@@ -3435,10 +3471,7 @@ function rMonth(i){
   kpiD.innerHTML=buildKPI('fijos',fijo,'Gastos Fijos')+buildKPI('variables',vari,'Gastos Variables · Personales');setTimeout(()=>{['fijos','variables'].forEach(gk=>{const items=Object.entries(GRUPOS[gk].cats).map(([ck,cv])=>({cv,v:ct[ck]||0})).filter(x=>x.v>0);mkDonut('ch-'+gk+'-'+i,items.map(x=>x.v),items.map(x=>x.cv.l),items.map(x=>x.cv.c),'ck'+gk+i);});},70);}
   const txDiv=document.getElementById('tx-'+i);
   if(txDiv){if(!S.meses[i].txns.length){txDiv.innerHTML='<p style="color:var(--lino4);font-size:12px;padding:8px 0">Sin movimientos.</p>';}else{
-    const mpColors={visa:'#5C3452',master:'#7A2010',uala:'#2A4A8A',mercadopago:'#006EBD',celesol:'#1A5A3A',billetera:'#4A3878',efectivo:'#3B6D11',transferencia:'#C9667A',usd_app:'#854F0B',galicia:'#A32D2D'};
-    const mpBg={visa:'#E4D2DE',master:'#F7DCE1',uala:'#E4D2DE',mercadopago:'#E4D2DE',celesol:'#EAF3DE',billetera:'#E8CFC3',efectivo:'#EAF3DE',transferencia:'#F2EDE8',usd_app:'#FAEEDA',galicia:'#FCEBEB'};
-    const mpLabel={visa:'Visa',master:'Mastercard',uala:'Ualá',mercadopago:'Mercado Pago',celesol:'Celesol',billetera:'Billetera',efectivo:'Efectivo',transferencia:'Transferencia',usd_app:'USD App',galicia:'Galicia'};
-    txDiv.innerHTML=[...S.meses[i].txns].reverse().map((t,ri)=>{const idx=S.meses[i].txns.length-1-ri;const cv=AC[t.cat]||{l:t.cat,c:'#707070'};const isIng=IS_ING.has(t.cat)||t.cat==='regalo_usd';const isUsdMov=IS_USD_MOV.has(t.cat);const usdqBadge=t.montoUsd?`<span style="background:#EAF3DE;color:#3B6D11;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">≈ ${fmtU(t.montoUsd)}</span>`:'';const mpBadge=t.mpLabel?`<span style="background:${mpBg[t.mp]||'#F2EDE8'};color:${mpColors[t.mp]||'#C9667A'};font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">${t.mpLabel}</span>`:'';const amt=isUsdMov?fmtU(t.monto):fmt(t.monto);return`<div class="tx-swipe-wrap" data-i="${i}" data-idx="${idx}"><div class="tx-swipe-bg">🗑</div><div class="txrow"><span class="txdate">${t.fecha||'—'}</span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span>${mpBadge}${usdqBadge}<span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${amt}</span><button class="btn-del" onclick="delT(${i},${idx})">✕</button></div></div>`;}).join('');
+    txDiv.innerHTML=[...S.meses[i].txns].reverse().map((t,ri)=>{const idx=S.meses[i].txns.length-1-ri;const cv=AC[t.cat]||{l:t.cat,c:'#707070'};const isIng=IS_ING.has(t.cat)||t.cat==='regalo_usd';const isUsdMov=IS_USD_MOV.has(t.cat);const usdqBadge=t.montoUsd?`<span style="background:#EAF3DE;color:#3B6D11;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">≈ ${fmtU(t.montoUsd)}</span>`:'';const mpv=MP[t.mp]||{};const mpBadge=t.mpLabel?`<span style="background:${mpv.bg||'#F2EDE8'};color:${mpv.c||'#C9667A'};font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;white-space:nowrap">${t.mpLabel}</span>`:'';const amt=isUsdMov?fmtU(t.monto):fmt(t.monto);return`<div class="tx-swipe-wrap" data-i="${i}" data-idx="${idx}"><div class="tx-swipe-bg">🗑</div><div class="txrow"><span class="txdate">${t.fecha||'—'}</span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span>${mpBadge}${usdqBadge}<span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${amt}</span><button class="btn-del" onclick="delT(${i},${idx})">✕</button></div></div>`;}).join('');
     initSwipeToDelete(txDiv,(wrap)=>delT(parseInt(wrap.dataset.i),parseInt(wrap.dataset.idx)));
   }}
 }
@@ -3558,8 +3591,10 @@ function rAnual(){
       mpTotales[mp]=(mpTotales[mp]||0)+t.monto;
     });
   });
-  const mpNames={visa:'Visa',master:'Mastercard',uala:'Ualá',mercadopago:'Mercado Pago',celesol:'Celesol',billetera:'Billetera',efectivo:'Efectivo',transferencia:'Transf.',usd_app:'USD App',galicia:'Galicia',otro:'Sin método'};
-  const mpColors2={visa:'#5C3452',master:'#7A2010',uala:'#2A4A8A',mercadopago:'#006EBD',celesol:'#1A5A3A',billetera:'#4A3878',efectivo:'#3B6D11',transferencia:'#C9667A',usd_app:'#854F0B',galicia:'#A32D2D',otro:'#B09890'};
+  const mpNames=Object.fromEntries(Object.entries(MP).map(([k,v])=>[k,v.l]));
+  mpNames.otro='Sin método';
+  const mpColors2=Object.fromEntries(Object.entries(MP).map(([k,v])=>[k,v.c]));
+  mpColors2.otro='#B09890';
   const mpEntries=Object.entries(mpTotales).sort(([,a],[,b])=>b-a);
   const tMpGas=mpEntries.reduce((a,[,v])=>a+v,0);
 
@@ -4208,6 +4243,45 @@ function rCustomCats(){
       <button class="btn-del" onclick="delCustomCat('${c.key}')">&#10005;</button>
     </div>`).join(''):'<p style="font-size:12px;color:var(--lino4)">Todavía no creaste categorías propias.</p>';
 }
+function addCustomMp(){
+  const labelInp=document.getElementById('cm-label');
+  const groupInp=document.getElementById('cm-group');
+  const colorInp=document.getElementById('cm-color');
+  const label=labelInp.value.trim();
+  if(!label)return;
+  const key='custom_mp_'+slugifyCat(label);
+  const mps=loadCustomMps();
+  if(!key.replace('custom_mp_','')||mps.some(m=>m.key===key)||MP[key]){showToast('Ya existe una cuenta con ese nombre');return;}
+  mps.push({key,label,group:groupInp.value,color:colorInp.value});
+  saveCustomMps(mps);
+  MP=mpAll();
+  labelInp.value='';
+  rCustomMps();
+  buildFinViews();
+  showToast('Cuenta agregada ✓');
+}
+function delCustomMp(key){
+  showConfirm('¿Eliminar esta cuenta/medio de pago? Los movimientos ya cargados no se modifican.',()=>{
+    const mps=loadCustomMps().filter(m=>m.key!==key);
+    saveCustomMps(mps);
+    MP=mpAll();
+    rCustomMps();
+    buildFinViews();
+    showToast('Cuenta eliminada');
+  });
+}
+function rCustomMps(){
+  const el=document.getElementById('custom-mps-list');
+  if(!el)return;
+  const mps=loadCustomMps();
+  el.innerHTML=mps.length?mps.map(m=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(201,102,122,0.08)">
+      <span style="width:8px;height:8px;border-radius:50%;background:${m.color};flex-shrink:0"></span>
+      <span style="font-size:13px;color:var(--lino);flex:1">${m.label}</span>
+      <span style="font-size:10px;color:var(--lino4);text-transform:uppercase">${MP_GROUPS[m.group]?.label||''}</span>
+      <button class="btn-del" onclick="delCustomMp('${m.key}')">&#10005;</button>
+    </div>`).join(''):'<p style="font-size:12px;color:var(--lino4)">Todavía no agregaste cuentas propias.</p>';
+}
 function rLockSettings(){
   const el=document.getElementById('lock-settings');
   if(!el)return;
@@ -4218,6 +4292,7 @@ function rLockSettings(){
 }
 function rLimits(){
   rCustomCats();
+  rCustomMps();
   rLockSettings();
   const limits=loadLimits();
   const AC=allC();
@@ -4524,8 +4599,7 @@ function addT(i){
     const ct2=document.getElementById('ct2-'+i)?.value||'?';
     descFinal=desc+(desc?' ':'')+'('+cc+'/'+ct2+')';
   }
-  const mpLabel={visa:'Visa',master:'Mastercard',uala:'Ualá',mercadopago:'Mercado Pago',celesol:'Celesol',billetera:'Billetera',efectivo:'Efectivo',transferencia:'Transferencia',usd_app:'USD App',galicia:'Galicia'};
-  const txn={desc:descFinal,monto,cat,fecha,mp,mpLabel:mpLabel[mp]||''};
+  const txn={desc:descFinal,monto,cat,fecha,mp,mpLabel:MP[mp]?.l||''};
   if(USD_COMPRA_CATS.has(cat)){
     const usdq=parseFloat(document.getElementById('usdq-'+i)?.value);
     if(!isNaN(usdq)&&usdq>0)txn.montoUsd=usdq;
