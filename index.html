@@ -3332,8 +3332,9 @@ function buildFinViews(){
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px">
         <p class="st" style="margin-bottom:0;flex:1">Agregar movimiento <span class="stl"></span></p>
-        ${i>0?`<button class="btn-gh" onclick="repetirMesPasado(${i})" style="white-space:nowrap;font-size:11px">↻ Repetir fijos del mes pasado</button>`:''}
+        <button class="btn-gh" onclick="toggleFijosRapidos(${i})" style="white-space:nowrap;font-size:11px">↻ Fijos rápido</button>
       </div>
+      <div id="fijos-rapidos-${i}" style="display:none;margin-bottom:16px"></div>
 
       <!-- F1: Descripción full width -->
       <div style="margin-bottom:8px">
@@ -4638,19 +4639,85 @@ function rSearch(){
     return`<div class="txrow"><span class="txdate">${t.fecha||'—'} <span style="opacity:.6">${MS[mi]}</span></span><span class="badge" style="background:${cv.c}28;color:${cv.c};border:1px solid ${cv.c}40">${cv.l}</span><span class="txdesc">${t.desc||''}</span><span class="txamt${isIng?' ing':''}">${isIng?'+':''}${amt}</span><button class="btn-gh" style="font-size:10px;padding:0 10px;height:26px" onclick="goFin('month',${mi})">Ver</button></div>`;
   }).join('');
 }
-function repetirMesPasado(i){
-  if(i<=0)return;
-  const prevTxns=S.meses[i-1].txns.filter(t=>IS_ING.has(t.cat)||IS_FIJO.has(t.cat));
-  if(!prevTxns.length){showToast('No hay ingresos/fijos el mes anterior para repetir');return;}
+// Busca el último monto cargado en una categoría, mirando hacia atrás desde el mes "antesDe".
+function ultimoMontoCat(cat,antesDe){
+  for(let k=antesDe-1;k>=0;k--){
+    const t=[...(S.meses[k].txns||[])].reverse().find(t=>t.cat===cat);
+    if(t)return t.monto;
+  }
+  return 0;
+}
+function toggleFijosRapidos(i){
+  const el=document.getElementById('fijos-rapidos-'+i);
+  if(!el)return;
+  if(el.style.display==='none'||!el.style.display){
+    el.innerHTML=renderFijosRapidos(i);
+    el.style.display='block';
+  }else{
+    el.style.display='none';
+  }
+}
+// Panel de "fijos rápido": solo ofrece lo que realmente se repite —
+// Caja Jubilaciones (débito automático) y cuotas activas — con monto editable,
+// en vez de copiar a ciegas todos los gastos fijos del mes anterior (que varían).
+function renderFijosRapidos(i){
+  const cajaMonto=ultimoMontoCat('caja_jub',i);
+  const cuotas=cuotasLoad().map((c,ci)=>({...c,ci})).filter(c=>c.pagadas<c.n);
+  let h=`<div class="card" style="background:#FAF7F5;margin-bottom:0">
+    <p class="st">Agregar fijos rápido <span class="stl"></span></p>
+    <p style="font-size:11px;color:var(--lino4);margin-bottom:10px">Tildá lo que corresponda este mes y ajustá el monto si cambió.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#fff;border-radius:10px">
+      <input type="checkbox" id="fr-caja-${i}" ${cajaMonto?'checked':''}/>
+      <span style="flex:1;font-size:13px">Caja Jubilaciones</span>
+      <input type="number" class="fi fn" id="fr-caja-monto-${i}" value="${cajaMonto||''}" placeholder="Monto" style="width:110px;height:34px"/>
+    </div>`;
+  cuotas.forEach(c=>{
+    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#fff;border-radius:10px">
+      <input type="checkbox" class="fr-cuota" data-ci="${c.ci}" checked/>
+      <span style="flex:1;font-size:13px">${c.desc} (${c.pagadas+1}/${c.n})</span>
+      <input type="number" class="fi fn fr-cuota-monto" value="${c.monto}" style="width:110px;height:34px"/>
+    </div>`;
+  });
+  if(!cajaMonto&&!cuotas.length){
+    h+=`<p style="font-size:12px;color:var(--lino4)">No encontré Caja Jubilaciones en meses anteriores ni cuotas activas.</p>`;
+  }
+  h+=`<button class="btn-p" style="width:100%;margin-top:4px" onclick="agregarFijosRapidos(${i})">+ Agregar seleccionados</button>
+  </div>`;
+  return h;
+}
+function agregarFijosRapidos(i){
+  const cont=document.getElementById('fijos-rapidos-'+i);
+  if(!cont)return;
   const mesNum=String(i+1).padStart(2,'0');
-  showConfirm(`¿Repetir ${prevTxns.length} movimiento(s) de ingresos y gastos fijos de ${MESES[i-1]} en ${MESES[i]}?`,()=>{
-    prevTxns.forEach(t=>{
-      const dia=(t.fecha||'01/01').split('/')[0];
-      S.meses[i].txns.push({...t,fecha:`${dia}/${mesNum}`});
-    });
-    save();rMonth(i);
-    showToast(`✓ ${prevTxns.length} movimientos repetidos`);
-  },{okLabel:'Repetir',danger:false});
+  const hoy=String(new Date().getDate()).padStart(2,'0');
+  let n=0;
+  const cajaChk=document.getElementById('fr-caja-'+i);
+  if(cajaChk&&cajaChk.checked){
+    const monto=parseFloat(document.getElementById('fr-caja-monto-'+i)?.value);
+    if(!isNaN(monto)&&monto>0){
+      S.meses[i].txns.push({fecha:`${hoy}/${mesNum}`,monto,cat:'caja_jub',desc:'Caja Jubilaciones'});
+      n++;
+    }
+  }
+  const cuotas=cuotasLoad();
+  let cuotasChanged=false;
+  cont.querySelectorAll('.fr-cuota').forEach(chk=>{
+    if(!chk.checked)return;
+    const ci=parseInt(chk.dataset.ci);
+    const c=cuotas[ci];
+    if(!c)return;
+    const montoInp=chk.closest('div').querySelector('.fr-cuota-monto');
+    const monto=parseFloat(montoInp?.value);
+    if(isNaN(monto)||monto<=0)return;
+    S.meses[i].txns.push({fecha:`${hoy}/${mesNum}`,monto,cat:'personales',desc:c.desc+' ('+(c.pagadas+1)+'/'+c.n+')'});
+    c.pagadas=Math.min(c.pagadas+1,c.n);
+    cuotasChanged=true;
+    n++;
+  });
+  if(cuotasChanged)cuotasSave(cuotas);
+  save();rMonth(i);
+  cont.style.display='none';
+  showToast(n?`✓ ${n} movimiento(s) agregado(s)`:'No se agregó nada');
 }
 function sMeta(i){const v=parseInt(document.getElementById('me-'+i)?.value);if(!isNaN(v)&&v>0&&v<100){S.meta=v;save();rMonth(i);}}
 function cerrar(i){S.meses[i].cerrado=!S.meses[i].cerrado;save();renderAll();}
