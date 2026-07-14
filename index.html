@@ -40,11 +40,13 @@ function markUpdated(key){
 // nueva que la local (o el dispositivo no tiene esa área todavía), la trae.
 // Si lo local es igual o más nuevo, lo deja intacto (se subirá con el próximo push).
 let sbPulledOnce=false;
+let lastSyncError='';
 async function sbPull(){
   try{
     const r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026&select=data',{headers:SB_H});
+    if(!r.ok){lastSyncError='Pull HTTP '+r.status+': '+(await r.text()).slice(0,200);return false;}
     const d=await r.json();
-    if(!d||!d[0])return false;
+    if(!d||!d[0]){lastSyncError='Pull: respuesta vacía de la nube';return false;}
     const cloud=d[0].data;
     const cloudMeta=cloud.hub_meta?JSON.parse(cloud.hub_meta):{};
     const localMeta=JSON.parse(localStorage.getItem('hub_meta')||'{}');
@@ -63,8 +65,9 @@ async function sbPull(){
     });
     if(metaChanged)localStorage.setItem('hub_meta',JSON.stringify(localMeta));
     sbPulledOnce=true;
+    lastSyncError='';
     return true;
-  }catch(e){return false;}
+  }catch(e){lastSyncError='Pull: '+(e&&e.message||e);return false;}
 }
 
 async function sbPush(){
@@ -75,7 +78,7 @@ async function sbPush(){
   if(!sbPulledOnce){
     const ok=await sbPull();
     if(!ok){
-      if(typeof showToast==='function')showToast('⚠️ Sin conexión con la nube — tus cambios quedaron guardados en este dispositivo, se van a subir apenas vuelva la conexión.');
+      if(typeof showToast==='function')showToast('⚠️ Sin conexión con la nube ('+lastSyncError+') — tus cambios quedaron guardados en este dispositivo.');
       return;
     }
   }
@@ -85,6 +88,11 @@ async function sbPush(){
     // cache borrado) jamás puede borrar áreas de datos que no tiene localmente: solo
     // pisa las claves que sí existen en este dispositivo, y deja el resto tal cual está.
     const r0=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026&select=data',{headers:SB_H});
+    if(!r0.ok){
+      lastSyncError='Push (lectura previa) HTTP '+r0.status;
+      if(typeof showToast==='function')showToast('⚠️ No se pudo sincronizar ('+lastSyncError+'). Tus cambios quedaron guardados en este dispositivo.');
+      return;
+    }
     const d0=await r0.json();
     const cloud=(d0&&d0[0]&&d0[0].data)?d0[0].data:{};
     const data={...cloud};
@@ -95,11 +103,15 @@ async function sbPush(){
       headers:{...SB_H,'Prefer':'return=minimal'},
       body:JSON.stringify({data,updated_at:new Date().toISOString()})
     });
-    if(!r.ok&&typeof showToast==='function'){
-      showToast('⚠️ No se pudo sincronizar con la nube. Tus cambios quedaron guardados en este dispositivo.');
+    if(!r.ok){
+      lastSyncError='Push HTTP '+r.status+': '+(await r.text()).slice(0,200);
+      if(typeof showToast==='function')showToast('⚠️ No se pudo sincronizar ('+lastSyncError+'). Tus cambios quedaron guardados en este dispositivo.');
+    }else{
+      lastSyncError='';
     }
   }catch(e){
-    if(typeof showToast==='function')showToast('⚠️ Sin conexión — tus cambios quedaron guardados en este dispositivo.');
+    lastSyncError='Push: '+(e&&e.message||e);
+    if(typeof showToast==='function')showToast('⚠️ Sin conexión ('+lastSyncError+') — tus cambios quedaron guardados en este dispositivo.');
   }
 }
 
@@ -6243,11 +6255,13 @@ function gratGetTemplateField(texto,idx){if(!texto)return'';return texto.split('
 async function syncTodo(){
   showToast('Sincronizando...');
   try{
-    if(!sbPulledOnce)await sbPull();
+    const okPull=await sbPull();
+    if(!okPull){showToast('⚠️ '+lastSyncError);return;}
     await sbPush();
-    showToast('✓ Todo sincronizado');
+    if(lastSyncError){showToast('⚠️ '+lastSyncError);}
+    else{showToast('✓ Todo sincronizado');renderAll();}
   }catch(e){
-    showToast('Error al sincronizar');
+    showToast('⚠️ Error al sincronizar: '+(e&&e.message||e));
   }
 }
 
