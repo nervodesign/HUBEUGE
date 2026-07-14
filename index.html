@@ -6311,7 +6311,7 @@ if(localStorage.getItem('hub_pin')){showLockScreen('verify');}else{bootApp();}
 // ── PWA: Service Worker para funcionar offline ──
 if('serviceWorker' in navigator){
   const swCode=`
-    const CACHE='hubeuge-v2';
+    const CACHE='hubeuge-v3';
     self.addEventListener('install',e=>{
       e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./',location.href])));
       self.skipWaiting();
@@ -6327,7 +6327,15 @@ if('serviceWorker' in navigator){
       // de red momentáneo se enmascara con una respuesta en caché y la app cree que
       // sincronizó cuando en realidad el dato nunca llegó a la nube.
       if(e.request.method!=='GET'||url.origin!==self.location.origin)return;
-      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('./'))));
+      // "Network-first": siempre intenta traer la versión más nueva primero, y sólo
+      // usa lo guardado en caché si no hay conexión — así las actualizaciones de la app
+      // llegan enseguida en vez de quedar pisadas por una copia vieja para siempre.
+      e.respondWith(
+        fetch(e.request).then(r=>{
+          caches.open(CACHE).then(c=>c.put(e.request,r.clone()));
+          return r;
+        }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./')))
+      );
     });
   `;
   const blob=new Blob([swCode],{type:'application/javascript'});
