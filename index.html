@@ -70,7 +70,15 @@ async function sbPull(){
 async function sbPush(){
   // Nunca empujar antes de haber sincronizado con la nube al menos una vez en esta
   // sesión — evita pisar datos de otros dispositivos con un estado local todavía no reconciliado.
-  if(!sbPulledOnce)return;
+  // Si el pull inicial falló (ej. un bache de red al abrir la app), se reintenta acá mismo
+  // en vez de bloquear el resto de la sesión en silencio.
+  if(!sbPulledOnce){
+    const ok=await sbPull();
+    if(!ok){
+      if(typeof showToast==='function')showToast('⚠️ Sin conexión con la nube — tus cambios quedaron guardados en este dispositivo, se van a subir apenas vuelva la conexión.');
+      return;
+    }
+  }
   try{
     // Merge sobre el estado ACTUAL de la nube — nunca se reemplaza la fila entera a ciegas.
     // Así, un dispositivo con storage vacío o parcial (recién instalado, pestaña privada,
