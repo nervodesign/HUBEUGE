@@ -6311,12 +6311,22 @@ if(localStorage.getItem('hub_pin')){showLockScreen('verify');}else{bootApp();}
 // ── PWA: Service Worker para funcionar offline ──
 if('serviceWorker' in navigator){
   const swCode=`
-    const CACHE='hubeuge-v1';
+    const CACHE='hubeuge-v2';
     self.addEventListener('install',e=>{
       e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./',location.href])));
       self.skipWaiting();
     });
+    self.addEventListener('activate',e=>{
+      e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+      self.clients.claim();
+    });
     self.addEventListener('fetch',e=>{
+      const url=new URL(e.request.url);
+      // Solo intervenir en pedidos GET al propio sitio (para poder abrir la app offline).
+      // Nunca interceptar llamadas a otros orígenes (Supabase, etc.) — si no, un problema
+      // de red momentáneo se enmascara con una respuesta en caché y la app cree que
+      // sincronizó cuando en realidad el dato nunca llegó a la nube.
+      if(e.request.method!=='GET'||url.origin!==self.location.origin)return;
       e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('./'))));
     });
   `;
