@@ -1106,6 +1106,12 @@ body.theme-dark .card-gold{background:#2E2620}
       <p class="st">Seguridad <span class="stl"></span></p>
       <div id="lock-settings"></div>
     </div>
+    <div class="card">
+      <p class="st">Diagnóstico de conexión <span class="stl"></span></p>
+      <p style="font-size:12px;color:var(--lino4);margin-bottom:13px">Probá esto y sacale una captura al resultado.</p>
+      <button class="btn-p" onclick="runDiagnostico()">Probar conexión</button>
+      <div id="diag-result" style="margin-top:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;color:var(--lino)"></div>
+    </div>
   </div>
   <div class="view" id="view-search">
     <div class="card">
@@ -6263,6 +6269,44 @@ async function syncTodo(){
   }catch(e){
     showToast('⚠️ Error al sincronizar: '+(e&&e.message||e));
   }
+}
+
+// Prueba de conectividad paso a paso — para diagnosticar sin depender de que
+// alguien describa a mano lo que ve en su celu.
+async function runDiagnostico(){
+  const el=document.getElementById('diag-result');
+  if(!el)return;
+  const lineas=[];
+  const push=(s)=>{lineas.push(s);el.textContent=lineas.join('\n');};
+  push('Hora: '+new Date().toLocaleString('es-AR'));
+  push('navigator.onLine: '+navigator.onLine);
+  push('');
+  push('1) Probando internet en general (google.com)...');
+  try{
+    const t0=Date.now();
+    await fetch('https://www.google.com/favicon.ico',{mode:'no-cors',cache:'no-store'});
+    push('   ✓ OK ('+(Date.now()-t0)+'ms)');
+  }catch(e){
+    push('   ✗ FALLÓ: '+(e&&e.message||e));
+  }
+  push('');
+  push('2) Probando conexión a la base de datos (Supabase)...');
+  try{
+    const t0=Date.now();
+    const r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.euge_2026&select=updated_at',{headers:SB_H,cache:'no-store'});
+    const ms=Date.now()-t0;
+    if(r.ok){
+      const d=await r.json();
+      push('   ✓ OK ('+ms+'ms) status='+r.status);
+      push('   Última actualización en la nube: '+(d&&d[0]&&d[0].updated_at||'—'));
+    }else{
+      push('   ✗ FALLÓ: status='+r.status+' '+(await r.text()).slice(0,150));
+    }
+  }catch(e){
+    push('   ✗ FALLÓ: '+(e&&e.name||'')+' — '+(e&&e.message||e));
+  }
+  push('');
+  push('Mandale una captura de esto a Claude.');
 }
 
 // Cargar TODOS los datos desde Supabase al abrir (sin pisar datos locales existentes)
