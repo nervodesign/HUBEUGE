@@ -1944,7 +1944,7 @@ body.theme-dark .kpi b{color:#F3E6DC!important}
 /* botones y campos */
 body:not(.theme-dark) .nv-btn:not(.ghost),body:not(.theme-dark) .btn-p{background:#A8665C!important;border-color:#A8665C!important;color:#FFFFFF!important;border-radius:999px!important}
 body:not(.theme-dark) .nv-btn.ghost,body:not(.theme-dark) .nt-ib,body:not(.theme-dark) .btn-gh{background:#FFFFFF!important;border:1px solid #EAE0D7!important;color:#6E5A4D!important;border-radius:999px!important}
-body:not(.theme-dark) .nv-in,body:not(.theme-dark) .fi,body:not(.theme-dark) .fsel,body:not(.theme-dark) input:not([type=checkbox]):not([type=radio]):not([type=color]),body:not(.theme-dark) select,body:not(.theme-dark) textarea{background:#FFFFFF!important;border:1px solid #EFE6DF!important;border-radius:12px!important;color:#4A362B!important}
+body:not(.theme-dark) .nv-in,body:not(.theme-dark) .fi,body:not(.theme-dark) .fsel,body:not(.theme-dark) input:not([type=checkbox]):not([type=radio]):not([type=color]),body:not(.theme-dark) select:not([style*="background"]),body:not(.theme-dark) textarea{background:#FFFFFF!important;border:1px solid #EFE6DF!important;border-radius:12px!important;color:#4A362B!important}
 
 /* solapas y pastillas (finanzas, metas, calendario) */
 body:not(.theme-dark) .stab,body:not(.theme-dark) .prog-pill,body:not(.theme-dark) .fin-month-btn{background:#FFFFFF!important;border:1px solid #EFE6DF!important;color:#7A6558!important;border-radius:999px!important}
@@ -2080,6 +2080,56 @@ body:not(.theme-dark) .pf-bol label,body:not(.theme-dark) .pf-bol>div{background
 .fx-add .fi,.fx-add .fsel{height:40px}
 .fx-go{width:100%!important;margin-top:16px;height:46px;display:block}
 @media(max-width:700px){.fx-add{grid-template-columns:1fr 1fr}.fx-add button{grid-column:1/-1}.fx-m{width:100px!important}}
+
+/* notas con fecha */
+.nt-frow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 10px;font-size:13px;color:#8E7B6B}
+.nt-frow label span{color:#B5A497}
+.nt-frow input[type=date]{height:36px;border:1px solid #EFE6DF;border-radius:10px;padding:0 10px;background:rgba(255,255,255,.7);color:#4A362B;font-size:14px}
+.nt-fx{border:none;background:none;color:#A8968A;text-decoration:underline;cursor:pointer;font-size:12px}
+.nt-fh{font-size:12px;color:#A8665C}
+.nt-fch{display:inline-block;margin:8px 0 0;font-size:11px;padding:2px 9px;border-radius:999px;background:#DCE8F7;color:#3F5A78}
+.nt-fch.hoy{background:#F6E1DC;color:#8C4F46}.nt-fch.pas{background:#EEE8E1;color:#8E7B6B}
+.nt-chip{background:#F6E1DC!important;color:#8C4F46!important;border-radius:6px;font-size:11px;padding:1px 6px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.nt-cs{--c:#E7AFA6;--b:#FBF1EE}
+
+/* menú lateral off-white cálido, distinto del fondo */
+body:not(.theme-dark) #sidebar{background:#FCF8F2!important;background-image:none!important;border-right:1px solid #E9DFD4!important;box-shadow:2px 0 14px rgba(110,80,60,.05)}
+body:not(.theme-dark) #sidebar nav a:hover{background:#F5EDE4!important}
+.pf-agok{font-size:12px;color:#6E8B62;white-space:nowrap}
+
+/* afirmaciones: sin marco, renglones con aire */
+body:not(.theme-dark) #dash-afirmaciones input:not([type=checkbox]):not([type=radio]):not([type=color]),#dash-afirmaciones input{border:none!important;background:transparent!important;box-shadow:none!important;border-radius:0!important;font-size:15px!important;padding:8px 0!important;color:#6E5A4D!important}
+#dash-afirmaciones>div{gap:0!important}
+#dash-afirmaciones>div>div{padding:4px 0;border-bottom:1px solid #F1E9E3;gap:12px!important}
+#dash-afirmaciones>div>div:last-child{border-bottom:none}
+#dash-afirmaciones>div>div>div:first-child{width:18px!important;height:18px!important;border-radius:50%!important;border-color:#E2BDB4!important}
+/* campos en general: más aire adentro para que la letra no quede apretada */
+body:not(.theme-dark) .nv-in,body:not(.theme-dark) .fi,body:not(.theme-dark) .fsel,body:not(.theme-dark) select:not([style*="background"]){padding-left:14px!important;padding-right:14px!important;min-height:44px}
+body:not(.theme-dark) textarea{padding:12px 14px!important}
+
+/* los campos que se escriben "sobre el renglón" (afirmaciones, metas, etc.) quedan sin marco */
+body:not(.theme-dark) input[style*="border:none"],body:not(.theme-dark) textarea[style*="border:none"],body:not(.theme-dark) input[style*="border: none"],body:not(.theme-dark) #view-metas input:not([type=checkbox]):not([type=radio]):not([type=color]),body:not(.theme-dark) #view-metas textarea{border:none!important;border-bottom:1px solid #EFE6DF!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;padding:8px 2px!important;min-height:0}
+#view-metas input:focus,#view-metas textarea:focus{box-shadow:none!important;border-bottom-color:#D9A79E!important;outline:none}
+#view-metas input[placeholder^="Escribí tu meta"]{font-size:17px!important}
+#view-metas select[style*="background"]{height:28px!important;padding:2px 12px!important;border-radius:999px!important;font-size:12px!important}
+
+/* cierre del día: agradecimientos + historial */
+.cie-grac{width:100%;min-height:84px;resize:vertical;line-height:1.5;font-family:inherit}
+.cie-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px}
+.cie-pie a{color:#A8665C;text-decoration:underline;cursor:pointer}.cie-okk{color:#6E8B62;font-size:12px}
+.cie-res{display:flex;flex-direction:column;gap:12px}
+.cie-rk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cie-rk>div{background:#F6EFE9;border-radius:14px;padding:10px;text-align:center}.cie-rk b{display:block;font-size:20px}.cie-rk span{font-size:11px;color:#A8968A}
+.cie-mbar{display:flex;height:10px;border-radius:999px;overflow:hidden;gap:2px}
+.m0{background:#C9BDB2}.m1{background:#E3D6CC}.m2{background:#F2CFC8}.m3{background:#DCE8F7}
+.cie-mleg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#8E7B6B}.cie-mleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.cie-gl>div,.cie-dg{font-size:14px;color:#5E4636;padding:6px 0;border-bottom:1px solid #F1E9E3}.cie-gl>div:last-child{border-bottom:none}
+.cie-gl small,.cie-dg small{display:inline-block;min-width:22px;color:#A8968A;margin-right:8px;font-size:12px}
+.cie-dia{background:#FFFFFF;border:1px solid #F1E9E3;border-radius:16px;padding:12px 14px}
+.cie-dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cie-mt{font-size:11px;border-radius:999px;padding:2px 9px;color:#5E4636}
+.cie-dg small{display:block;margin:0 0 2px;text-transform:uppercase;letter-spacing:.12em;font-size:10px}
+.cie-dg{border-bottom:none;padding:4px 0}
 </style>
 
 </style>
@@ -6803,15 +6853,15 @@ function metasSave(d){try{localStorage.setItem('hub_metas',JSON.stringify(d));ma
 let metasVista='activas'; // activas | anual | ahorro | historial
 
 const META_AREAS={
-  gym:     {l:'Gym',      emoji:'🏋️', bg:'#F7DCE1',tc:'#C9667A'},
-  salud:   {l:'Salud',   emoji:'💚', bg:'#D7F4E1',tc:'#1A4D2E'},
-  finanzas:{l:'Finanzas',emoji:'💰', bg:'#E4D2DE',tc:'#5C3452'},
-  mfa:     {l:'MFA',     emoji:'📋', bg:'#E8E4F4',tc:'#3A2870'},
-  nervo:   {l:'Nervo',   emoji:'🪵', bg:'#F4EDE2',tc:'#C9667A'},
-  personal:{l:'Personal',emoji:'🌿', bg:'#F2EDE8',tc:'#6B3A30'},
-  habito:  {l:'Hábito',  emoji:'✅', bg:'#F0F9E8',tc:'#2D5016'},
+  gym:     {l:'Gym',      emoji:'🏋️', bg:'#F6E1DC',tc:'#8C4F46'},
+  salud:   {l:'Salud',   emoji:'💚', bg:'#E3ECDD',tc:'#56704B'},
+  finanzas:{l:'Finanzas',emoji:'💰', bg:'#EDE2D8',tc:'#7A5A45'},
+  mfa:     {l:'MFA',     emoji:'📋', bg:'#DCE8F7',tc:'#3F5A78'},
+  nervo:   {l:'Nervo',   emoji:'🪵', bg:'#EEE6DD',tc:'#7A5A45'},
+  personal:{l:'Personal',emoji:'🌿', bg:'#F3EDE7',tc:'#6E5A4D'},
+  habito:  {l:'Hábito',  emoji:'✅', bg:'#D6E8EA',tc:'#3F6A70'},
 };
-const META_PRIO={alta:{l:'Alta',c:'#c85830'},media:{l:'Media',c:'#854F0B'},baja:{l:'Baja',c:'#3B6D11'}};
+const META_PRIO={alta:{l:'Alta',c:'#A8665C'},media:{l:'Media',c:'#8A6A4F'},baja:{l:'Baja',c:'#6E8B62'}};
 
 function metaKey(tipo){
   const now=new Date();
@@ -6861,32 +6911,32 @@ function renderMetasAhorro(data){
     const fmtFn=m.moneda==='USD'?fmtU:fmt;
     const falta=Math.max(0,m.monto-progreso);
     const cumplida=!!m.cumplidaManual||progreso>=m.monto;
-    return`<div class="card" style="margin-bottom:12px;background:${cumplida?'rgba(59,109,17,0.04)':'#FFFFFF'};border-color:${cumplida?'rgba(59,109,17,0.3)':''}">
+    return`<div class="card" style="margin-bottom:12px;background:${cumplida?'rgba(138,163,127,0.04)':'#FFFFFF'};border-color:${cumplida?'rgba(138,163,127,0.3)':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
           <div onclick="metaAhorroToggle(${idx})"
-            style="width:26px;height:26px;border-radius:50%;border:2.5px solid ${cumplida?'#3B6D11':'rgba(201,102,122,0.3)'};background:${cumplida?'#3B6D11':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;font-size:13px;transition:all .2s;margin-top:1px">
+            style="width:26px;height:26px;border-radius:50%;border:1.5px solid ${cumplida?'#8AA37F':'rgba(201,138,128,0.3)'};background:${cumplida?'#8AA37F':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;font-size:13px;transition:all .2s;margin-top:1px">
             ${cumplida?'✓':''}
           </div>
           <div>
-            <div style="font-weight:700;font-size:15px;text-decoration:${cumplida?'line-through':'none'};color:${cumplida?'#8B6B5A':'#1A0F0A'}">${m.titulo}</div>
+            <div style="font-weight:400;font-size:15px;text-decoration:${cumplida?'line-through':'none'};color:${cumplida?'#A8968A':'#4A362B'}">${m.titulo}</div>
             <div style="font-size:11px;color:var(--lino4)">${MS[m.mesInicio]} — ${MS[m.mesFin]}</div>
           </div>
         </div>
         <button class="btn-del" onclick="delMetaAhorro(${idx})">✕</button>
       </div>
       <div style="display:flex;align-items:baseline;gap:8px;margin:10px 0 4px">
-        <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${cumplida?'#3B6D11':'#1A0F0A'}">${fmtFn(progreso)}</span>
+        <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:${cumplida?'#8AA37F':'#4A362B'}">${fmtFn(progreso)}</span>
         <span style="font-size:12px;color:var(--lino4)">de ${fmtFn(m.monto)}</span>
       </div>
-      <div class="pbarw"><div class="pbarf" style="width:${pct}%${cumplida?';background:#3B6D11':''}"></div></div>
+      <div class="pbarw"><div class="pbarf" style="width:${pct}%${cumplida?';background:#8AA37F':''}"></div></div>
       <div style="font-size:11px;color:var(--lino4);margin-top:4px">${cumplida?'¡Meta cumplida! 🎉':`Faltan ${fmtFn(falta)} · ${pct}%`}</div>
     </div>`;
   }).join('');
   const curM=new Date().getMonth();
   const mesOpts=MESES.map((m,i)=>`<option value="${i}" ${i===curM?'selected':''}>${m}</option>`).join('');
   return`
-    ${metas.length===0?'<div style="text-align:center;padding:20px;color:#B09890;font-size:13px">Todavía no cargaste ninguna meta de ahorro.</div>':cards}
+    ${metas.length===0?'<div style="text-align:center;padding:20px;color:#B5A497;font-size:13px">Todavía no cargaste ninguna meta de ahorro.</div>':cards}
     <div class="card">
       <p class="st">Nueva meta de ahorro <span class="stl"></span></p>
       <div style="margin-bottom:8px"><input type="text" class="fi" id="ma-titulo" placeholder="Ej: Viaje a Bariloche" style="width:100%"/></div>
@@ -6950,7 +7000,7 @@ function renderMetasActivas(data){
       <button class="btn-p" onclick="metaActivaAdd()" style="height:36px;padding:0 14px;font-size:12px;width:auto">+ Nueva meta</button>
     </div>
 
-    ${activas.length===0?`<div class="card" style="text-align:center;padding:32px;color:#B09890;font-size:13px">Tocá "+ Nueva meta" para empezar</div>`:''}
+    ${activas.length===0?`<div class="card" style="text-align:center;padding:32px;color:#B5A497;font-size:13px">Tocá "+ Nueva meta" para empezar</div>`:''}
 
     <div style="display:flex;flex-direction:column;gap:10px">
       ${metas.map((m,i)=>m.cumplida?'':renderMetaActivaCard(m,i)).join('')}
@@ -6966,15 +7016,15 @@ function renderMetaActivaCard(m,i){
   return`<div class="card" style="padding:14px">
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
       <div style="flex:1;min-width:0">
-        <input class="fi" style="width:100%;height:30px;font-size:14px;font-weight:700;color:#1A0F0A;background:transparent;border-color:transparent;padding:0 2px"
+        <input class="fi" style="width:100%;height:30px;font-size:14px;font-weight:400;color:#4A362B;background:transparent;border-color:transparent;padding:0 2px"
           value="${m.texto}" placeholder="Escribí tu meta..."
           onchange="metaActivaUpdate(${i},'texto',this.value)"/>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;align-items:center">
-          <select style="background:${area.bg};color:${area.tc};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+          <select style="background:${area.bg};color:${area.tc};border:none;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:400;cursor:pointer;height:22px"
             onchange="metaActivaUpdate(${i},'cat',this.value)">
             ${Object.entries(META_AREAS).map(([k,v])=>`<option value="${k}" ${(m.cat||'personal')===k?'selected':''}>${v.emoji} ${v.l}</option>`).join('')}
           </select>
-          <select style="background:${prio.c}20;color:${prio.c};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+          <select style="background:${prio.c}20;color:${prio.c};border:none;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:400;cursor:pointer;height:22px"
             onchange="metaActivaUpdate(${i},'prio',this.value)">
             ${Object.entries(META_PRIO).map(([k,v])=>`<option value="${k}" ${(m.prio||'media')===k?'selected':''}>${v.l}</option>`).join('')}
           </select>
@@ -6983,15 +7033,15 @@ function renderMetaActivaCard(m,i){
       <button class="btn-del" onclick="metaActivaDel(${i})">✕</button>
     </div>
 
-    <div style="border-top:1px solid rgba(201,102,122,0.08);padding-top:10px">
+    <div style="border-top:1px solid rgba(201,138,128,0.08);padding-top:10px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div>
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inicio</div>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inicio</div>
           <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 01/05"
             value="${m.fechaInicio||''}" onchange="metaActivaUpdate(${i},'fechaInicio',this.value)"/>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fin / Deadline</div>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fin / Deadline</div>
           <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 31/07"
             value="${m.fechaFin||''}" onchange="metaActivaUpdate(${i},'fechaFin',this.value)"/>
         </div>
@@ -6999,26 +7049,26 @@ function renderMetaActivaCard(m,i){
 
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
-          <button onclick="metaActivaAddSub(${i})" style="font-size:10px;color:#C9667A;background:none;border:1px solid rgba(201,102,122,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
+          <button onclick="metaActivaAddSub(${i})" style="font-size:11px;color:#C98A80;background:none;border:1px solid rgba(201,138,128,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
         </div>
         ${subs.length>0?`<div style="margin-bottom:8px">
-          <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .4s"></div>
+          <div style="height:6px;background:rgba(201,138,128,0.1);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#8AA37F':'#C98A80'};border-radius:3px;transition:width .4s"></div>
           </div>
         </div>`:''}
         ${subs.map((s,si)=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,138,128,0.06)">
             <div onclick="metaActivaToggleSub(${i},${si})"
-              style="width:18px;height:18px;border-radius:5px;border:2px solid ${s.done?'#3B6D11':'rgba(201,102,122,0.3)'};background:${s.done?'#3B6D11':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${s.done?'✓':''}</div>
-            <input style="flex:1;border:none;background:transparent;font-size:12px;color:${s.done?'#B09890':'#1A0F0A'};text-decoration:${s.done?'line-through':'none'};outline:none;padding:0"
+              style="width:18px;height:18px;border-radius:50%;border:1.5px solid ${s.done?'#8AA37F':'rgba(201,138,128,0.3)'};background:${s.done?'#8AA37F':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">${s.done?'✓':''}</div>
+            <input style="flex:1;border:none;background:transparent;font-size:12px;color:${s.done?'#B5A497':'#4A362B'};text-decoration:${s.done?'line-through':'none'};outline:none;padding:0"
               value="${s.texto}" placeholder="Paso..."
               onchange="metaActivaUpdateSub(${i},${si},this.value)"/>
-            <button onclick="metaActivaDelSub(${i},${si})" style="background:none;border:none;color:#C8B898;cursor:pointer;font-size:13px;padding:0 2px">✕</button>
+            <button onclick="metaActivaDelSub(${i},${si})" style="background:none;border:none;color:#C2B3A8;cursor:pointer;font-size:13px;padding:0 2px">✕</button>
           </div>`).join('')}
       </div>
 
-      <button class="btn-p" onclick="metaActivaCumplir(${i})" style="width:100%;background:#3B6D11">✓ Cumplida</button>
+      <button class="btn-p" onclick="metaActivaCumplir(${i})" style="width:100%;background:#8AA37F">✓ Cumplida</button>
     </div>
   </div>`;
 }
@@ -7083,25 +7133,25 @@ function renderMetasAnual(data,now){
   return`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
-        <div style="font-size:18px;font-weight:700;color:#1A0F0A">Metas ${now.getFullYear()}</div>
-        <div style="font-size:12px;color:#8B6B5A">${logradas} de ${total} logradas · ${pct}%</div>
+        <div style="font-size:18px;font-weight:400;color:#4A362B">Metas ${now.getFullYear()}</div>
+        <div style="font-size:12px;color:#A8968A">${logradas} de ${total} logradas · ${pct}%</div>
       </div>
       <button class="btn-p" onclick="addMetaItem('${key}','anual')" style="height:36px;padding:0 14px;font-size:12px;width:auto">+ Nueva meta anual</button>
     </div>
 
     <!-- Barra de avance anual -->
-    <div style="background:#FAF8F2;border:1.5px solid rgba(201,102,122,0.12);border-radius:16px;padding:14px;margin-bottom:14px">
+    <div style="background:#FAF8F2;border:1.5px solid rgba(201,138,128,0.12);border-radius:16px;padding:14px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:12px;font-weight:700;color:#1A0F0A">Progreso ${now.getFullYear()}</span>
-        <span style="font-size:12px;font-weight:700;color:${pct>=80?'#3B6D11':'#C9667A'}">${pct}%</span>
+        <span style="font-size:12px;font-weight:400;color:#4A362B">Progreso ${now.getFullYear()}</span>
+        <span style="font-size:12px;font-weight:400;color:${pct>=80?'#8AA37F':'#C98A80'}">${pct}%</span>
       </div>
-      <div style="height:10px;background:rgba(201,102,122,0.1);border-radius:5px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${pct>=80?'#3B6D11':'#C9667A'};border-radius:5px;transition:width .5s"></div>
+      <div style="height:10px;background:rgba(201,138,128,0.1);border-radius:50%;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${pct>=80?'#8AA37F':'#C98A80'};border-radius:50%;transition:width .5s"></div>
       </div>
     </div>
 
     <div class="card">
-      ${anio.metas.length===0?`<div style="text-align:center;padding:20px;color:#B09890;font-size:13px">Sin metas anuales — tocá "+ Nueva meta anual"</div>`:''}
+      ${anio.metas.length===0?`<div style="text-align:center;padding:20px;color:#B5A497;font-size:13px">Sin metas anuales — tocá "+ Nueva meta anual"</div>`:''}
       <div style="display:flex;flex-direction:column;gap:10px">
         ${anio.metas.map((m,i)=>renderMetaCard(m,i,key)).join('')}
       </div>
@@ -7115,13 +7165,13 @@ function renderMetasHistorial(data,now){
     <p class="st" style="margin-bottom:12px">Metas cumplidas <span class="stl"></span></p>
     ${cumplidas.map(x=>{
       const area=META_AREAS[x.cat]||META_AREAS.personal;
-      return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+      return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,138,128,0.06)">
         <span style="font-size:16px;margin-top:1px">✅</span>
         <div style="flex:1">
-          <div style="font-size:13px;color:#3B6D11;text-decoration:line-through">${x.texto}</div>
-          ${x.fechaCumplida?`<div style="font-size:11px;color:#8B6B5A;margin-top:2px">${x.fechaCumplida}</div>`:''}
+          <div style="font-size:13px;color:#8AA37F;text-decoration:line-through">${x.texto}</div>
+          ${x.fechaCumplida?`<div style="font-size:11px;color:#A8968A;margin-top:2px">${x.fechaCumplida}</div>`:''}
         </div>
-        <span style="font-size:10px;background:${area.bg};color:${area.tc};padding:2px 7px;border-radius:20px;flex-shrink:0">${area.emoji}</span>
+        <span style="font-size:11px;background:${area.bg};color:${area.tc};padding:2px 7px;border-radius:20px;flex-shrink:0">${area.emoji}</span>
       </div>`;}).join('')}
   </div>`:'';
 
@@ -7130,7 +7180,7 @@ function renderMetasHistorial(data,now){
   const entries=Object.entries(data)
     .filter(([k])=>k!==curMesKey&&k!==curAnioKey&&k!=='metasActivas'&&k!=='ahorros')
     .sort(([a],[b])=>b.localeCompare(a));
-  if(entries.length===0&&!cumplidasHtml)return`<div class="card" style="text-align:center;padding:32px;color:#B09890">Sin historial todavía</div>`;
+  if(entries.length===0&&!cumplidasHtml)return`<div class="card" style="text-align:center;padding:32px;color:#B5A497">Sin historial todavía</div>`;
 
   return cumplidasHtml+entries.map(([key,d])=>{
     const isMes=key.startsWith('M-');
@@ -7141,21 +7191,21 @@ function renderMetasHistorial(data,now){
     const p=metas.length>0?Math.round(lg/metas.length*100):0;
     return`<div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:14px;font-weight:700;color:#1A0F0A">${isMes?'📅':'🗓'} ${label}</span>
-        <span style="font-size:12px;font-weight:700;color:${p===100?'#3B6D11':'#8B6B5A'}">${lg}/${metas.length} · ${p}%</span>
+        <span style="font-size:14px;font-weight:400;color:#4A362B">${isMes?'📅':'🗓'} ${label}</span>
+        <span style="font-size:12px;font-weight:400;color:${p===100?'#8AA37F':'#A8968A'}">${lg}/${metas.length} · ${p}%</span>
       </div>
       <div style="height:4px;background:#F2EDE8;border-radius:2px;overflow:hidden;margin-bottom:12px">
-        <div style="height:4px;width:${p}%;background:${p===100?'#3B6D11':'#C9667A'};border-radius:2px"></div>
+        <div style="height:4px;width:${p}%;background:${p===100?'#8AA37F':'#C98A80'};border-radius:2px"></div>
       </div>
       ${metas.map(x=>{
         const area=META_AREAS[x.cat]||META_AREAS.personal;
-        return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+        return`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,138,128,0.06)">
           <span style="font-size:16px;margin-top:1px">${x.lograda?'✅':'○'}</span>
           <div style="flex:1">
-            <div style="font-size:13px;color:${x.lograda?'#3B6D11':'#1A0F0A'};text-decoration:${x.lograda?'line-through':'none'}">${x.texto}</div>
-            ${x.resultado?`<div style="font-size:11px;color:#8B6B5A;margin-top:2px">📊 ${x.resultado}</div>`:''}
+            <div style="font-size:13px;color:${x.lograda?'#8AA37F':'#4A362B'};text-decoration:${x.lograda?'line-through':'none'}">${x.texto}</div>
+            ${x.resultado?`<div style="font-size:11px;color:#A8968A;margin-top:2px">📊 ${x.resultado}</div>`:''}
           </div>
-          <span style="font-size:10px;background:${area.bg};color:${area.tc};padding:2px 7px;border-radius:20px;flex-shrink:0">${area.emoji}</span>
+          <span style="font-size:11px;background:${area.bg};color:${area.tc};padding:2px 7px;border-radius:20px;flex-shrink:0">${area.emoji}</span>
         </div>`;}).join('')}
     </div>`;
   }).join('');
@@ -7168,46 +7218,46 @@ function renderMetaCard(m,i,key){
   const subDone=subs.filter(s=>s.done).length;
   const subPct=subs.length>0?Math.round(subDone/subs.length*100):0;
 
-  return`<div style="background:${m.lograda?'rgba(59,109,17,0.04)':'#FFFFFF'};border:1.5px solid ${m.lograda?'rgba(59,109,17,0.3)':'rgba(201,102,122,0.12)'};border-radius:16px;padding:14px">
+  return`<div style="background:${m.lograda?'rgba(138,163,127,0.04)':'#FFFFFF'};border:1.5px solid ${m.lograda?'rgba(138,163,127,0.3)':'rgba(201,138,128,0.12)'};border-radius:16px;padding:14px">
 
     <!-- Fila principal -->
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
       <div onclick="metaToggle(${i},'${key}')"
-        style="width:26px;height:26px;border-radius:50%;border:2.5px solid ${m.lograda?'#3B6D11':'rgba(201,102,122,0.3)'};background:${m.lograda?'#3B6D11':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;font-size:13px;transition:all .2s">
+        style="width:26px;height:26px;border-radius:50%;border:1.5px solid ${m.lograda?'#8AA37F':'rgba(201,138,128,0.3)'};background:${m.lograda?'#8AA37F':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;font-size:13px;transition:all .2s">
         ${m.lograda?'✓':''}
       </div>
       <div style="flex:1;min-width:0">
-        <input class="fi" style="width:100%;height:30px;font-size:14px;font-weight:${m.lograda?'400':'700'};color:${m.lograda?'#B09890':'#1A0F0A'};text-decoration:${m.lograda?'line-through':'none'};background:transparent;border-color:transparent;padding:0 2px"
+        <input class="fi" style="width:100%;height:30px;font-size:14px;font-weight:${m.lograda?'400':'700'};color:${m.lograda?'#B5A497':'#4A362B'};text-decoration:${m.lograda?'line-through':'none'};background:transparent;border-color:transparent;padding:0 2px"
           value="${m.texto}" placeholder="Escribí tu meta..."
           onchange="metaUpdate(${i},'texto',this.value,'${key}')"/>
         <!-- Tags -->
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;align-items:center">
-          <select style="background:${area.bg};color:${area.tc};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+          <select style="background:${area.bg};color:${area.tc};border:none;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:400;cursor:pointer;height:22px"
             onchange="metaUpdate(${i},'cat',this.value,'${key}')">
             ${Object.entries(META_AREAS).map(([k,v])=>`<option value="${k}" ${(m.cat||'personal')===k?'selected':''}>${v.emoji} ${v.l}</option>`).join('')}
           </select>
-          <select style="background:${prio.c}20;color:${prio.c};border:none;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;height:22px"
+          <select style="background:${prio.c}20;color:${prio.c};border:none;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:400;cursor:pointer;height:22px"
             onchange="metaUpdate(${i},'prio',this.value,'${key}')">
             ${Object.entries(META_PRIO).map(([k,v])=>`<option value="${k}" ${(m.prio||'media')===k?'selected':''}>${v.l}</option>`).join('')}
           </select>
-          ${m.fechaInicio?`<span style="font-size:10px;color:#8B6B5A">📅 ${m.fechaInicio}${m.fechaFin?' → '+m.fechaFin:''}</span>`:''}
+          ${m.fechaInicio?`<span style="font-size:11px;color:#A8968A">📅 ${m.fechaInicio}${m.fechaFin?' → '+m.fechaFin:''}</span>`:''}
         </div>
       </div>
       <button class="btn-del" onclick="metaDel(${i},'${key}')">✕</button>
     </div>
 
     <!-- Expandible: plan + progreso + subtareas -->
-    <div style="border-top:1px solid rgba(201,102,122,0.08);padding-top:10px">
+    <div style="border-top:1px solid rgba(201,138,128,0.08);padding-top:10px">
 
       <!-- Fechas -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div>
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inicio</div>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inicio</div>
           <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 01/05"
             value="${m.fechaInicio||''}" onchange="metaUpdate(${i},'fechaInicio',this.value,'${key}')"/>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fin / Deadline</div>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fin / Deadline</div>
           <input class="fi" type="text" style="width:100%;height:32px;font-size:12px" placeholder="ej: 31/05"
             value="${m.fechaFin||''}" onchange="metaUpdate(${i},'fechaFin',this.value,'${key}')"/>
         </div>
@@ -7216,29 +7266,29 @@ function renderMetaCard(m,i,key){
       <!-- Subtareas checklist -->
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-size:9px;font-weight:700;color:#8B6B5A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
-          <button onclick="metaAddSub(${i},'${key}')" style="font-size:10px;color:#C9667A;background:none;border:1px solid rgba(201,102,122,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
+          <div style="font-size:11px;font-weight:400;color:#A8968A;text-transform:uppercase;letter-spacing:.06em">Pasos / checklist ${subs.length>0?`(${subDone}/${subs.length})`:''}</div>
+          <button onclick="metaAddSub(${i},'${key}')" style="font-size:11px;color:#C98A80;background:none;border:1px solid rgba(201,138,128,0.25);border-radius:20px;padding:2px 10px;cursor:pointer">+ Paso</button>
         </div>
         ${subs.length>0?`<div style="margin-bottom:8px">
-          <div style="height:6px;background:rgba(201,102,122,0.1);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#3B6D11':'#C9667A'};border-radius:3px;transition:width .4s"></div>
+          <div style="height:6px;background:rgba(201,138,128,0.1);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${subPct}%;background:${subPct>=100?'#8AA37F':'#C98A80'};border-radius:3px;transition:width .4s"></div>
           </div>
         </div>`:''}
         ${subs.map((s,si)=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,102,122,0.06)">
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(201,138,128,0.06)">
             <div onclick="metaToggleSub(${i},${si},'${key}')"
-              style="width:18px;height:18px;border-radius:5px;border:2px solid ${s.done?'#3B6D11':'rgba(201,102,122,0.3)'};background:${s.done?'#3B6D11':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${s.done?'✓':''}</div>
-            <input style="flex:1;border:none;background:transparent;font-size:12px;color:${s.done?'#B09890':'#1A0F0A'};text-decoration:${s.done?'line-through':'none'};outline:none;padding:0"
+              style="width:18px;height:18px;border-radius:50%;border:1.5px solid ${s.done?'#8AA37F':'rgba(201,138,128,0.3)'};background:${s.done?'#8AA37F':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">${s.done?'✓':''}</div>
+            <input style="flex:1;border:none;background:transparent;font-size:12px;color:${s.done?'#B5A497':'#4A362B'};text-decoration:${s.done?'line-through':'none'};outline:none;padding:0"
               value="${s.texto}" placeholder="Paso..."
               onchange="metaUpdateSub(${i},${si},'texto',this.value,'${key}')"/>
-            <button onclick="metaDelSub(${i},${si},'${key}')" style="background:none;border:none;color:#C8B898;cursor:pointer;font-size:13px;padding:0 2px">✕</button>
+            <button onclick="metaDelSub(${i},${si},'${key}')" style="background:none;border:none;color:#C2B3A8;cursor:pointer;font-size:13px;padding:0 2px">✕</button>
           </div>`).join('')}
       </div>
 
       <!-- Resultado final (al lograr) -->
       ${m.lograda?`<div style="margin-top:10px">
-        <div style="font-size:9px;font-weight:700;color:#3B6D11;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">¿Qué lograste / qué número llegaste?</div>
-        <input class="fi" type="text" style="width:100%;height:34px;font-size:13px;border-color:rgba(59,109,17,0.3)"
+        <div style="font-size:11px;font-weight:400;color:#8AA37F;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">¿Qué lograste / qué número llegaste?</div>
+        <input class="fi" type="text" style="width:100%;height:34px;font-size:13px;border-color:rgba(138,163,127,0.3)"
           placeholder="Ej: ahorré $450.000, bajé 3kg, fui al gym 18 veces..."
           value="${m.resultado||''}" onchange="metaUpdate(${i},'resultado',this.value,'${key}')"/>
       </div>`:''}
@@ -8992,9 +9042,9 @@ function pfResumenHTML(d){
   var h='<div class="kpis"><div class="kpi k1" onclick="pf_tab=\'mes\';pf_mes=\''+k+'\';rParque()"><b>'+$m(r.tot)+'</b><span>a cobrar en '+CAL_MESES[new Date().getMonth()]+'</span></div>'+
     '<div class="kpi k4"><b>'+$m(r.pag)+'</b><span>cobrado</span></div><div class="kpi k3"><b>'+$m(r.saldo)+'</b><span>pendiente</span></div><div class="kpi k2" onclick="pf_tab=\'anio\';rParque()"><b>'+$m(cobAno)+'</b><span>cobrado en '+ano+'</span></div></div>';
   if(!d.meses[k])h+='<div class="empty-card" style="margin-bottom:16px">Todavía no armaste los cobros de '+pfMesLbl(k)+'. <a onclick="pfMesCrear(\''+k+'\');pf_tab=\'mes\';pf_mes=\''+k+'\';rParque()">Crear el mes</a></div>';
-  var al=pfAlertas(d);
+  var al=pfAlertas(d);PF_AVISOS=[];
   h+='<div class="sec-h">Avisos <span class="cnt">'+al.length+'</span></div><div class="ev-list">'+(al.length?al.map(function(x){
-    return '<div class="ev-card" style="border-left-color:'+x.c+'"'+(x.go?' onclick="pf_tab=\'mes\';pf_mes=\''+x.go+'\';rParque()"':'')+'><div style="flex:1;min-width:0"><div class="ev-t">'+calEsc(x.t)+'</div><div class="ev-m">'+calEsc(x.s)+'</div></div>'+(x.tar?'<button class="nt-ib" onclick="event.stopPropagation();pfAgendar(\''+x.tar.replace(/'/g,'’')+'\',\''+(x.f||'')+'\')">+ Agendar</button>':'')+'</div>';}).join(''):'<div class="empty-card">Todo en orden 🎉</div>')+'</div>';
+    return '<div class="ev-card" style="border-left-color:'+x.c+'"'+(x.go?' onclick="pf_tab=\'mes\';pf_mes=\''+x.go+'\';rParque()"':'')+'><div style="flex:1;min-width:0"><div class="ev-t">'+calEsc(x.t)+'</div><div class="ev-m">'+calEsc(x.s)+'</div></div>'+(x.tar?(pfYaAgendada(x.tar)?'<span class="pf-agok">✓ Agendada</span>':'<button class="nt-ib" onclick="event.stopPropagation();pfAgendarAviso('+(PF_AVISOS.push(x)-1)+',this)">+ Agendar</button>'):'')+'</div>';}).join(''):'<div class="empty-card">Todo en orden 🎉</div>')+'</div>';
   if(d.meses[k]){h+='<div class="sec-h">'+pfMesLbl(k)+' por unidad</div><div class="pf-grid">'+r.lineas.map(function(x){
     return '<div class="pf-u" onclick="pf_tab=\'mes\';pf_mes=\''+k+'\';rParque();setTimeout(function(){pfLineaAbrir(\''+x.uid+'\')},50)"><div class="pf-un">'+x.u.n+'</div><div class="pf-nm">'+calEsc(x.n||'')+'</div><b>'+$m(x.tot)+'</b>'+pfEstTag(x.est)+'</div>';}).join('')+'</div>';}
   return h;
@@ -9248,8 +9298,8 @@ function cieHTML(iso){
   return '<div class="sec-h">'+tit+'</div><div class="nv-card cie" id="cie-card">'+
     '<div class="cie-l">¿Cómo estuvo hoy?</div><div class="cie-moods">'+CIE_MOODS.map(function(e,i){return '<button class="'+(d.m===i?'on':'')+'" onclick="cieMood(\''+iso+'\','+i+')">'+e+'</button>';}).join('')+'</div>'+
     '<div class="cie-l">Una cosa linda de hoy</div><input class="nv-in cie-in" id="cie-linda" value="'+calEsc(d.linda||'')+'" placeholder="Ej: almuerzo con Pau" onchange="cieSet(\''+iso+'\',\'linda\',this.value.trim())">'+
-    '<div class="cie-l">Una cosa para mañana</div><div class="tr-add"><input class="nv-in cie-in" id="cie-man" placeholder="Ej: llamar al plomero" onkeydown="if(event.key===\'Enter\')cieManiana(\''+iso+'\')"><button class="nv-btn" onclick="cieManiana(\''+iso+'\')">→ Mañana</button></div>'+
-    ((d.man||[]).length?'<div class="cie-ok">'+d.man.map(function(t){return '✓ '+calEsc(t);}).join('<br>')+' <span>· ya está en tus tareas de mañana</span></div>':'')+
+    '<div class="cie-l">Agradezco hoy…</div><textarea class="nv-in cie-in cie-grac" id="cie-grac" rows="3" placeholder="Ej: la charla con mamá, el sol de la tarde, haber ido al gym" onchange="cieSet(\''+iso+'\',\'grac\',this.value.trim());cieGuardado()">'+calEsc(d.grac||'')+'</textarea>'+
+    '<div class="cie-pie"><span id="cie-ok" class="cie-okk">'+((d.grac||d.linda||d.m!=null)?'✓ guardado':'')+'</span><a onclick="cieHistorial()">Ver mis días y el resumen del mes</a></div>'+
     '</div>';
 }
 function cieRefrescar(){var c=document.getElementById('cie-card');if(!c)return;var w=document.createElement('div');w.innerHTML=cieHTML(calISO(new Date()));c.replaceWith(w.children[1]);}
@@ -9443,6 +9493,125 @@ function agregarFijosRapidos(i){
   var el=document.getElementById('fijos-rapidos-'+i);if(el)el.style.display='none';
   showToast('✓ '+n+' fijo(s) cargado(s)');
 }
+
+// ═══════════════════════════════════════
+// NOTAS Y LISTAS CON FECHA (opcional) → aparecen en Hoy y en el Calendario
+// ═══════════════════════════════════════
+function ntDelDia(iso){return notasLoad().filter(function(n){return n.fecha===iso;});}
+function ntFechaTxt(iso){var d=calParse(iso);return d.getDate()+' '+CAL_MESES[d.getMonth()].slice(0,3);}
+// campo de fecha dentro de la nota
+function ntFechaCampo(){var t=document.getElementById('nt-t');if(!t||document.getElementById('nt-frow'))return;
+  var r=document.createElement('div');r.id='nt-frow';r.className='nt-frow';
+  r.innerHTML='<label for="nt-f">Fecha <span>(opcional)</span></label><input type="date" id="nt-f" onchange="ntCampo(\'fecha\',this.value);ntFechaPintar()"><button type="button" class="nt-fx" id="nt-fx" onclick="document.getElementById(\'nt-f\').value=\'\';ntCampo(\'fecha\',\'\');ntFechaPintar()">Quitar</button><span class="nt-fh" id="nt-fh"></span>';
+  t.parentNode.insertBefore(r,t.nextSibling);}
+function ntFechaPintar(){var v=(document.getElementById('nt-f')||{}).value||'';var x=document.getElementById('nt-fx');if(x)x.style.display=v?'':'none';
+  var h=document.getElementById('nt-fh');if(h)h.textContent=v?(v===calISO(new Date())?'aparece en Hoy':'aparece en el calendario'):'';}
+var _ntAbrirBase=ntAbrir;
+ntAbrir=function(id){ntFechaCampo();_ntAbrirBase.apply(this,arguments);var n=ntGet(id);var f=document.getElementById('nt-f');if(f)f.value=(n&&n.fecha)||'';ntFechaPintar();};
+// etiqueta de fecha en la tarjeta de la nota
+var _ntCardBase=ntCard;
+ntCard=function(n){var h=_ntCardBase.apply(this,arguments);if(!n.fecha)return h;
+  var hoy=calISO(new Date());var cls=n.fecha===hoy?' hoy':(n.fecha<hoy?' pas':'');
+  return h.replace('<div class="nt-foot">','<div class="nt-fch'+cls+'">'+(n.fecha===hoy?'Hoy':ntFechaTxt(n.fecha))+'</div><div class="nt-foot">');};
+function ntResumen(n){
+  if(n.tipo==='lista'){var p=n.items.filter(function(i){return!i.done;});return p.length?p.slice(0,3).map(function(i){return calEsc(i.texto);}).join(' · ')+(p.length>3?' · +'+(p.length-3):''):'todo tildado ✓';}
+  return calEsc((n.texto||'').slice(0,80));
+}
+function ntFilaHoy(n){
+  return '<div class="ev-card nt-hoy" onclick="ntAbrir(\''+n.id+'\')"><div style="flex:1;min-width:0"><div class="ev-t">'+calEsc(n.titulo||(n.tipo==='lista'?'Lista':'Nota'))+'</div><div class="ev-m">'+ntResumen(n)+'</div></div><span class="tg soft">'+(n.tipo==='lista'?'Lista':'Nota')+'</span></div>';
+}
+// en Hoy: debajo de la agenda
+var _hoyRenderNotas=hoyRender;
+hoyRender=function(){
+  _hoyRenderNotas.apply(this,arguments);
+  try{var hoy=calISO(new Date());
+    var arr=notasLoad().filter(function(n){return n.fecha&&(n.fecha===hoy||(n.fecha<hoy&&n.tipo==='lista'&&n.items.some(function(i){return!i.done;})));});
+    if(!arr.length)return;
+    var L=document.getElementById('dash-left');var hs=[].slice.call(L.querySelectorAll('.sec-h'));var ag=hs.find(function(h){return /agenda/i.test(h.textContent);});
+    var lista=ag&&ag.nextElementSibling;if(!lista)return;
+    var w=document.createElement('div');
+    w.innerHTML='<div class="sec-h">Notas y listas de hoy <span class="cnt">'+arr.length+'</span></div><div class="ev-list">'+arr.map(ntFilaHoy).join('')+'</div>';
+    var ref=lista.nextSibling;while(w.firstChild)lista.parentNode.insertBefore(w.firstChild,ref);
+  }catch(e){console.log(e);}
+};
+// en el calendario: chip en el día del mes y en el panel del día elegido
+var _rCalMesNotas=rCalMes;
+rCalMes=function(){
+  _rCalMesNotas.apply(this,arguments);
+  try{var porDia={};notasLoad().forEach(function(n){if(n.fecha)(porDia[n.fecha]=porDia[n.fecha]||[]).push(n);});
+    document.querySelectorAll('#cal-body .nv-day[onclick]').forEach(function(c){var m=(c.getAttribute('onclick')||'').match(/(\d{4}-\d{2}-\d{2})/);if(!m||!porDia[m[1]])return;
+      var num=c.querySelector('.nv-num');var html=porDia[m[1]].slice(0,2).map(function(n){return '<div class="nv-ev nt-chip" onclick="event.stopPropagation();ntAbrir(\''+n.id+'\')">'+calEsc(n.titulo||(n.tipo==='lista'?'Lista':'Nota'))+'</div>';}).join('');
+      var t=document.createElement('div');t.innerHTML=html;while(t.firstChild)c.insertBefore(t.firstChild,num?num.nextSibling:c.firstChild);var dots=c.querySelector('.nv-dots');if(dots){var i=document.createElement('i');i.style.background='#E7AFA6';dots.appendChild(i);}});
+  }catch(e){}
+};
+var _rCalSideNotas=rCalSide;
+rCalSide=function(){
+  _rCalSideNotas.apply(this,arguments);
+  try{var el=document.getElementById('cal-side');var iso=cal_sel||calISO(new Date());var arr=ntDelDia(iso);if(!el||!arr.length)return;
+    var cs=el.querySelector('.cs');var w=document.createElement('div');w.className='cs-sec';
+    w.innerHTML='<h6>Notas y listas</h6>'+arr.map(function(n){return '<div class="cs-it nt-cs" onclick="ntAbrir(\''+n.id+'\')"><div class="cs-h">'+(n.tipo==='lista'?'Lista':'Nota')+'</div><div><b>'+calEsc(n.titulo||'Sin título')+'</b><div style="font-size:12px;color:#A8968A">'+ntResumen(n)+'</div></div></div>';}).join('');
+    var links=cs&&cs.querySelector('.cs-links');if(links)cs.insertBefore(w,links);else if(cs)cs.appendChild(w);
+  }catch(e){}
+};
+// al cerrar la nota, refrescar también el calendario
+var _ntCerrarBase=ntCerrar;
+ntCerrar=function(){_ntCerrarBase.apply(this,arguments);if(aSection==='calendario')rCalendario();};
+
+var PF_AVISOS=[];
+function pfYaAgendada(t){return tarLoad().some(function(x){return !x.done&&x.t===t;});}
+function pfAgendarAviso(i,btn){
+  var x=PF_AVISOS[i];if(!x)return;
+  var f=x.f||calISO(new Date());
+  if(pfYaAgendada(x.tar)){showToast('Ya estaba agendada');}
+  else{pfAgendar(x.tar,f);}
+  if(btn){var s=document.createElement('span');s.className='pf-agok';s.textContent='✓ Agendada '+(f===calISO(new Date())?'para hoy':'para el '+calParse(f).getDate()+'/'+(calParse(f).getMonth()+1));btn.replaceWith(s);}
+  if(typeof navBadges==='function')navBadges();
+}
+
+// ── historial del cierre del día + resumen del mes ──
+var CIE_LBL=['Pesado','Normal','Lindo','Soñado'];
+var cie_hist_mes=null;
+function cieGuardado(){var e=document.getElementById('cie-ok');if(e)e.textContent='✓ guardado';}
+function cieMesDatos(y,m){
+  var o=cieLoad(),dias=[];
+  Object.keys(o).sort().forEach(function(k){var d=calParse(k);if(d.getFullYear()===y&&d.getMonth()===m){var v=o[k];if(v&&(v.m!=null||v.linda||v.grac))dias.push({iso:k,d:v});}});
+  var moods=[0,0,0,0];dias.forEach(function(x){if(x.d.m!=null)moods[x.d.m]++;});
+  return {dias:dias,moods:moods,grac:dias.filter(function(x){return x.d.grac;}).length,lindas:dias.filter(function(x){return x.d.linda;}).length};
+}
+function cieResumenHTML(y,m,corto){
+  var r=cieMesDatos(y,m);var tot=r.moods.reduce(function(a,b){return a+b;},0);
+  var h='<div class="cie-res"><div class="cie-rk"><div><b>'+r.dias.length+'</b><span>días cerrados</span></div><div><b>'+r.grac+'</b><span>con agradecimientos</span></div><div><b>'+r.lindas+'</b><span>cosas lindas</span></div></div>';
+  if(tot){h+='<div class="cie-mbar">'+r.moods.map(function(n,i){return n?'<i class="m'+i+'" style="flex:'+n+'" title="'+CIE_LBL[i]+': '+n+'"></i>':'';}).join('')+'</div><div class="cie-mleg">'+r.moods.map(function(n,i){return n?'<span><i class="m'+i+'"></i>'+CIE_LBL[i]+' '+n+'</span>':'';}).join('')+'</div>';}
+  if(corto){var ult=r.dias.filter(function(x){return x.d.grac;}).slice(-3);if(ult.length)h+='<div class="cie-gl">'+ult.map(function(x){return '<div><small>'+calParse(x.iso).getDate()+'</small>'+calEsc(x.d.grac)+'</div>';}).join('')+'</div>';return h+'</div>';}
+  if(!r.dias.length)h+='<div class="nv-empty" style="padding:16px">Todavía no cerraste ningún día este mes.</div>';
+  h+=r.dias.slice().reverse().map(function(x){var dd=calParse(x.iso);
+    return '<div class="cie-dia"><div class="cie-dh"><b>'+CAL_DIAS[dd.getDay()]+' '+dd.getDate()+'</b>'+(x.d.m!=null?'<span class="cie-mt m'+x.d.m+'">'+CIE_LBL[x.d.m]+'</span>':'')+'</div>'+
+      (x.d.grac?'<div class="cie-dg"><small>Agradezco</small>'+calEsc(x.d.grac)+'</div>':'')+(x.d.linda?'<div class="cie-dg"><small>Lo lindo</small>'+calEsc(x.d.linda)+'</div>':'')+'</div>';}).join('');
+  return h+'</div>';
+}
+function cieHistorial(){
+  if(!cie_hist_mes){var n=new Date();cie_hist_mes=[n.getFullYear(),n.getMonth()];}
+  var md=document.getElementById('cie-hmodal');
+  if(!md){md=document.createElement('div');md.className='nv-modal';md.id='cie-hmodal';md.onclick=function(e){if(e.target===md)md.classList.remove('on');};document.body.appendChild(md);}
+  var y=cie_hist_mes[0],m=cie_hist_mes[1];
+  md.innerHTML='<div class="nv-sheet" style="width:560px;max-height:88vh;overflow-y:auto"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">'+
+    '<button class="nt-ib" aria-label="Mes anterior" onclick="cieHistMover(-1)">‹</button><h3 style="margin:0;font-size:22px">'+CAL_MESES[m].charAt(0).toUpperCase()+CAL_MESES[m].slice(1)+' '+y+'</h3><button class="nt-ib" aria-label="Mes siguiente" onclick="cieHistMover(1)">›</button></div>'+
+    '<div style="font-size:13px;color:#A8968A;text-align:center;margin-bottom:14px">Tus días, lo lindo y lo que agradeciste</div>'+cieResumenHTML(y,m,false)+
+    '<div style="text-align:right;margin-top:14px"><button class="nv-btn" onclick="document.getElementById(\'cie-hmodal\').classList.remove(\'on\')">Listo</button></div></div>';
+  md.classList.add('on');
+}
+function cieHistMover(d){var y=cie_hist_mes[0],m=cie_hist_mes[1]+d;if(m<0){m=11;y--;}if(m>11){m=0;y++;}cie_hist_mes=[y,m];cieHistorial();}
+// resumen del mes anterior en Hoy (primeros 7 días del mes)
+var _hoyRenderCieRes=hoyRender;
+hoyRender=function(){
+  _hoyRenderCieRes.apply(this,arguments);
+  try{var n=new Date();if(n.getDate()>7)return;var p=new Date(n.getFullYear(),n.getMonth()-1,1);
+    var r=cieMesDatos(p.getFullYear(),p.getMonth());if(!r.dias.length)return;
+    var card=document.getElementById('cie-card');if(!card)return;var w=document.createElement('div');
+    w.innerHTML='<div class="sec-h">Tu '+CAL_MESES[p.getMonth()]+' en resumen</div><div class="nv-card" style="padding:16px 18px;cursor:pointer" onclick="cie_hist_mes=['+p.getFullYear()+','+p.getMonth()+'];cieHistorial()">'+cieResumenHTML(p.getFullYear(),p.getMonth(),true)+'</div>';
+    var ref=card.nextSibling;while(w.firstChild)card.parentNode.insertBefore(w.firstChild,ref);
+  }catch(e){}
+};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
