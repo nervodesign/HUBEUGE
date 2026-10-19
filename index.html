@@ -2315,6 +2315,8 @@ body:not(.theme-dark) .md-addrow input:not([type=checkbox]):not([type=radio]):no
 .md-ag.ya{background:#DCE8F7}
 .md-ag.pas{opacity:.5}
 
+.md-it i.md-area{font-size:10.5px;padding:2px 8px;border-radius:999px;font-style:normal;white-space:nowrap}
+
 .md-ag .md-ag-t,.md-ag .md-ag-h{color:inherit!important}.md-ag .md-ag-h{opacity:.75}
 .md-ag.ya{box-shadow:inset 3px 0 0 var(--agdot)}
 .md-ag-now{color:inherit!important}
@@ -10023,11 +10025,23 @@ function mdExtras(hoy){
 var _rMiDiaBase=rMiDia;
 rMiDia=function(){_rMiDiaBase.apply(this,arguments);try{var hoy=calISO(new Date());var m=document.querySelector('#view-midia .md');if(m)m.insertAdjacentHTML('beforeend',mdExtras(hoy));
   var ab=document.querySelector('#view-midia .md-addbar');var hs=tarLoad().filter(function(t){return t.done&&t.doneAt&&calISO(new Date(t.doneAt))===hoy;});
-  mdOrdenar();
+  mdOrdenar();try{mdAreasPintar();}catch(e){}
   if(ab&&hs.length)ab.insertAdjacentHTML('afterend','<details class="md-hechas"'+(md_hechas_abierto?' open':'')+' ontoggle="md_hechas_abierto=this.open"><summary>Hechas hoy · '+hs.length+'</summary><div class="md-list">'+hs.map(function(t){
     return '<div class="md-it hecha"><button class="md-chk on" aria-label="Desmarcar" onclick="mdHecho(\''+t.id+'\')">✓</button><div class="md-itx"><span>'+calEsc(t.t)+'</span></div></div>';}).join('')+'</div><a class="md-vertodas" onclick="goSection(\'tareas\')">Ver todas en Tareas</a></details>');
 }catch(e){console.log(e);}};
 var md_hechas_abierto=false,md_cie_abierto=false;
+// tareas de Hoy: color y etiqueta de su área
+function mdAreasPintar(){
+  var tl=tarLoad();
+  document.querySelectorAll('#view-midia [data-k="hoy"] .md-list .md-it').forEach(function(r){
+    var b=r.querySelector('.md-chk');if(!b)return;var m=(b.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;
+    var t=tl.find(function(x){return String(x.id)===m[1];});if(!t||!t.area)return;var a=areaGet(t.area);if(!a)return;var p=areaPal(a);
+    if(!t.prio)r.style.background=p.bg;
+    var tag=document.createElement('i');tag.className='md-area';tag.textContent=a.n;tag.style.background=t.prio?p.bg:'#FFFFFF';tag.style.color=p.tx;
+    var itx=r.querySelector('.md-itx');if(itx)itx.parentNode.insertBefore(tag,itx.nextSibling);
+  });
+}
+
 // ── Agenda de hoy en tiritas (Google + Hub), en vez de la línea de horas ──
 mdTimeline=function(hoy){
   var evs=calDelDia(hoy);var ahora=new Date();var now=ahora.getHours()*60+ahora.getMinutes();
@@ -10035,7 +10049,7 @@ mdTimeline=function(hoy){
   var todo=evs.filter(function(e){return!e.horaIni;}),con=evs.filter(function(e){return e.horaIni;}).sort(function(a,b){return mdMin(a.horaIni)-mdMin(b.horaIni);});
   var prox=con.find(function(e){var f=mdMin(e.horaFin)||mdMin(e.horaIni)+60;return f>now;});
   function fila(e){var ini=e.horaIni?mdMin(e.horaIni):null,fin=e.horaIni?(mdMin(e.horaFin)||ini+60):null;
-    var pas=ini!==null&&fin<=now,ya=ini!==null&&ini<=now&&fin>now;
+    var pas=(ini!==null&&fin<=now)||/^✓/.test(e.titulo||''),ya=ini!==null&&ini<=now&&fin>now;
     var tag=ya?'<i class="md-ag-now">ahora</i>':(e===prox&&ini>now&&ini-now<=120?'<i class="md-ag-now">en '+(ini-now<60?(ini-now)+' min':Math.round((ini-now)/60)+' h')+'</i>':'');
     var c=calCol(e);
     return '<div class="md-ag'+(pas?' pas':'')+(ya?' ya':'')+'" style="background:'+c.bg+';color:'+c.tx+';--agdot:'+c.dot+'" onclick="calEditarEvento(\''+e.id+'\',\''+hoy+'\')"><span class="md-ag-h">'+(e.horaIni?e.horaIni:'todo el día')+'</span><span class="md-ag-t">'+calEsc(e.titulo)+'</span>'+tag+'</div>';}
@@ -10101,6 +10115,7 @@ calDelDia=function(iso){
   var a=_calDelDiaBase.apply(this,arguments);
   var g=gcalEvsLoad().filter(function(e){return e.fecha===iso;}).map(function(e){
     return {id:'g_'+e.gid,titulo:e.titulo||'(sin título)',fecha:e.fecha,horaIni:e.horaIni||'',horaFin:e.horaFin||'',tipo:(function(c){return c==='arena'?'nervo':(c==='azul'?'trabajo':'personal');})(gcalColor(e)),color:gcalColor(e),nota:e.lugar||'',_dia:iso,_g:1,_cal:e.cal||''};});
+  var vistos={};g=g.filter(function(e){var k=(e.titulo||'').replace(/^[✓•]\s*/,'').replace(/\s·\s.*$/,'').toLowerCase()+'|'+e.horaIni;if(vistos[k])return false;vistos[k]=1;return true;});
   if(!g.length)return a;
   return a.concat(g).sort(function(x,y){return(x.horaIni||'99').localeCompare(y.horaIni||'99');});
 };
