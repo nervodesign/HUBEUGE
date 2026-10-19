@@ -2050,7 +2050,7 @@ body:not(.theme-dark) #sidebar nav a.active svg{stroke:#8C4F46}
 
 
 /* sin amarillos ni rayas: arena y marrones */
-body:not(.theme-dark){background-color:#F8F6F2!important;background-image:none!important}
+body:not(.theme-dark){background-color:#FBF9F6!important;background-image:none!important}
 body:not(.theme-dark)::before{display:none!important}
 body:not(.theme-dark) #sidebar{background-color:#EDE7E0!important;background-image:none!important}
 body:not(.theme-dark) #dash-left .kpi.k2{background:#EAE2D9!important}
@@ -2296,6 +2296,39 @@ body:not(.theme-dark) .md-addrow input:not([type=checkbox]):not([type=radio]):no
 .md-addbar .md-plus{font-size:17px}
 .md-addbar.cerrada .md-addopts{display:none}
 .md-addbar:not(.cerrada){padding-bottom:10px!important}
+
+/* ── Hoy: tareas rosita y agenda celeste, todo en tiritas ── */
+.md-lay [data-k="hoy"] .md-list .md-it{background:#F5EEE7;box-shadow:none}
+.md-lay [data-k="hoy"] .md-list .md-it:has(.md-imp){background:#FBEDEA}
+.md-lay [data-k="hoy"] .md-list .md-it .md-itx span{color:#4A362B}
+.md-lay [data-k="hoy"] .md-chk{border-color:#E2BDB4!important;background:#fff}
+.md-lay [data-k="hoy"] .md-hechas .md-it{background:#FFFFFF}
+.md-uno{display:none!important}
+.cal-gfoot{display:flex;justify-content:center;margin:22px 0 10px}
+#cal-areas{flex:1 1 100%!important}
+.md-dia-card{background:transparent!important;box-shadow:none!important;padding:0!important}
+.md-ags{display:flex;flex-direction:column;gap:6px}
+.md-ag{display:flex;align-items:center;gap:12px;background:#EAF1FA;border-radius:13px;padding:9px 14px;cursor:pointer;color:#3F5A78}
+.md-ag-h{font-size:12px;color:#5E7A99;min-width:62px;white-space:nowrap}
+.md-ag-t{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#34506E}
+.md-ag-now{font-style:normal;font-size:10.5px;background:#FFFFFF;color:#3F5A78;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.md-ag.ya{background:#DCE8F7}
+.md-ag.pas{opacity:.5}
+.md-libre0{background:#EAF1FA;border-radius:13px;padding:10px 14px;color:#5E7A99!important}
+/* calendario: las tareas se ven distintas a los eventos */
+body:not(.theme-dark) .nv-day .tr-chip,body:not(.theme-dark) .tr-chip{background:#FFFFFF!important;color:#8C4F46!important;border:1px solid #EFC9C1!important}
+body:not(.theme-dark) .tr-chip.done{color:#B5A497!important;border-color:#EEE6DD!important}
+.nv-day .tr-g{display:inline!important;color:#D49A8F;font-size:.9em}
+.tr-chip .tr-g{margin-right:1px}
+/* calendario en el celu: la parte de arriba sin cortes */
+@media(max-width:700px){
+  .cal-top{flex-wrap:wrap}
+  .cal-ctrl{display:flex!important;flex-wrap:wrap;gap:8px!important;width:100%}
+  .cal-ctrl .nv-seg{flex:1 0 100%;order:5}
+  .cal-ctrl .nv-seg button{flex:1;padding:8px 6px!important}
+  #cal-areas{overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  #cal-areas::-webkit-scrollbar{display:none}
+}
 
 /* celu: fecha e importante dentro de la línea */
 .md-addrow .md-plus{border:none;background:none;padding:0;cursor:pointer;font-family:inherit;line-height:1}
@@ -9051,7 +9084,7 @@ function rCalSide(){
   var evs=calDelDia(iso),ts=tarDelDia(iso).sort(tarOrden);
   var h='<div class="cs"><h6>'+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][d.getDay()]+'</h6><h4>'+d.getDate()+' de '+CAL_MESES[d.getMonth()]+'</h4>';
   h+=evs.map(function(e){var t=calCol(e);return '<div class="cs-it" style="--c:'+t.dot+';--b:'+t.bg+'" onclick="calEditarEvento(\''+e.id+'\',\''+iso+'\')"><div class="cs-h">'+(e.horaIni||'Todo el día')+'</div><div><b>'+(e.tipo==='cumple'?'🎂 ':'')+calEsc(e.titulo)+'</b><small>'+t.l+'</small></div></div>';}).join('');
-  h+=ts.map(function(t){return '<div class="cs-it" style="--c:#8DB0D4;--b:#F1F6FB" onclick="tarAbrir(\''+t.id+'\')"><div class="cs-h">'+(t.hora||'Todo el día')+'</div><div><b style="'+(t.done?'text-decoration:line-through;color:#9A8E84':'')+'">'+calEsc(t.t)+'</b><small>Tarea'+(t.monto?' · '+tarMonto(t.monto):'')+'</small></div><button class="tr-chk" onclick="event.stopPropagation();tarToggle(\''+t.id+'\')">'+(t.done?'✓':'')+'</button></div>';}).join('');
+  h+=ts.map(function(t){return '<div class="cs-it" style="--c:#E7B3A9;--b:#FCF1EE" onclick="tarAbrir(\''+t.id+'\')"><div class="cs-h">'+(t.hora||'Todo el día')+'</div><div><b style="'+(t.done?'text-decoration:line-through;color:#9A8E84':'')+'">'+calEsc(t.t)+'</b><small>Tarea'+(t.monto?' · '+tarMonto(t.monto):'')+'</small></div><button class="tr-chk" onclick="event.stopPropagation();tarToggle(\''+t.id+'\')">'+(t.done?'✓':'')+'</button></div>';}).join('');
   if(!evs.length&&!ts.length)h+='<div style="font-size:14px;color:#9A8E84;padding:4px 0 8px">Nada este día.</div>';
   h+='<div class="cs-links"><a onclick="var f=\''+iso+'\';tarAbrir();document.getElementById(\'tar-fecha\').value=f">+ Tarea</a><a onclick="calAgregarEvento(\''+iso+'\')">+ Evento</a></div>';
   var hoy=tarHoy();var pend=tarLoad().filter(function(t){return!t.done&&areaPasa(t)&&(!t.fecha||t.fecha<=tarSumarDias(hoy,7));}).sort(tarOrden).slice(0,8);
@@ -9905,18 +9938,18 @@ function rMiDia(){
   var v=document.getElementById('view-midia');if(!v)return;
   var n=new Date(),hoy=calISO(n),hr=n.getHours();
   var sal=hr<12?'Buen día':hr<19?'Buenas tardes':'Buenas noches';
-  var uno=mdUnico(hoy);
+  var uno=null;
   var tars=tarLoad().filter(function(t){return !t.done&&t.fecha&&t.fecha<=hoy&&(!uno||t.id!==uno.id);}).sort(tarOrden);
   var notas=[];try{notas=notasLoad().filter(function(x){return x.fecha===hoy;});}catch(e){}
   var h='<div class="md">'+
     '<header class="md-top"><div class="md-fecha"><span class="md-dow">'+MD_DIAS[n.getDay()]+'</span><span class="md-dia">'+n.getDate()+'</span><span class="md-mes">'+CAL_MESES[n.getMonth()]+'</span></div>'+
     '<div class="md-hola">'+sal+', Euge 🫀</div></header>'+
-    '<section class="md-uno">'+(uno?
+    '<section class="md-uno" style="display:none">'+(uno?
       '<div class="md-uno-c"><span class="md-lbl">Lo único de hoy</span><div class="md-uno-t">'+calEsc(uno.t)+'</div></div><button class="md-hecho" onclick="mdHecho(\''+uno.id+'\')">Listo</button>':
       '<span class="md-lbl">Lo único de hoy</span><div class="md-uno-in"><input id="md-unico-in" placeholder="¿Qué es lo que sí o sí tiene que salir hoy?" onkeydown="if(event.key===\'Enter\')mdUnicoNuevo()"><button class="md-hecho" onclick="mdUnicoNuevo()">Fijar</button></div>')+
     '</section>'+
-    '<div class="md-grid"><section class="md-col"><div class="md-h">Tu día</div><div class="md-card md-dia-card">'+mdTimeline(hoy)+'</div></section>'+
-    '<section class="md-col"><div class="md-h">Para hoy <span>'+(tars.length+notas.length)+'</span></div><div class="md-card md-list">'+
+    '<div class="md-grid"><section class="md-col"><div class="md-h">Agenda de hoy</div><div class="md-card md-dia-card">'+mdTimeline(hoy)+'</div></section>'+
+    '<section class="md-col"><div class="md-h">Hoy <span>'+(tars.length+notas.length)+'</span></div><div class="md-card md-list">'+
       (tars.length||notas.length?tars.map(function(t){return '<div class="md-it"><button class="md-chk" aria-label="Marcar hecha" onclick="mdHecho(\''+t.id+'\')"></button><div class="md-itx" onclick="tarAbrir(\''+t.id+'\')" style="cursor:pointer"><span>'+calEsc(t.t)+'</span>'+(t.fecha<hoy?'<em>pendiente de antes</em>':(t.hora?'<em>'+t.hora+'</em>':''))+'</div>'+(t.prio?'<i class="md-imp">Importante</i>':'')+(t.monto?'<i>'+tarMonto(t.monto)+'</i>':'')+'</div>';}).join('')+
         notas.map(function(x){return '<div class="md-it" onclick="ntAbrir(\''+x.id+'\')"><span class="md-nt">'+(x.tipo==='lista'?'Lista':'Nota')+'</span><div class="md-itx"><span>'+calEsc(x.titulo||'Sin título')+'</span></div></div>';}).join('')
        :'<div class="md-vacio">Nada más para hoy. Disfrutá ✨</div>')+
@@ -9991,6 +10024,19 @@ rMiDia=function(){_rMiDiaBase.apply(this,arguments);try{var hoy=calISO(new Date(
     return '<div class="md-it hecha"><button class="md-chk on" aria-label="Desmarcar" onclick="mdHecho(\''+t.id+'\')">✓</button><div class="md-itx"><span>'+calEsc(t.t)+'</span></div></div>';}).join('')+'</div><a class="md-vertodas" onclick="goSection(\'tareas\')">Ver todas en Tareas</a></details>');
 }catch(e){console.log(e);}};
 var md_hechas_abierto=false,md_cie_abierto=false;
+// ── Agenda de hoy en tiritas (Google + Hub), en vez de la línea de horas ──
+mdTimeline=function(hoy){
+  var evs=calDelDia(hoy);var ahora=new Date();var now=ahora.getHours()*60+ahora.getMinutes();
+  if(!evs.length)return '<div class="md-libre0">Nada agendado hoy · <a onclick="calAgregarEvento(\''+hoy+'\')">agregar algo</a></div>';
+  var todo=evs.filter(function(e){return!e.horaIni;}),con=evs.filter(function(e){return e.horaIni;}).sort(function(a,b){return mdMin(a.horaIni)-mdMin(b.horaIni);});
+  var prox=con.find(function(e){var f=mdMin(e.horaFin)||mdMin(e.horaIni)+60;return f>now;});
+  function fila(e){var ini=e.horaIni?mdMin(e.horaIni):null,fin=e.horaIni?(mdMin(e.horaFin)||ini+60):null;
+    var pas=ini!==null&&fin<=now,ya=ini!==null&&ini<=now&&fin>now;
+    var tag=ya?'<i class="md-ag-now">ahora</i>':(e===prox&&ini>now&&ini-now<=120?'<i class="md-ag-now">en '+(ini-now<60?(ini-now)+' min':Math.round((ini-now)/60)+' h')+'</i>':'');
+    return '<div class="md-ag'+(pas?' pas':'')+(ya?' ya':'')+'" onclick="calEditarEvento(\''+e.id+'\',\''+hoy+'\')"><span class="md-ag-h">'+(e.horaIni?e.horaIni:'todo el día')+'</span><span class="md-ag-t">'+calEsc(e.titulo)+'</span>'+tag+'</div>';}
+  return '<div class="md-ags">'+todo.map(fila).join('')+con.map(fila).join('')+'</div>';
+};
+
 function mdOrdenar(){
   var md=document.querySelector('#view-midia .md');if(!md)return;
   var grid=md.querySelector('.md-grid'),ex=md.querySelector('.md-extras');if(!grid)return;
@@ -10001,7 +10047,7 @@ function mdOrdenar(){
   function tit(b){var h=b.querySelector('.md-h');return h?h.textContent.toLowerCase():(b.querySelector('.md-cie')?'cerrar':'');}
   var bl={};bl.dia=document.createElement('div');bl.dia.className='mdb';while(dia.firstChild)bl.dia.appendChild(dia.firstChild);
   grupos(der).concat(ex?[].concat.apply([],[].slice.call(ex.querySelectorAll(':scope > .md-col')).map(grupos)):[]).forEach(function(b){var t=tit(b);
-    var k=/para hoy/.test(t)?'hoy':/números/.test(t)?'num':/herramientas/.test(t)?'tools':/hábitos/.test(t)?'hab':/próximos/.test(t)?'prox':/listas/.test(t)?'listas':/cerrar/.test(t)?'cie':'otro';
+    var k=/^(para )?hoy/.test(t.trim())?'hoy':/números/.test(t)?'num':/herramientas/.test(t)?'tools':/hábitos/.test(t)?'hab':/próximos/.test(t)?'prox':/listas/.test(t)?'listas':/cerrar/.test(t)?'cie':'otro';
     if(bl[k]){while(b.firstChild)bl[k].appendChild(b.firstChild);}else{bl[k]=b;}});
   var lay=document.createElement('div');lay.className='md-lay';
   var L=document.createElement('div');L.className='md-lc';var R=document.createElement('div');R.className='md-rc';
@@ -10038,7 +10084,7 @@ var _calDelDiaBase=calDelDia;
 calDelDia=function(iso){
   var a=_calDelDiaBase.apply(this,arguments);
   var g=gcalEvsLoad().filter(function(e){return e.fecha===iso;}).map(function(e){
-    return {id:'g_'+e.gid,titulo:e.titulo||'(sin título)',fecha:e.fecha,horaIni:e.horaIni||'',horaFin:e.horaFin||'',tipo:'personal',color:'arena',nota:e.lugar||'',_dia:iso,_g:1,_cal:e.cal||''};});
+    return {id:'g_'+e.gid,titulo:e.titulo||'(sin título)',fecha:e.fecha,horaIni:e.horaIni||'',horaFin:e.horaFin||'',tipo:'personal',color:'celeste',nota:e.lugar||'',_dia:iso,_g:1,_cal:e.cal||''};});
   if(!g.length)return a;
   return a.concat(g).sort(function(x,y){return(x.horaIni||'99').localeCompare(y.horaIni||'99');});
 };
@@ -10057,6 +10103,10 @@ renderAll=function(){var r=_renderAllGcal.apply(this,arguments);if(aSection==='m
 setInterval(function(){gcalTraer(false);},10*60000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)gcalTraer(false);});
 setTimeout(function(){gcalTraer(false);},2500);
+
+// el botón de Google va abajo del calendario (no corta los filtros)
+(function(){var ch=document.getElementById('gcal-chip');var lay=document.querySelector('#view-calendario .cal-layout');if(!ch||!lay)return;
+  var f=document.createElement('div');f.className='cal-gfoot';lay.parentNode.insertBefore(f,lay.nextSibling);ch.style.margin='0';f.appendChild(ch);})();
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
