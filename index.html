@@ -2314,6 +2314,10 @@ body:not(.theme-dark) .md-addrow input:not([type=checkbox]):not([type=radio]):no
 .md-ag-now{font-style:normal;font-size:10.5px;background:#FFFFFF;color:#3F5A78;border-radius:999px;padding:2px 8px;white-space:nowrap}
 .md-ag.ya{background:#DCE8F7}
 .md-ag.pas{opacity:.5}
+
+.md-ag .md-ag-t,.md-ag .md-ag-h{color:inherit!important}.md-ag .md-ag-h{opacity:.75}
+.md-ag.ya{box-shadow:inset 3px 0 0 var(--agdot)}
+.md-ag-now{color:inherit!important}
 .md-libre0{background:#EAF1FA;border-radius:13px;padding:10px 14px;color:#5E7A99!important}
 /* calendario: las tareas se ven distintas a los eventos */
 body:not(.theme-dark) .nv-day .tr-chip,body:not(.theme-dark) .tr-chip{background:#FFFFFF!important;color:#8C4F46!important;border:1px solid #EFC9C1!important}
@@ -10033,7 +10037,8 @@ mdTimeline=function(hoy){
   function fila(e){var ini=e.horaIni?mdMin(e.horaIni):null,fin=e.horaIni?(mdMin(e.horaFin)||ini+60):null;
     var pas=ini!==null&&fin<=now,ya=ini!==null&&ini<=now&&fin>now;
     var tag=ya?'<i class="md-ag-now">ahora</i>':(e===prox&&ini>now&&ini-now<=120?'<i class="md-ag-now">en '+(ini-now<60?(ini-now)+' min':Math.round((ini-now)/60)+' h')+'</i>':'');
-    return '<div class="md-ag'+(pas?' pas':'')+(ya?' ya':'')+'" onclick="calEditarEvento(\''+e.id+'\',\''+hoy+'\')"><span class="md-ag-h">'+(e.horaIni?e.horaIni:'todo el día')+'</span><span class="md-ag-t">'+calEsc(e.titulo)+'</span>'+tag+'</div>';}
+    var c=calCol(e);
+    return '<div class="md-ag'+(pas?' pas':'')+(ya?' ya':'')+'" style="background:'+c.bg+';color:'+c.tx+';--agdot:'+c.dot+'" onclick="calEditarEvento(\''+e.id+'\',\''+hoy+'\')"><span class="md-ag-h">'+(e.horaIni?e.horaIni:'todo el día')+'</span><span class="md-ag-t">'+calEsc(e.titulo)+'</span>'+tag+'</div>';}
   return '<div class="md-ags">'+todo.map(fila).join('')+con.map(fila).join('')+'</div>';
 };
 
@@ -10080,11 +10085,22 @@ function gcalTraer(forzar){
     return true;
   }).catch(function(){gcal_trayendo=false;if(forzar&&typeof showToast==='function')showToast('⚠️ No se pudo leer Google Calendar');return false;});
 }
+// color de cada evento de Google según de qué se trata (Nervo marrón, MFA azul, etc.)
+function gcalColor(e){
+  var t=((e.titulo||'')+' '+(e.cal||'')).toLowerCase();
+  if(/festivo|feriado|holiday/.test(t))return 'piedra';
+  if(/cumple/.test(t))return 'rosa';
+  if(/nervo/.test(t))return 'arena';
+  try{var ar=areasLoad();for(var i=0;i<ar.length;i++){var a=ar[i];if(a.id==='personal'||a.id==='nervo')continue;
+    var n=(a.n||'').toLowerCase();if(n&&t.indexOf(n)>=0&&a.c&&CAL_PALETA[a.c])return a.c;}}catch(x){}
+  if(/lawmatics|matter flow|\bmfa\b/.test(t))return 'azul';
+  return 'celeste';
+}
 var _calDelDiaBase=calDelDia;
 calDelDia=function(iso){
   var a=_calDelDiaBase.apply(this,arguments);
   var g=gcalEvsLoad().filter(function(e){return e.fecha===iso;}).map(function(e){
-    return {id:'g_'+e.gid,titulo:e.titulo||'(sin título)',fecha:e.fecha,horaIni:e.horaIni||'',horaFin:e.horaFin||'',tipo:'personal',color:'celeste',nota:e.lugar||'',_dia:iso,_g:1,_cal:e.cal||''};});
+    return {id:'g_'+e.gid,titulo:e.titulo||'(sin título)',fecha:e.fecha,horaIni:e.horaIni||'',horaFin:e.horaFin||'',tipo:(function(c){return c==='arena'?'nervo':(c==='azul'?'trabajo':'personal');})(gcalColor(e)),color:gcalColor(e),nota:e.lugar||'',_dia:iso,_g:1,_cal:e.cal||''};});
   if(!g.length)return a;
   return a.concat(g).sort(function(x,y){return(x.horaIni||'99').localeCompare(y.horaIni||'99');});
 };
