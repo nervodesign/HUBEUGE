@@ -10138,6 +10138,164 @@ setTimeout(function(){gcalTraer(false);},2500);
 // el botón de Google va abajo del calendario (no corta los filtros)
 (function(){var ch=document.getElementById('gcal-chip');var lay=document.querySelector('#view-calendario .cal-layout');if(!ch||!lay)return;
   var f=document.createElement('div');f.className='cal-gfoot';lay.parentNode.insertBefore(f,lay.nextSibling);ch.style.margin='0';f.appendChild(ch);})();
+
+// ── FINANZAS POR VOZ: "pagué 15 mil de luz" → carga con confirmación (solo agrega, nunca borra) ──
+var FV_CSS=document.createElement('style');FV_CSS.textContent=''
++'.fv-bar{display:flex;align-items:center;gap:8px;background:#FFFFFF;border:1.5px solid #F1E8DF;border-radius:16px;padding:8px 8px 8px 14px;margin:0 0 14px;box-shadow:0 4px 14px rgba(62,44,34,.05)}'
++'.fv-bar input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:15px;color:#3E2C22;padding:6px 0}'
++'.fv-mic,.fv-go{flex-shrink:0;width:38px;height:38px;border-radius:19px;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}'
++'.fv-mic{background:#FCE9EC}.fv-mic.rec{background:#E6A9BD;animation:fvp 1s infinite}.fv-go{background:#3E2C22}'
++'@keyframes fvp{50%{transform:scale(1.08)}}'
++'.fv-ov{position:fixed;inset:0;background:rgba(62,44,34,.32);z-index:9990;display:flex;align-items:flex-end;justify-content:center}'
++'@media(min-width:769px){.fv-ov{align-items:center}}'
++'.fv-card{background:#FFFDF9;width:100%;max-width:440px;border-radius:26px 26px 0 0;padding:18px 20px calc(22px + env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:12px;color:#3E2C22;font-family:inherit;max-height:92vh;overflow:auto}'
++'@media(min-width:769px){.fv-card{border-radius:24px}}'
++'.fv-card h3{margin:0;font-size:20px;font-weight:400}.fv-q{font-size:13px;color:#8E7B6B;font-style:italic}'
++'.fv-tipos{display:flex;gap:6px}.fv-tipos button{flex:1;border:1.5px solid #EFE6DD;background:#fff;border-radius:99px;padding:7px 0;font:inherit;font-size:13px;color:#7E6B5E;cursor:pointer}'
++'.fv-tipos button.on[data-t=gasto]{background:#FCE9EC;border-color:#E6A9BD;color:#8C3E5B}.fv-tipos button.on[data-t=ing]{background:#EAF4EA;border-color:#AFCFB2;color:#34603A}.fv-tipos button.on[data-t=aho]{background:#E6EFFA;border-color:#A9BFE2;color:#2D4C7C}'
++'.fv-f{display:flex;flex-direction:column;gap:4px}.fv-f label{font-size:10.5px;letter-spacing:.18em;color:#8E7B6B;font-weight:500}'
++'.fv-f input,.fv-f select{border:1.5px solid #EFE6DD;border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:#3E2C22;width:100%;box-sizing:border-box}'
++'.fv-monto{font-size:26px!important;font-weight:300}.fv-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
++'.fv-btns{display:flex;gap:10px;margin-top:4px}.fv-btns button{border:0;border-radius:99px;padding:13px 0;font:inherit;font-size:15px;cursor:pointer}'
++'.fv-ok{flex:2;background:#3E2C22;color:#fff}.fv-no{flex:1;background:#F7F1EA;color:#5B4A3F}';
+document.head.appendChild(FV_CSS);
+
+function fvNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+var FV_NUMW={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,quince:15,veinte:20,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,quinientos:500};
+function fvMonto(n){
+  var m=n.match(/(\d{1,3}(?:[.\s]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)\s*(mil\b|k\b|lucas?\b|millon(?:es)?\b|palos?\b)?/);
+  if(m){var raw=m[1],v;
+    if(/[.\s]\d{3}/.test(raw)&&!/^\d+[.,]\d{1,2}$/.test(raw))v=parseFloat(raw.replace(/[.\s]/g,'').replace(',','.'));
+    else v=parseFloat(raw.replace(',','.'));
+    var u=m[2]||'';if(/^(millon|palo)/.test(u))v*=1000000;else if(/^(mil|k|luca)/.test(u))v*=1000;
+    return {v:Math.round(v*100)/100,txt:m[0]};}
+  var w=n.match(/\b(un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|cien|ciento|doscientos|trescientos|quinientos)\s+(mil|millon(?:es)?)\b/);
+  if(w)return {v:FV_NUMW[w[1]]*(w[2]==='mil'?1000:1000000),txt:w[0]};
+  if(/\bmil\b/.test(n))return {v:1000,txt:'mil'};
+  return null;
+}
+var FV_MP=[[/mercado ?pago|\bmp\b/,'mercadopago'],[/personal ?pay/,'personalpay'],[/celesol/,'celesol'],[/\bvisa\b/,'visa'],[/master/,'master'],
+  [/banco (de )?cordoba|bancor/,'bancocordoba_debito'],[/galicia/,'galicia'],[/transferen|transferi/,'transferencia'],[/efectivo|cash|en mano/,'efectivo'],[/\buala\b/,'uala']];
+var FV_GASTO=[[/\bluz\b|epec/,'epec'],[/ecogas|\bgas\b/,'ecogas'],[/internet|wifi|fibertel/,'internet'],[/expensa/,'expensas'],[/caja|jubilac|autonomo/,'caja_jub'],
+  [/celular|telefono|claro|movistar/,'celular'],[/psicolog|terapia/,'psicologa'],[/mariana/,'mariana'],[/ingles/,'ingles'],[/\bgym\b|gimnasio/,'gimnasio'],
+  [/seguro/,'seguro_auto'],[/obra social|prepaga|osde/,'obra_social'],[/municipalidad|\bmuni\b/,'muni_auto'],[/rentas|patente/,'rentas_auto'],
+  [/verduler|verdura|fruta/,'verduleria'],[/carnicer|\bcarne\b/,'carniceria'],[/poller|pollo/,'polleria'],[/diesel|nafta|combustible|gasoil|\bypf\b|shell|axion/,'diesel'],
+  [/super (de )?(la )?casa/,'super_casa'],[/super|chango|carrefour|disco\b|vea\b/,'super_propio'],[/farmacia|remedio/,'farmacia'],[/arreglo/,'arreglos_dpto'],[/incorpor/,'incorp_dpto'],
+  [/netflix|spotify|suscrip|disney|\bhbo\b|youtube|icloud|chatgpt|claude|\bmax\b/,'suscripciones'],[/sellos/,'imp_sellos'],[/\biva\b/,'imp_iva'],[/dietetica/,'dietetica'],
+  [/ropa|zapatilla|remera|pantalon|vestido|campera/,'ropa'],[/salida|cena|cine|boliche|\bbar\b|restaurant|resto\b/,'salidas'],[/vacacion|viaje|hotel|pasaje/,'vacaciones'],
+  [/regalo/,'regalos'],[/cafe|barcito|cafeteria|medialuna/,'cafe'],[/delivery|pedidos ?ya|rappi/,'delivery']];
+function fvCatExiste(k){var ok=false;Object.values(GRUPOS).forEach(function(g){if(g.cats[k])ok=true;});(loadCustomCats()||[]).forEach(function(c){if(c.key===k)ok=true;});return ok;}
+function fvParse(text){
+  var n=fvNorm(text),r={tipo:'gasto',monto:null,cat:'',mp:'',fecha:new Date(),desc:''};
+  if(/\b(cobre|me pagaron|me pago|me depositaron|me transfirieron|me entro|me entraron|ingreso|ingresaron|entraron|sueldo)\b/.test(n))r.tipo='ing';
+  else if(/\b(ahorre|guarde|compre (dolares|usd|verdes))\b/.test(n))r.tipo='aho';
+  var mo=fvMonto(n);if(mo)r.monto=mo.v;
+  var sinMp=n;
+  for(var i=0;i<FV_MP.length;i++){if(FV_MP[i][0].test(n)&&!(FV_MP[i][1]==='uala'&&/dolar/.test(n))){r.mp=FV_MP[i][1];sinMp=n.replace(FV_MP[i][0],' ');break;}}
+  if(/credito/.test(n)&&r.mp==='bancocordoba_debito')r.mp='bancocordoba_credito';
+  if(r.tipo==='ing'){r.cat=/parque|futura/.test(n)?'parque_futura':/rendimiento|interes|plazo fijo/.test(n)?'rendimientos':/nervo|sueldo/.test(n)?'sueldo_nervo':'otros_ing';}
+  else if(r.tipo==='aho'){r.cat=/uala/.test(n)&&/dolar|usd/.test(n)?'dolar_uala':/dolar|usd|verdes/.test(n)?'dolar_efectivo':'ahorro_ars';}
+  else{
+    (loadCustomCats()||[]).forEach(function(c){if(!r.cat&&c.label&&sinMp.indexOf(fvNorm(c.label))>=0)r.cat=c.key;});
+    for(var j=0;j<FV_GASTO.length&&!r.cat;j++)if(FV_GASTO[j][0].test(sinMp))r.cat=FV_GASTO[j][1];
+    if(!r.cat)r.cat='otros';
+  }
+  if(!fvCatExiste(r.cat))r.cat='';
+  var d=new Date();
+  if(/antes de ayer|anteayer/.test(n))d.setDate(d.getDate()-2);
+  else if(/\bayer\b/.test(n))d.setDate(d.getDate()-1);
+  else{var dm=n.match(/\b(?:el|dia)\s+(\d{1,2})\b(?!\s*(mil|k|luca))/);if(dm){var dd=parseInt(dm[1],10);if(dd>=1&&dd<=31)d.setDate(dd);}}
+  r.fecha=d;
+  var desc=String(text||'').trim().replace(/^(pague|pagué|gaste|gasté|cobre|cobré|me pagaron|ahorre|ahorré|guarde|guardé)\s+/i,'');
+  if(mo){var re=new RegExp('\\$?\\s*'+mo.txt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*'),'i');desc=desc.replace(re,' ');}
+  desc=desc.replace(/\b(antes de ayer|anteayer|ayer|hoy)\b/ig,' ').replace(/\b(el|dia|día)\s+\d{1,2}\b/ig,' ')
+    .replace(/\b(con|por|en|via|vía)\s+(la\s+|el\s+|tarjeta\s+)?(mercado ?pago|mp|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b(\s+(d[eé]bito|cr[eé]dito))?/ig,' ')
+    .replace(/^\s*(pagu[eé]|gast[eé]|cobr[eé]|ahorr[eé]|guard[eé])\s+/i,' ').replace(/\s+/g,' ').trim();
+  desc=desc.replace(/^\s*(de|en|por|del|la|el)\s+/i,'').replace(/^\s*(de|en|por|del|la|el)\s+/i,'').replace(/\s+/g,' ').trim();
+  r.desc=desc?desc.charAt(0).toUpperCase()+desc.slice(1):'';
+  return r;
+}
+function fvEsPlata(t){var n=fvNorm(t);return /^(?:(?:hoy|ayer|anteayer|antes de ayer)\s+)?(pague|gaste|cobre|me pagaron|me pago|me depositaron|me transfirieron|ahorre|guarde|compre dolares)\b/.test(n)&&!!fvMonto(n);}
+
+function fvAbrir(text){
+  var p=fvParse(text);var old=document.getElementById('fv-ov');if(old)old.remove();
+  var ov=document.createElement('div');ov.id='fv-ov';ov.className='fv-ov';
+  var dd=String(p.fecha.getDate()).padStart(2,'0'),mm=String(p.fecha.getMonth()+1).padStart(2,'0');
+  ov.innerHTML='<div class="fv-card" role="dialog" aria-label="Cargar en Finanzas">'
+   +'<h3>¿Lo cargo así?</h3><div class="fv-q">“'+String(text).replace(/</g,'&lt;')+'”</div>'
+   +'<div class="fv-tipos"><button data-t="gasto">Gasto</button><button data-t="ing">Ingreso</button><button data-t="aho">Ahorro</button></div>'
+   +'<div class="fv-f"><label>MONTO</label><input id="fv-m" class="fv-monto" inputmode="decimal" placeholder="$ 0"></div>'
+   +'<div class="fv-f"><label>CATEGORÍA</label><select id="fv-c">'+catOpts()+'</select></div>'
+   +'<div class="fv-row"><div class="fv-f"><label>FECHA</label><input id="fv-d" type="date"></div>'
+   +'<div class="fv-f"><label>PAGO</label><select id="fv-p">'+mpOpts()+'</select></div></div>'
+   +'<div class="fv-f"><label>DETALLE</label><input id="fv-x" placeholder="Detalle"></div>'
+   +'<div class="fv-btns"><button class="fv-no">Cancelar</button><button class="fv-ok">Guardar en Finanzas</button></div></div>';
+  document.body.appendChild(ov);
+  var tipo=p.tipo;function pintaTipo(){ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.classList.toggle('on',b.dataset.t===tipo);});}
+  pintaTipo();
+  ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.onclick=function(){tipo=b.dataset.t;pintaTipo();
+    var c=document.getElementById('fv-c');if(tipo==='ing'&&!IS_ING.has(c.value))c.value='otros_ing';if(tipo==='aho'&&!IS_AHO.has(c.value))c.value='ahorro_ars';
+    if(tipo==='gasto'&&(IS_ING.has(c.value)||IS_AHO.has(c.value)))c.value='otros';};});
+  if(p.monto)document.getElementById('fv-m').value=p.monto;
+  if(p.cat)document.getElementById('fv-c').value=p.cat;
+  document.getElementById('fv-p').value=p.mp||'';
+  document.getElementById('fv-d').value=p.fecha.getFullYear()+'-'+mm+'-'+dd;
+  document.getElementById('fv-x').value=p.desc;
+  function cerrar(){ov.remove();}
+  ov.addEventListener('click',function(e){if(e.target===ov)cerrar();});
+  ov.querySelector('.fv-no').onclick=cerrar;
+  ov.querySelector('.fv-ok').onclick=function(){
+    var mv=String(document.getElementById('fv-m').value).trim();if(/\d\.\d{3}(\D|$)/.test(mv))mv=mv.replace(/\./g,'');var monto=parseFloat(mv.replace(',','.'));
+    if(isNaN(monto)||monto<=0){var mi=document.getElementById('fv-m');mi.style.borderColor='#E6A9BD';mi.focus();return;}
+    var cat=document.getElementById('fv-c').value;var mp=document.getElementById('fv-p').value||'';
+    var dv=document.getElementById('fv-d').value;var fd=new Date();if(dv){var q=dv.split('-');fd=new Date(+q[0],+q[1]-1,+q[2]);}
+    var mesIdx=fd.getMonth();if(!S||!S.meses||!S.meses[mesIdx]){showToast('No encontré ese mes en Finanzas');return;}
+    var txn={desc:document.getElementById('fv-x').value.trim(),monto:monto,cat:cat,fecha:String(fd.getDate()).padStart(2,'0')+'/'+String(mesIdx+1).padStart(2,'0'),mp:mp,mpLabel:(MP[mp]&&MP[mp].l)||''};
+    S.meses[mesIdx].txns.push(txn);save();
+    try{rMonth(mesIdx);}catch(e){}
+    cerrar();var bi=document.getElementById('fv-in-'+mesIdx);if(bi)bi.value='';
+    showToast('✓ Cargado en Finanzas · '+(typeof fmt==='function'?fmt(monto):('$'+monto)));
+  };
+  setTimeout(function(){if(!p.monto)document.getElementById('fv-m').focus();},80);
+}
+
+var FV_SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function fvMic(btn,inp,onDone){
+  if(!FV_SR){inp.focus();showToast('Tocá el micrófono del teclado y hablá');return;}
+  try{var r=new FV_SR();r.lang='es-AR';r.interimResults=true;r.maxAlternatives=1;
+    btn.classList.add('rec');
+    r.onresult=function(e){var t='';for(var k=0;k<e.results.length;k++)t+=e.results[k][0].transcript;inp.value=t;
+      if(e.results[e.results.length-1].isFinal){btn.classList.remove('rec');if(t.trim())onDone(t.trim());}};
+    r.onerror=function(){btn.classList.remove('rec');inp.focus();};
+    r.onend=function(){btn.classList.remove('rec');};
+    r.start();
+  }catch(e){btn.classList.remove('rec');inp.focus();}
+}
+var FV_MIC_SVG='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B4577D" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0014 0M12 18v3"></path></svg>';
+var FV_GO_SVG='<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
+
+function fvBarra(i){
+  var md=document.getElementById('mt-'+i);if(!md||document.getElementById('fv-bar-'+i))return;
+  var b=document.createElement('div');b.className='fv-bar';b.id='fv-bar-'+i;
+  b.innerHTML='<input id="fv-in-'+i+'" placeholder="Decime qué pagaste o cobraste…" enterkeyhint="done" autocomplete="off">'
+   +'<button class="fv-mic" aria-label="Hablar">'+FV_MIC_SVG+'</button><button class="fv-go" aria-label="Cargar">'+FV_GO_SVG+'</button>';
+  md.parentNode.insertBefore(b,md);
+  var inp=b.querySelector('input');
+  function go(){var t=inp.value.trim();if(!t){inp.focus();return;}fvAbrir(t);}
+  b.querySelector('.fv-go').onclick=go;
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();go();}});
+  b.querySelector('.fv-mic').onclick=function(){fvMic(this,inp,function(t){fvAbrir(t);});};
+}
+var _rMonthFV=rMonth;
+rMonth=function(i){var r=_rMonthFV.apply(this,arguments);try{fvBarra(i);}catch(e){}return r;};
+try{for(var _fi=0;_fi<12;_fi++)fvBarra(_fi);}catch(e){}
+
+// Desde "Mi día": si escribís o dictás "pagué…/cobré…" con un monto, te ofrece cargarlo en Finanzas
+var _mdAgregarFV=mdAgregar;
+mdAgregar=function(){var i=document.getElementById('md-add-in');var t=(i&&i.value||'').trim();
+  if(t&&fvEsPlata(t)){i.value='';fvAbrir(t);return;}
+  return _mdAgregarFV.apply(this,arguments);};
+
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
