@@ -10296,6 +10296,75 @@ var _mdAgregarFV=mdAgregar;
 mdAgregar=function(){var i=document.getElementById('md-add-in');var t=(i&&i.value||'').trim();
   if(t&&fvEsPlata(t)){i.value='';fvAbrir(t);return;}
   return _mdAgregarFV.apply(this,arguments);};
+// ── MI DÍA 2.0 (celu): encabezado compacto, semana, clima + frase, progreso, barra flotante ──
+var MD2_CSS=document.createElement('style');MD2_CSS.textContent=''
++'.md2-week,.md2-clima,.md2-prog{display:none}'
++'@media(max-width:768px){'
++'#view-midia .md-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;text-align:left!important;gap:2px;padding-top:6px;margin-bottom:12px}#view-midia .md-top>*{margin-left:0!important;text-align:left!important}'
++'#view-midia .md-fecha{display:flex!important;align-items:baseline;justify-content:flex-start!important;gap:6px;height:auto}'
++'#view-midia .md-dow,#view-midia .md-dia,#view-midia .md-mes{font-size:11px!important;letter-spacing:.2em!important;text-transform:uppercase;color:#8A6A55!important;font-weight:500!important;line-height:1.4!important;font-family:inherit!important}'
++'#view-midia .md-mes:before{content:"· ";}'
++'#view-midia .md-hola{font-size:31px!important;font-weight:300!important;color:#3E2C22!important;letter-spacing:-.02em;line-height:1.15!important;margin:0!important}'
++'#view-midia .md-hola b{font-weight:300;color:#B4577D}'
++'.md2-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:4px 0 14px}'
++'.md2-d{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border-radius:14px;border:0;background:transparent;font:inherit;cursor:pointer}'
++'.md2-d span{font-size:10px;color:#8E7B6B;letter-spacing:.06em}.md2-d b{font-size:17px;font-weight:400;color:#3E2C22}.md2-d i{width:4px;height:4px;border-radius:2px;background:transparent}'
++'.md2-d.pas b{color:#A8988A}.md2-d.hoy{background:#3E2C22}.md2-d.hoy span{color:#E8D9CC}.md2-d.hoy b{color:#fff}'
++'.md2-clima{display:flex;align-items:center;gap:12px;background:#FBF3EC;border-radius:18px;padding:12px 14px;margin:0 0 16px}'
++'.md2-clima .tx{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}.md2-clima .t1{font-size:14px;color:#3E2C22}.md2-clima .t1 b{font-weight:400;font-size:18px}'
++'.md2-clima .t2{font-size:12.5px;font-style:italic;color:#8A6A55}'
++'.md2-prog{display:block;height:4px;border-radius:2px;background:#F1E8DF;overflow:hidden;margin:2px 0 10px}.md2-prog i{display:block;height:4px;background:#E6A9BD;border-radius:2px;transition:width .4s}'
++'#nv-tabbar{left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;height:66px!important;border-radius:26px!important;background:rgba(255,255,255,.82)!important;-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);border:1px solid #EFE6DD!important;box-shadow:0 8px 28px rgba(62,44,34,.12)!important;padding:0 4px!important}'
++'#view-midia .md{padding-bottom:40px}'
++'}';
+document.head.appendChild(MD2_CSS);
+
+var MD2_FRASES=['Hoy alcanza con dar el próximo paso.','Lo simple, bien hecho, también es avanzar.','Tu ritmo también es un buen ritmo.','Hacé una cosa a la vez y hacela con cariño.','Lo que hoy empieces, mañana te va a agradecer.','Ordená lo de afuera para descansar lo de adentro.','Pequeños avances, todos los días, cambian todo.','Hoy elegí lo importante, no lo urgente.','Confiá en lo que ya construiste.','Un día tranquilo también es un día productivo.','Lo que hacés con amor se nota.','Respirá, priorizá, avanzá.','No tiene que ser perfecto, tiene que estar hecho.','Cada tarea tildada es una promesa cumplida con vos.','Tu energía es valiosa: cuidala.','Las buenas ideas aparecen cuando hay espacio.','Hoy es un buen día para terminar algo.','Agradecé lo que ya tenés y andá por lo que querés.','Paso a paso se llega lejos.','Hacelo simple, hacelo lindo.','Lo que te importa merece tu mejor hora del día.','Menos ruido, más foco.','Celebrá lo que ya hiciste esta semana.','Un poco cada día suma mucho.','Tu forma de hacer las cosas es tu sello.','Empezá por lo que te da más paz.','Hoy también se vale ir despacio.','Lo que sembrás con constancia florece.','Elegí una prioridad y dale tu mejor energía.','Que el día te encuentre presente.','Hacé espacio para lo que te hace bien.'];
+function md2Frase(){var n=new Date();var d=Math.floor((n-new Date(n.getFullYear(),0,0))/864e5);return MD2_FRASES[d%MD2_FRASES.length];}
+var MD2_MANGA='M8 4L4 7v12h3V10M16 4l4 3v12h-3V10M8 4c1 1.5 2.5 2 4 2s3-.5 4-2';
+var MD2_ROPA={remera:['remera','M8 4L4 7l2 3 2-1v11h8V9l2 1 2-3-4-3c-1 1.5-2.5 2-4 2s-3-.5-4-2z'],buzo:['algo liviano',MD2_MANGA+'M7 10v10h10V10'],campera:['campera',MD2_MANGA+'M7 10v10h10V10M12 6v14M10 13h0.01M14 13h0.01'],abrigo:['abrigo',MD2_MANGA+'M7 10v12h10V10M9.5 4.5L12 9l2.5-4.5M12 9v13']};
+function md2ClimaTxt(c){return c===0?'Despejado':c<=2?'Algo nublado':c===3?'Nublado':c<=48?'Niebla':c<=57?'Llovizna':c<=67?'Lluvia':c<=77?'Nieve':c<=82?'Chaparrones':'Tormenta';}
+var md2Clima=null;try{var _mc=JSON.parse(localStorage.getItem('hub_clima_cache')||'null');if(_mc&&Date.now()-_mc.at<45*60000)md2Clima=_mc;}catch(e){}
+function md2TraerClima(){
+  if(md2Clima&&Date.now()-md2Clima.at<45*60000)return;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.42&longitude=-64.18&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FCordoba&forecast_days=1')
+  .then(function(r){return r.json();}).then(function(c){var mx=Math.round(c.daily.temperature_2m_max[0]);
+    md2Clima={at:Date.now(),t:Math.round(c.current.temperature_2m),d:md2ClimaTxt(c.current.weather_code),ll:c.current.weather_code>=51,ropa:mx>=25?'remera':mx>=19?'buzo':mx>=12?'campera':'abrigo'};
+    try{localStorage.setItem('hub_clima_cache',JSON.stringify(md2Clima));}catch(e){}md2PintarClima();}).catch(function(){});
+}
+function md2PintarClima(){
+  var el=document.querySelector('#view-midia .md2-clima');if(!el)return;
+  var c=md2Clima,ic='',t1='';
+  if(c){var r=MD2_ROPA[c.ropa]||MD2_ROPA.remera;
+    ic='<svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B08F78" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="'+r[1]+'"></path></svg>'
+      +(c.ll?'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7F9AC8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0zM12 12v6.5a2 2 0 0 1-4 0"></path></svg>':'');
+    t1='<span class="t1"><b>'+c.t+'°</b>  '+c.d+' · '+r[0]+'</span>';}
+  else{ic='<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B08F78" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>';t1='<span class="t1">Córdoba</span>';}
+  el.innerHTML=ic+'<div class="tx">'+t1+'<span class="t2">'+md2Frase()+'</span></div>';
+}
+function md2Pintar(){
+  var v=document.getElementById('view-midia');if(!v)return;var top=v.querySelector('.md-top');if(!top)return;
+  var hola=top.querySelector('.md-hola');if(hola&&!hola.querySelector('b'))hola.innerHTML=hola.innerHTML.replace(/Euge/,'<b>Euge</b>');
+  var hoy=new Date();hoy.setHours(0,0,0,0);var hoyIso=calISO(hoy);
+  var lun=new Date(hoy);var dw=(lun.getDay()+6)%7;lun.setDate(lun.getDate()-dw);
+  var tars=[];try{tars=tarLoad()||[];}catch(e){}
+  var DN=['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM'],h='';
+  for(var i=0;i<7;i++){var d=new Date(lun);d.setDate(lun.getDate()+i);var iso=calISO(d);
+    var tieneT=tars.some(function(t){return t.fecha===iso&&!t.done;});var tieneE=false;try{tieneE=(calDelDia(iso)||[]).length>0;}catch(e){}
+    var dot=tieneT?'#E6A9BD':tieneE?'#A9BFE2':'transparent';if(iso===hoyIso&&(tieneT||tieneE))dot='#F2C9C3';
+    h+='<button type="button" class="md2-d'+(iso===hoyIso?' hoy':iso<hoyIso?' pas':'')+'" onclick="goSection(\'calendario\')"><span>'+DN[i]+'</span><b>'+d.getDate()+'</b><i style="background:'+dot+'"></i></button>';}
+  var wk=v.querySelector('.md2-week');if(!wk){wk=document.createElement('div');wk.className='md2-week';top.parentNode.insertBefore(wk,top.nextSibling);}
+  wk.innerHTML=h;
+  var cl=v.querySelector('.md2-clima');if(!cl){cl=document.createElement('div');cl.className='md2-clima';wk.parentNode.insertBefore(cl,wk.nextSibling);}
+  md2PintarClima();md2TraerClima();
+  var hb=v.querySelector('.mdb[data-k="hoy"] .md-h');
+  if(hb){var deHoy=tars.filter(function(t){return t.fecha===hoyIso;});var hechas=deHoy.filter(function(t){return t.done;}).length;
+    var pg=v.querySelector('.md2-prog');if(!pg){pg=document.createElement('div');pg.className='md2-prog';pg.innerHTML='<i></i>';hb.parentNode.insertBefore(pg,hb.nextSibling);}
+    pg.style.display=deHoy.length?'':'none';pg.firstChild.style.width=(deHoy.length?Math.round(hechas/deHoy.length*100):0)+'%';}
+}
+var _rMiDiaMD2=rMiDia;
+rMiDia=function(){var r=_rMiDiaMD2.apply(this,arguments);try{md2Pintar();}catch(e){}return r;};
+try{md2Pintar();}catch(e){}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
