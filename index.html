@@ -10154,8 +10154,8 @@ var FV_CSS=document.createElement('style');FV_CSS.textContent=''
 +'.fv-tipos{display:flex;gap:6px}.fv-tipos button{flex:1;border:1.5px solid #EFE6DD;background:#fff;border-radius:99px;padding:7px 0;font:inherit;font-size:13px;color:#7E6B5E;cursor:pointer}'
 +'.fv-tipos button.on[data-t=gasto]{background:#FCE9EC;border-color:#E6A9BD;color:#8C3E5B}.fv-tipos button.on[data-t=ing]{background:#EAF4EA;border-color:#AFCFB2;color:#34603A}.fv-tipos button.on[data-t=aho]{background:#E6EFFA;border-color:#A9BFE2;color:#2D4C7C}'
 +'.fv-f{display:flex;flex-direction:column;gap:4px}.fv-f label{font-size:10.5px;letter-spacing:.18em;color:#8E7B6B;font-weight:500}'
-+'.fv-f input,.fv-f select{border:1.5px solid #EFE6DD;border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:#3E2C22;width:100%;box-sizing:border-box}'
-+'.fv-monto{font-size:26px!important;font-weight:300}.fv-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
++'.fv-f input,.fv-f select{-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;display:block;height:46px;line-height:22px;text-align:left;border:1.5px solid #EFE6DD;border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:#3E2C22;width:100%;box-sizing:border-box}'
++'.fv-monto{font-size:26px!important;font-weight:300;height:54px!important}.fv-f select{background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238E7B6B%27 stroke-width=%272.4%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px!important}.fv-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.fv-row .fv-f{min-width:0}'
 +'.fv-btns{display:flex;gap:10px;margin-top:4px}.fv-btns button{border:0;border-radius:99px;padding:13px 0;font:inherit;font-size:15px;cursor:pointer}'
 +'.fv-ok{flex:2;background:#3E2C22;color:#fff}.fv-no{flex:1;background:#F7F1EA;color:#5B4A3F}';
 document.head.appendChild(FV_CSS);
@@ -10206,7 +10206,7 @@ function fvParse(text){
   else if(/\bayer\b/.test(n))d.setDate(d.getDate()-1);
   else{var dm=n.match(/\b(?:el|dia)\s+(\d{1,2})\b(?!\s*(mil|k|luca))/);if(dm){var dd=parseInt(dm[1],10);if(dd>=1&&dd<=31)d.setDate(dd);}}
   r.fecha=d;
-  var desc=String(text||'').trim().replace(/^(pague|pagué|gaste|gasté|cobre|cobré|me pagaron|ahorre|ahorré|guarde|guardé)\s+/i,'');
+  var desc=String(text||'').trim().replace(/^(agreg[aá]r?|agreg[aá]|anot[aá]r?|carg[aá]r?|sum[aá]r?|pon[eé]r?)\s+(un|el|la)?\s*/i,'').replace(/^(pago|gasto)\s+(de|del)\s+/i,'').replace(/^(pagar|pague|pagué|gaste|gasté|cobre|cobré|me pagaron|ahorre|ahorré|guarde|guardé)\s+/i,'');
   if(mo){var re=new RegExp('\\$?\\s*'+mo.txt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*'),'i');desc=desc.replace(re,' ');}
   desc=desc.replace(/\b(antes de ayer|anteayer|ayer|hoy)\b/ig,' ').replace(/\b(el|dia|día)\s+\d{1,2}\b/ig,' ')
     .replace(/\b(con|por|en|via|vía)\s+(la\s+|el\s+|tarjeta\s+)?(mercado ?pago|mp|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b(\s+(d[eé]bito|cr[eé]dito))?/ig,' ')
@@ -10215,9 +10215,10 @@ function fvParse(text){
   r.desc=desc?desc.charAt(0).toUpperCase()+desc.slice(1):'';
   return r;
 }
-function fvEsPlata(t){var n=fvNorm(t);return /^(?:(?:hoy|ayer|anteayer|antes de ayer)\s+)?(pague|gaste|cobre|me pagaron|me pago|me depositaron|me transfirieron|ahorre|guarde|compre dolares)\b/.test(n)&&!!fvMonto(n);}
+function fvEsPlata(t){var n=fvNorm(t);return /^(?:(?:hoy|ayer|anteayer|antes de ayer)\s+)?(pago de|pagar|pague|gaste|cobre|me pagaron|me pago|me depositaron|me transfirieron|ahorre|guarde|compre dolares)\b/.test(n)&&!!fvMonto(n);}
 
 function fvAbrir(text){
+  try{if(document.activeElement)document.activeElement.blur();}catch(e){}
   var p=fvParse(text);var old=document.getElementById('fv-ov');if(old)old.remove();
   var ov=document.createElement('div');ov.id='fv-ov';ov.className='fv-ov';
   var dd=String(p.fecha.getDate()).padStart(2,'0'),mm=String(p.fecha.getMonth()+1).padStart(2,'0');
@@ -10232,8 +10233,8 @@ function fvAbrir(text){
    +'<div class="fv-btns"><button class="fv-no">Cancelar</button><button class="fv-ok">Guardar en Finanzas</button></div></div>';
   document.body.appendChild(ov);
   var tipo=p.tipo;function pintaTipo(){ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.classList.toggle('on',b.dataset.t===tipo);});}
-  pintaTipo();
-  ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.onclick=function(){tipo=b.dataset.t;pintaTipo();
+  pintaTipo();var fvT0=Date.now();
+  ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.onclick=function(){if(Date.now()-fvT0<700)return;tipo=b.dataset.t;pintaTipo();
     var c=document.getElementById('fv-c');if(tipo==='ing'&&!IS_ING.has(c.value))c.value='otros_ing';if(tipo==='aho'&&!IS_AHO.has(c.value))c.value='ahorro_ars';
     if(tipo==='gasto'&&(IS_ING.has(c.value)||IS_AHO.has(c.value)))c.value='otros';};});
   if(p.monto)document.getElementById('fv-m').value=p.monto;
@@ -10242,9 +10243,9 @@ function fvAbrir(text){
   document.getElementById('fv-d').value=p.fecha.getFullYear()+'-'+mm+'-'+dd;
   document.getElementById('fv-x').value=p.desc;
   function cerrar(){ov.remove();}
-  ov.addEventListener('click',function(e){if(e.target===ov)cerrar();});
-  ov.querySelector('.fv-no').onclick=cerrar;
-  ov.querySelector('.fv-ok').onclick=function(){
+  ov.addEventListener('click',function(e){if(e.target===ov&&Date.now()-fvT0>700)cerrar();});
+  ov.querySelector('.fv-no').onclick=function(){if(Date.now()-fvT0>700)cerrar();};
+  ov.querySelector('.fv-ok').onclick=function(){if(Date.now()-fvT0<700)return;
     var mv=String(document.getElementById('fv-m').value).trim();if(/\d\.\d{3}(\D|$)/.test(mv))mv=mv.replace(/\./g,'');var monto=parseFloat(mv.replace(',','.'));
     if(isNaN(monto)||monto<=0){var mi=document.getElementById('fv-m');mi.style.borderColor='#E6A9BD';mi.focus();return;}
     var cat=document.getElementById('fv-c').value;var mp=document.getElementById('fv-p').value||'';
@@ -10295,7 +10296,6 @@ var _mdAgregarFV=mdAgregar;
 mdAgregar=function(){var i=document.getElementById('md-add-in');var t=(i&&i.value||'').trim();
   if(t&&fvEsPlata(t)){i.value='';fvAbrir(t);return;}
   return _mdAgregarFV.apply(this,arguments);};
-
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
