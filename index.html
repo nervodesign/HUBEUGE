@@ -10365,6 +10365,108 @@ function md2Pintar(){
 var _rMiDiaMD2=rMiDia;
 rMiDia=function(){var r=_rMiDiaMD2.apply(this,arguments);try{md2Pintar();}catch(e){}return r;};
 try{md2Pintar();}catch(e){}
+// ── AVISOS: tareas con hora → Google Calendar (te avisa 30 min antes en celu y compu) ──
+function avMapa(){try{return JSON.parse(localStorage.getItem('hub_tar_gsync')||'{}')||{};}catch(e){return{};}}
+function avGuardarMapa(m){try{localStorage.setItem('hub_tar_gsync',JSON.stringify(m));}catch(e){}}
+var avCorriendo=false;
+function avSincronizar(){
+  if(avCorriendo||!gcalUrl())return;avCorriendo=true;
+  var hoy=calISO(new Date()),mapa=avMapa(),vivos={},p=Promise.resolve(),cambios=0;
+  (tarLoad()||[]).forEach(function(t){
+    if(!t||!t.id||t.done||!t.fecha||!t.hora)return;
+    if(t.fecha<hoy){vivos['t_'+t.id]=1;return;}
+    var gid='t_'+t.id,firma=[t.t,t.fecha,t.hora,t.prio?1:0].join('|');vivos[gid]=1;
+    if(mapa[gid]===firma)return;
+    cambios++;var ev={id:gid,titulo:(t.prio?'★ ':'')+t.t,fecha:t.fecha,horaIni:t.hora,nota:'Tarea del Hub Euge'};
+    p=p.then(function(){return gcalEnviar('save',ev);}).then(function(){mapa[gid]=firma;avGuardarMapa(mapa);});
+  });
+  Object.keys(mapa).forEach(function(gid){if(vivos[gid])return;cambios++;
+    p=p.then(function(){return gcalEnviar('delete',{id:gid});}).then(function(){delete mapa[gid];avGuardarMapa(mapa);});});
+  p.then(function(){avCorriendo=false;},function(){avCorriendo=false;});
+}
+var _tarStoreAV=tarStore;
+tarStore=function(a){var r=_tarStoreAV.apply(this,arguments);setTimeout(avSincronizar,600);return r;};
+setTimeout(avSincronizar,4000);
+setInterval(avSincronizar,5*60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(avSincronizar,1500);});
+// ── MI DÍA 2.0 (compu): encabezado compacto, tarjetas arriba (clima · mes · Parque Futura), 3 columnas ──
+var MD3_CSS=document.createElement('style');MD3_CSS.textContent=''
++'.md3-top{display:none}'
++'@media(min-width:901px){'
++'#view-midia .md-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;text-align:left!important;gap:2px;margin-bottom:18px}'
++'#view-midia .md-top>*{margin-left:0!important;text-align:left!important}'
++'#view-midia .md-fecha{display:flex!important;align-items:baseline;justify-content:flex-start!important;gap:6px;height:auto}'
++'#view-midia .md-dow,#view-midia .md-dia,#view-midia .md-mes{font-size:11px!important;letter-spacing:.2em!important;text-transform:uppercase;color:#8A6A55!important;font-weight:500!important;line-height:1.4!important;font-family:inherit!important}'
++'#view-midia .md-mes:before{content:"· ";}'
++'#view-midia .md-hola{font-size:34px!important;font-weight:300!important;color:#3E2C22!important;letter-spacing:-.02em;line-height:1.15!important;margin:0!important}'
++'#view-midia .md-hola b{font-weight:300;color:#B4577D}'
++'.md3-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:16px;margin:0 0 22px}'
++'.md3-c{border-radius:22px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;border:0;font:inherit;text-align:left;color:#3E2C22;cursor:pointer;min-width:0;transition:transform .15s,box-shadow .15s}'
++'.md3-c:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(62,44,34,.07)}'
++'.md3-c .lb{font-size:10.5px;letter-spacing:.2em;font-weight:500;display:flex;justify-content:space-between;gap:8px}.md3-c .lb small{letter-spacing:0;font-weight:400;font-size:11.5px}'
++'.md3-cl{background:#FDF1E6;flex-direction:row;align-items:center;gap:14px;cursor:default}.md3-cl:hover{transform:none;box-shadow:none}'
++'.md3-cl .t1{font-size:15px}.md3-cl .t1 b{font-weight:300;font-size:28px}.md3-cl .t2{font-size:13px;font-style:italic;color:#A07657}'
++'.md3-mes{background:#EEF6EE}.md3-mes .lb{color:#4E7A52}.md3-tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}'
++'.md3-tres div{display:flex;flex-direction:column;min-width:0}.md3-tres span{font-size:12px}.md3-tres b{font-size:20px;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'.md3-tres .q{background:#fff;border-radius:12px;padding:3px 10px}'
++'.md3-pf{background:#F3EEFA}.md3-pf .lb{color:#6B5490}.md3-pf .mo{display:flex;align-items:baseline;gap:8px}.md3-pf .mo span{font-size:12px;color:#8A76AB}.md3-pf .mo b{font-size:22px;font-weight:300;color:#4A355F}'
++'.md3-bar{height:8px;border-radius:4px;background:#fff;overflow:hidden}.md3-bar i{display:block;height:8px;background:#CDBDE6;border-radius:4px}'
++'#view-midia .md-lay{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,.95fr);gap:18px;align-items:start}'
++'#view-midia .md-lc,#view-midia .md-rc{display:contents!important}'
++'#view-midia .md-lay>.mdb,#view-midia .md-lc>.mdb,#view-midia .md-rc>.mdb{min-width:0}'
++'#view-midia [data-k="hoy"],#view-midia [data-k="dia"],#view-midia [data-k="prox"],#view-midia [data-k="listas"],#view-midia [data-k="otro"]{background:#fff;border:1px solid #F3EBE3;border-radius:22px;padding:18px}'
++'#view-midia [data-k="hoy"]{grid-column:1;grid-row:1 / span 2}'
++'#view-midia [data-k="dia"]{grid-column:2;grid-row:1}'
++'#view-midia [data-k="prox"]{grid-column:3;grid-row:1}'
++'#view-midia [data-k="listas"]{grid-column:3;grid-row:2}'
++'#view-midia [data-k="cie"]{grid-column:2;grid-row:2}'+'#view-midia .md-lay:not(:has([data-k="prox"])):not(:has([data-k="listas"])) [data-k="dia"],#view-midia .md-lay:not(:has([data-k="prox"])):not(:has([data-k="listas"])) [data-k="cie"]{grid-column:2 / -1}'+'#view-midia [data-k="tools"] .md-h{gap:10px}'
++'#view-midia [data-k="otro"]{grid-column:1 / -1}'
++'#view-midia.md3-con [data-k="num"]{display:none}'
++'#view-midia [data-k="num"]{grid-column:1 / -1}'
++'#view-midia [data-k="tools"]{grid-column:1 / -1;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:6px 0}'
++'#view-midia [data-k="tools"] .md-h{margin:0!important;min-width:110px}'
++'#view-midia [data-k="tools"] .md-tools{display:flex;flex-wrap:wrap;gap:10px}'
++'#view-midia [data-k="hab"]{grid-column:1 / -1}'
++'}';
+document.head.appendChild(MD3_CSS);
+
+function md3Plata(n){try{return fmt(n);}catch(e){return '$'+Math.round(n).toLocaleString('es-AR');}}
+function md3Pintar(){
+  var v=document.getElementById('view-midia');if(!v)return;var top=v.querySelector('.md-top');if(!top)return;
+  var hola=top.querySelector('.md-hola');if(hola&&!hola.querySelector('b'))hola.innerHTML=hola.innerHTML.replace(/Euge/,'<b>Euge</b>');
+  var MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var hoy=new Date(),mi=hoy.getMonth(),diasRest=new Date(hoy.getFullYear(),mi+1,0).getDate()-hoy.getDate();
+  // clima
+  var c=(typeof md2Clima!=='undefined')?md2Clima:null,cl='';
+  if(c&&typeof MD2_ROPA!=='undefined'){var r=MD2_ROPA[c.ropa]||MD2_ROPA.remera;
+    cl='<svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C2906A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="'+r[1]+'"></path></svg>'
+      +(c.ll?'<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7F9AC8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0zM12 12v6.5a2 2 0 0 1-4 0"></path></svg>':'')
+      +'<div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="t1"><b>'+c.t+'°</b>  Córdoba · '+r[0]+'</span><span class="t2">'+md2Frase()+'</span></div>';}
+  else cl='<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C2906A" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><div style="display:flex;flex-direction:column;gap:3px"><span class="t1">Córdoba</span><span class="t2">'+(typeof md2Frase==='function'?md2Frase():'')+'</span></div>';
+  // mes (datos reales de Finanzas)
+  var mes='';try{var m=calcM(mi);
+    mes='<div class="lb"><span>'+MS[mi].toUpperCase()+'</span><small>quedan '+diasRest+' días</small></div><div class="md3-tres">'
+      +'<div><span style="color:#6A8F6D">Entró</span><b style="color:#2F5A33">'+md3Plata(m.ing)+'</b></div>'
+      +'<div><span style="color:#B07A7A">Salió</span><b style="color:#7A3E3E">'+md3Plata(m.gas)+'</b></div>'
+      +'<div class="q"><span style="color:#6A8F6D">Te queda</span><b style="color:'+(m.neto>=0?'#2F5A33':'#A0463E')+'">'+md3Plata(m.neto)+'</b></div></div>';}catch(e){mes='<div class="lb"><span>'+MS[mi].toUpperCase()+'</span></div><span style="font-size:13px;color:#6A8F6D">Abrí Finanzas</span>';}
+  // Parque Futura (datos reales)
+  var pf='';try{var d=pfLoad();
+    if(d&&d.meses){var k=pfMesKey(),t=pfMesTot(d,k);
+      if(d.meses[k]&&t.tot>0){var pc=Math.max(0,Math.min(100,Math.round(t.pag/t.tot*100)));
+        pf='<div class="lb"><span>PARQUE FUTURA</span><small>'+MS[mi]+'</small></div><div class="mo"><span>Falta cobrar</span><b>'+md3Plata(t.saldo)+'</b></div><div class="md3-bar"><i style="width:'+pc+'%"></i></div><span style="font-size:12px;color:#6B5490">Cobrado '+md3Plata(t.pag)+' de '+md3Plata(t.tot)+'</span>';}
+      else pf='<div class="lb"><span>PARQUE FUTURA</span></div><span style="font-size:13.5px;color:#6B5490">'+MS[mi].charAt(0).toUpperCase()+MS[mi].slice(1)+' todavía sin cargar</span>';}
+    else pf='<div class="lb"><span>PARQUE FUTURA</span></div><span style="font-size:13.5px;color:#6B5490">Abrir</span>';}catch(e){pf='<div class="lb"><span>PARQUE FUTURA</span></div>';}
+  var row=v.querySelector('.md3-top');if(!row){row=document.createElement('div');row.className='md3-top';top.parentNode.insertBefore(row,top.nextSibling);}
+  row.innerHTML='<div class="md3-c md3-cl">'+cl+'</div>'
+    +'<button type="button" class="md3-c md3-mes" onclick="goFin(\'month\','+mi+')">'+mes+'</button>'
+    +'<button type="button" class="md3-c md3-pf" onclick="goSection(\'parque\')">'+pf+'</button>';
+  v.classList.add('md3-con');
+}
+var _rMiDiaMD3=rMiDia;
+rMiDia=function(){var r=_rMiDiaMD3.apply(this,arguments);try{md3Pintar();}catch(e){}return r;};
+var _md2PintarClimaMD3=md2PintarClima;
+md2PintarClima=function(){var r=_md2PintarClimaMD3.apply(this,arguments);try{if(document.querySelector('#view-midia .md3-top'))md3Pintar();}catch(e){}return r;};
+try{md3Pintar();}catch(e){}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
