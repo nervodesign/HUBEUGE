@@ -10659,6 +10659,22 @@ function mdOkPoner(){var row=document.querySelector('#view-midia .md-addrow');if
 function mdOkEstado(){var b=document.querySelector('#view-midia .md-okb'),i=document.getElementById('md-add-in');if(b&&i)b.classList.toggle('on',!!i.value.trim());}
 var _rMiDiaOK=rMiDia;rMiDia=function(){var r=_rMiDiaOK.apply(this,arguments);try{mdOkPoner();}catch(e){}return r;};
 try{mdOkPoner();}catch(e){}
+// ── Agregar tarea simple también en la compu + Nervo en marrón de verdad ──
+try{CAL_PALETA.arena={bg:'#EBDCCB',tx:'#5E3F25',dot:'#B08F78'};}catch(e){}
+var ADD2_CSS=document.createElement('style');ADD2_CSS.textContent='#view-midia .md-addopts{display:none!important}'
++'#view-midia .md-addrow{display:flex!important;align-items:center;gap:6px}'
++'#view-midia .md-addrow .md-in-b{display:inline-flex!important;align-items:center;justify-content:center}'
++'#view-midia .md-addrow #md-add-in{min-width:0;flex:1 1 auto}'
++'#view-midia .md-okb{display:flex!important;flex-shrink:0;width:34px;height:34px;border-radius:17px;border:0;background:#3E2C22;align-items:center;justify-content:center;padding:0;cursor:pointer;opacity:.35;transition:opacity .2s}'
++'#view-midia .md-okb.on{opacity:1}';
+document.head.appendChild(ADD2_CSS);
+// ── Tareas: cada tarea con el color de su área (tiritas) ──
+var TRA_CSS=document.createElement('style');TRA_CSS.textContent='body:not(.theme-dark) .tr-row.tr-ar{border-radius:14px!important;margin:6px 8px!important;border-bottom:0!important;border-left:4px solid var(--ard)!important;background:var(--arb)!important}body:not(.theme-dark) .tr-row.tr-ar .tr-t{color:var(--art)!important}body:not(.theme-dark) .tr-row.tr-ar .ar-tag{background:#fff!important}';document.head.appendChild(TRA_CSS);
+var _tarFilaAR=tarFila;
+tarFila=function(t,opts){var h=_tarFilaAR.apply(this,arguments);
+  try{var a=t.area?areaGet(t.area):null,p=null;if(a&&CAL_PALETA[a.c])p=CAL_PALETA[a.c];else if(t.prio)p={bg:'#FBEDEA',tx:'#8C4F46',dot:'#E3A79C'};
+    if(p)h=h.replace('<div class="tr-row','<div style="--arb:'+p.bg+';--art:'+p.tx+';--ard:'+p.dot+'" class="tr-ar tr-row');}catch(e){}
+  return h;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
