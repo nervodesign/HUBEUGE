@@ -10186,10 +10186,15 @@ var FV_GASTO=[[/\bluz\b|epec/,'epec'],[/ecogas|\bgas\b/,'ecogas'],[/internet|wif
   [/regalo/,'regalos'],[/cafe|barcito|cafeteria|medialuna/,'cafe'],[/delivery|pedidos ?ya|rappi/,'delivery']];
 function fvCatExiste(k){var ok=false;Object.values(GRUPOS).forEach(function(g){if(g.cats[k])ok=true;});(loadCustomCats()||[]).forEach(function(c){if(c.key===k)ok=true;});return ok;}
 function fvParse(text){
-  var n=fvNorm(text),r={tipo:'gasto',monto:null,cat:'',mp:'',fecha:new Date(),desc:''};
+  var n=fvNorm(text),r={tipo:'gasto',monto:null,cat:'',mp:'',fecha:new Date(),desc:'',cc:0,ct:0};
+  var CW={una:1,un:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,dieciocho:18,veinticuatro:24};
+  var cq=n.match(/cuota\s*(?:n(?:ro|umero)?\.?\s*)?(\d+)\s*(?:de|\/)\s*(\d+)/);
+  if(cq){r.cc=+cq[1];r.ct=+cq[2];}
+  else{var cq2=n.match(/(?:en\s+)?(\d+|una|un|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|dieciocho|veinticuatro)\s+cuotas/);if(cq2){r.ct=/^\d+$/.test(cq2[1])?+cq2[1]:CW[cq2[1]];r.cc=1;}}
+  var nM=n.replace(/cuota\s*(?:n(?:ro|umero)?\.?\s*)?\d+\s*(?:de|\/)\s*\d+/g,' ').replace(/(?:en\s+)?(\d+|una|un|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|dieciocho|veinticuatro)\s+cuotas(\s+de)?/g,' ');
   if(/\b(cobre|me pagaron|me pago|me depositaron|me transfirieron|me entro|me entraron|ingreso|ingresaron|entraron|sueldo)\b/.test(n))r.tipo='ing';
   else if(/\b(ahorre|guarde|compre (dolares|usd|verdes))\b/.test(n))r.tipo='aho';
-  var mo=fvMonto(n);if(mo)r.monto=mo.v;
+  var mo=fvMonto(nM);if(mo)r.monto=mo.v;
   var sinMp=n;
   for(var i=0;i<FV_MP.length;i++){if(FV_MP[i][0].test(n)&&!(FV_MP[i][1]==='uala'&&/dolar/.test(n))){r.mp=FV_MP[i][1];sinMp=n.replace(FV_MP[i][0],' ');break;}}
   if(/credito/.test(n)&&r.mp==='bancocordoba_debito')r.mp='bancocordoba_credito';
@@ -10208,7 +10213,7 @@ function fvParse(text){
   r.fecha=d;
   var desc=String(text||'').trim().replace(/^(agreg[aá]r?|agreg[aá]|anot[aá]r?|carg[aá]r?|sum[aá]r?|pon[eé]r?)\s+(un|el|la)?\s*/i,'').replace(/^(pago|gasto)\s+(de|del)\s+/i,'').replace(/^(pagar|pague|pagué|gaste|gasté|cobre|cobré|me pagaron|ahorre|ahorré|guarde|guardé)\s+/i,'');
   if(mo){var re=new RegExp('\\$?\\s*'+mo.txt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*'),'i');desc=desc.replace(re,' ');}
-  desc=desc.replace(/\b(antes de ayer|anteayer|ayer|hoy)\b/ig,' ').replace(/\b(el|dia|día)\s+\d{1,2}\b/ig,' ')
+  desc=desc.replace(/cuota\s*(?:n(?:ro|[uú]mero)?\.?\s*)?\d+\s*(?:de|\/)\s*\d+/ig,' ').replace(/(?:en\s+)?(\d+|una|un|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|dieciocho|veinticuatro)\s+cuotas(\s+de)?/ig,' ').replace(/\b(antes de ayer|anteayer|ayer|hoy)\b/ig,' ').replace(/\b(el|dia|día)\s+\d{1,2}\b/ig,' ')
     .replace(/\b(con|por|en|via|vía)\s+(la\s+|el\s+|tarjeta\s+)?(mercado ?pago|mp|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b(\s+(d[eé]bito|cr[eé]dito))?/ig,' ')
     .replace(/\b(mercado ?pago|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba( d[eé]bito| cr[eé]dito)?|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b/ig,' ').replace(/\b(con|por|en|via|vía)\s*$/i,' ')
     .replace(/^\s*(pagu[eé]|gast[eé]|cobr[eé]|ahorr[eé]|guard[eé])\s+/i,' ').replace(/\s+/g,' ').trim();
@@ -10231,6 +10236,7 @@ function fvAbrir(text){
    +'<div class="fv-row"><div class="fv-f"><label>FECHA</label><input id="fv-d" type="date"></div>'
    +'<div class="fv-f"><label>PAGO</label><select id="fv-p">'+mpOpts()+'</select></div></div>'
    +'<div class="fv-f"><label>DETALLE</label><input id="fv-x" placeholder="Detalle"></div>'
+   +'<div class="fv-f"><label>FORMA DE PAGO</label><div style="display:flex;gap:8px;align-items:center"><select id="fv-tp" style="flex:1"><option value="unico">Pago único</option><option value="cuota">En cuotas</option></select><span id="fv-cw" style="display:none;align-items:center;gap:6px;font-size:13px;color:#7E6B5E">cuota <input id="fv-cc" inputmode="numeric" style="width:52px!important;text-align:center"> de <input id="fv-ct" inputmode="numeric" style="width:52px!important;text-align:center"></span></div></div>'
    +'<div class="fv-btns"><button class="fv-no">Cancelar</button><button class="fv-ok">Guardar en Finanzas</button></div></div>';
   document.body.appendChild(ov);
   var tipo=p.tipo;function pintaTipo(){ov.querySelectorAll('.fv-tipos button').forEach(function(b){b.classList.toggle('on',b.dataset.t===tipo);});}
@@ -10243,6 +10249,10 @@ function fvAbrir(text){
   document.getElementById('fv-p').value=p.mp||'';
   document.getElementById('fv-d').value=p.fecha.getFullYear()+'-'+mm+'-'+dd;
   document.getElementById('fv-x').value=p.desc;
+  var tpS=document.getElementById('fv-tp'),cw=document.getElementById('fv-cw');
+  function pintaTp(){cw.style.display=tpS.value==='cuota'?'flex':'none';}
+  tpS.onchange=function(){if(tpS.value==='cuota'&&!document.getElementById('fv-cc').value)document.getElementById('fv-cc').value='1';pintaTp();};
+  if(p.ct){tpS.value='cuota';document.getElementById('fv-cc').value=p.cc||1;document.getElementById('fv-ct').value=p.ct;}pintaTp();
   function cerrar(){ov.remove();}
   ov.addEventListener('click',function(e){if(e.target===ov&&Date.now()-fvT0>700)cerrar();});
   ov.querySelector('.fv-no').onclick=function(){if(Date.now()-fvT0>700)cerrar();};
@@ -10252,7 +10262,9 @@ function fvAbrir(text){
     var cat=document.getElementById('fv-c').value;var mp=document.getElementById('fv-p').value||'';
     var dv=document.getElementById('fv-d').value;var fd=new Date();if(dv){var q=dv.split('-');fd=new Date(+q[0],+q[1]-1,+q[2]);}
     var mesIdx=fd.getMonth();if(!S||!S.meses||!S.meses[mesIdx]){showToast('No encontré ese mes en Finanzas');return;}
-    var txn={desc:document.getElementById('fv-x').value.trim(),monto:monto,cat:cat,fecha:String(fd.getDate()).padStart(2,'0')+'/'+String(mesIdx+1).padStart(2,'0'),mp:mp,mpLabel:(MP[mp]&&MP[mp].l)||''};
+    var dsc=document.getElementById('fv-x').value.trim();
+    if(document.getElementById('fv-tp').value==='cuota'){var ccv=parseInt(document.getElementById('fv-cc').value,10)||1,ctv=parseInt(document.getElementById('fv-ct').value,10)||0;dsc=dsc+(dsc?' ':'')+'('+ccv+'/'+(ctv||'?')+')';}
+    var txn={desc:dsc,monto:monto,cat:cat,fecha:String(fd.getDate()).padStart(2,'0')+'/'+String(mesIdx+1).padStart(2,'0'),mp:mp,mpLabel:(MP[mp]&&MP[mp].l)||''};
     S.meses[mesIdx].txns.push(txn);save();
     try{rMonth(mesIdx);}catch(e){}
     cerrar();var bi=document.getElementById('fv-in-'+mesIdx);if(bi)bi.value='';
