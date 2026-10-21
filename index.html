@@ -10409,10 +10409,9 @@ function calDragInit(){
       var cols=[].slice.call(document.querySelectorAll('#cal-body .wk-col')),col=null;
       cols.forEach(function(c){var r=c.getBoundingClientRect();if(x>=r.left&&x<=r.right)col=c;});
       if(!col)col=el.parentNode;
-      var r=col.getBoundingClientRect();var delta=Math.round(((y-st.y0)/HH*60)/15)*15;
-      var ni=Math.max(0,Math.min(24*60-st.dur,st.ini+delta));
+      var ni=Math.round(calMfromY(calY(st.ini)+(y-st.y0))/15)*15;ni=Math.max(0,Math.min(24*60-st.dur,ni));
       if(el.parentNode!==col)col.appendChild(el);
-      el.style.top=(ni/60*HH+1)+'px';
+      el.style.top=(calY(ni)+1)+'px';
       var ciso=((col.getAttribute('onclick')||'').match(/'(\d{4}-\d{2}-\d{2})'/)||[])[1]||st.iso;
       st.nuevoIni=ni;st.nuevoIso=ciso;
       st.bub.textContent=drgHHMM(ni)+' – '+drgHHMM(ni+st.dur)+(ciso!==st.iso?' · '+calParse(ciso).getDate()+'/'+(calParse(ciso).getMonth()+1):'');
@@ -10593,6 +10592,61 @@ rCalSide=function(){var r=_rCalSideAR.apply(this,arguments);
     else if(t.prio){var s2=el.querySelector('small');if(s2)s2.textContent='Tarea · Importante';}
     else{el.style.setProperty('--c','#D6C2B0');el.style.setProperty('--b','#F7F2EC');}});}catch(e){}
   return r;};
+// ── CALENDARIO SEMANA: 1 a 5 am contraído + tareas con hora en su horario ──
+var NCH_CSS=document.createElement('style');NCH_CSS.textContent=''
++'.wk-col.wk-cmp{background-image:none!important}'
++'.wk-ln{position:absolute;left:0;right:0;height:1px;background:var(--nv-line,#EFE6DD);pointer-events:none}'
++'.wk-noche{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,rgba(214,194,176,.10) 0 6px,rgba(214,194,176,.22) 6px 12px);pointer-events:none;border-top:1px solid var(--nv-line,#EFE6DD);border-bottom:1px solid var(--nv-line,#EFE6DD)}'
++'.wk-hours div.wk-hz{display:flex;align-items:center;justify-content:flex-end;font-size:9.5px;color:#B8A898;transform:none}'
++'.wk-ev.wk-tar{background:#fff;border:1px solid #EFC9C1;border-left:3px solid #E6A9BD;color:#8C4F46;cursor:pointer;display:flex;gap:4px;align-items:flex-start}'
++'.wk-ev.wk-tar.done{opacity:.55;text-decoration:line-through}';
+document.head.appendChild(NCH_CSS);
+var CAL_NOCHE_HC=26;
+function calHHnow(){return window.innerWidth<=700?44:48;}
+function calY(m){var HH=calHHnow(),HC=CAL_NOCHE_HC;
+  if(m<=60)return m/60*HH;if(m<=300)return HH+(m-60)/240*HC;return HH+HC+(m-300)/60*HH;}
+function calMfromY(y){var HH=calHHnow(),HC=CAL_NOCHE_HC;
+  if(y<=HH)return y/HH*60;if(y<=HH+HC)return 60+(y-HH)/HC*240;return 300+(y-HH-HC)/HH*60;}
+function calWkPost(){
+  var HH=calHHnow(),body=document.querySelector('#cal-body .wk');if(!body)return;
+  var total=calY(24*60);
+  // horas
+  var hs=document.querySelectorAll('#cal-body .wk-hours > div');
+  hs.forEach(function(d,i){if(i>=1&&i<=4){if(i===1){d.className='wk-hz';d.style.height=CAL_NOCHE_HC+'px';d.textContent='1–5 am';}else d.style.display='none';}});
+  // columnas
+  var tars=[];try{tars=tarLoad()||[];}catch(e){}
+  document.querySelectorAll('#cal-body .wk-col').forEach(function(col){
+    if(col.classList.contains('wk-cmp'))return;col.classList.add('wk-cmp');col.style.height=total+'px';
+    for(var h=1;h<=24;h++){if(h>=2&&h<=4)continue;var ln=document.createElement('div');ln.className='wk-ln';ln.style.top=(calY(h*60)-1)+'px';col.appendChild(ln);}
+    var nz=document.createElement('div');nz.className='wk-noche';nz.style.top=calY(60)+'px';nz.style.height=CAL_NOCHE_HC+'px';col.appendChild(nz);
+    col.querySelectorAll('.wk-ev').forEach(function(ev){
+      var t=parseFloat(ev.style.top)||0,hh=parseFloat(ev.style.height)||20;
+      var s=(t-1)/HH*60,f=s+(hh+2)/HH*60;
+      ev.style.top=(calY(s)+1)+'px';ev.style.height=Math.max(calY(f)-calY(s)-2,20)+'px';});
+    var now=col.querySelector('.wk-now');if(now){var n=new Date();now.style.top=calY(n.getHours()*60+n.getMinutes())+'px';}
+    // tareas con hora → en su horario
+    var iso=((col.getAttribute('onclick')||'').match(/'(\d{4}-\d{2}-\d{2})'/)||[])[1];if(!iso)return;
+    tars.filter(function(x){return x.fecha===iso&&x.hora;}).forEach(function(x){
+      var p=x.hora.split(':'),s=(+p[0])*60+(+p[1]||0);
+      var st='';try{var a=x.area?areaGet(x.area):null;if(a&&CAL_PALETA[a.c]){var pl=CAL_PALETA[a.c];st='background:'+pl.bg+';color:'+pl.tx+';border-color:'+pl.dot+';';}}catch(e){}
+      var el=document.createElement('div');el.className='wk-ev wk-tar'+(x.done?' done':'');el._drg=1;
+      el.setAttribute('style',st+'top:'+(calY(s)+1)+'px;height:'+Math.max(calY(s+30)-calY(s)-2,20)+'px;left:2px;width:calc(100% - 4px);z-index:2');
+      el.innerHTML='<span>'+(x.done?'✓':'○')+'</span><b>'+calEsc(x.t)+'</b>';
+      el.onclick=function(e){e.stopPropagation();tarAbrir(x.id);};col.appendChild(el);});
+  });
+  // sacar del "todo el día" las tareas que ya tienen hora
+  document.querySelectorAll('#cal-body .wk-allc .tr-chip').forEach(function(ch){var m=(ch.getAttribute('onclick')||'').match(/tarAbrir\('([^']+)'\)/);if(!m)return;
+    var t=tars.filter(function(x){return String(x.id)===m[1];})[0];if(t&&t.hora)ch.remove();});
+  var sc=document.getElementById('wk-scroll');if(sc){var ah=new Date();var m0=Math.max(ah.getHours()-1,6)*60;sc.scrollTop=Math.max(calY(Math.min(m0,7*60))-8,0);}
+}
+var _rCalSemanaNCH=rCalSemana;
+rCalSemana=function(){var r=_rCalSemanaNCH.apply(this,arguments);try{calWkPost();}catch(e){}return r;};
+calClickHora=function(ev,iso){
+  var r=ev.currentTarget.getBoundingClientRect();var m=calMfromY(ev.clientY-r.top);var hr=Math.max(0,Math.min(23,Math.floor(m/60)));
+  calAbrir(null,iso);
+  document.getElementById('cal-ev-hora-ini').value=String(hr).padStart(2,'0')+':00';
+  document.getElementById('cal-ev-hora-fin').value=String(Math.min(hr+1,23)).padStart(2,'0')+':'+(hr===23?'59':'00');
+};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
