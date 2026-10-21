@@ -10675,6 +10675,19 @@ tarFila=function(t,opts){var h=_tarFilaAR.apply(this,arguments);
   try{var a=t.area?areaGet(t.area):null,p=null;if(a&&CAL_PALETA[a.c])p=CAL_PALETA[a.c];else if(t.prio)p={bg:'#FBEDEA',tx:'#8C4F46',dot:'#E3A79C'};
     if(p)h=h.replace('<div class="tr-row','<div style="--arb:'+p.bg+';--art:'+p.tx+';--ard:'+p.dot+'" class="tr-ar tr-row');}catch(e){}
   return h;};
+// ── Áreas y colores: acceso fácil + los colores se mantienen en todos lados ──
+(function(){var sb=document.querySelector('#sidebar .sidebar-bottom');if(!sb||sb.querySelector('.ar-side'))return;
+  var a=document.createElement('a');a.className='ar-side';a.setAttribute('data-section','');a.onclick=function(){areasEditar();};
+  a.innerHTML='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="8.5" cy="10" r="1.2"></circle><circle cx="12" cy="7.5" r="1.2"></circle><circle cx="15.5" cy="10" r="1.2"></circle><path d="M12 21a3 3 0 0 1 0-6h2"></path></svg>Áreas y colores';
+  sb.insertBefore(a,sb.firstChild);})();
+var _areasCerrarAR=areasCerrar;
+areasCerrar=function(){var r=_areasCerrarAR.apply(this,arguments);try{if(aSection==='midia')rMiDia();else if(aSection==='calendario')rCalendario();}catch(e){}return r;};
+var _gcalColorAR=gcalColor;
+gcalColor=function(e){var c=_gcalColorAR.apply(this,arguments);
+  try{var t=((e.titulo||'')+' '+(e.cal||'')).toLowerCase();
+    if(/nervo/.test(t)){var n=areaGet('nervo');if(n&&CAL_PALETA[n.c])return n.c;}
+    if(/lawmatics|matter flow|\bmfa\b/.test(t)){var m=areaGet('mfa');if(m&&CAL_PALETA[m.c])return m.c;}}catch(x){}
+  return c;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
@@ -10743,6 +10756,7 @@ tarFila=function(t,opts){var h=_tarFilaAR.apply(this,arguments);
   <div class="nv-sheet">
     <button class="mas-item" onclick="masIr('fin')"><span>💰</span>Finanzas</button>
     <button class="mas-item" onclick="masIr('parque')"><span>🏡</span>Parque Futura</button>
+    <button class="mas-item" onclick="document.getElementById('mas-modal').classList.remove('on');areasEditar()"><span>🎨</span>Mis áreas y colores</button>
     <button class="mas-item" onclick="masIr('objetivo')"><span>🌿</span>Bienestar <small style="color:var(--nv-mute);font-weight:400;margin-left:auto">Objetivo · Hábitos · Gym · Salud</small></button>
     <button class="mas-item" onclick="masIr('metas')"><span>🎯</span>Personal <small style="color:var(--nv-mute);font-weight:400;margin-left:auto">Metas · Logros</small></button>
     <button class="mas-item" onclick="document.getElementById('mas-modal').classList.remove('on');areasEditar()"><span>🏷️</span>Mis áreas</button>
