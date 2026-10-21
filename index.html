@@ -10582,8 +10582,9 @@ calCol=function(ev){var r=_calColAR.apply(this,arguments);
   try{if(ev&&!ev.color&&ev.area){var a=areaGet(ev.area);if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];return {l:r.l,bg:p.bg,tx:p.tx,dot:p.dot};}}}catch(e){}return r;};
 tarChip=function(t){
   var st='';try{var a=t.area?areaGet(t.area):null;
-    if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];st='background:'+p.bg+'!important;color:'+p.tx+'!important;border:1px solid '+p.dot+'!important';}
-    else if(t.prio)st='background:#FBEDEA!important;color:#8C4F46!important;border:1px solid #EFC9C1!important';}catch(e){}
+    if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];st='background:#FFFFFF!important;color:'+p.tx+'!important;border:1.5px solid '+p.dot+'!important';}
+    else if(t.prio)st='background:#FFFFFF!important;color:#8C4F46!important;border:1.5px solid #E3A79C!important';
+    else st='background:#FFFFFF!important;color:#6B4A30!important;border:1.5px solid #D6C2B0!important';}catch(e){}
   return '<div class="nv-ev tr-chip'+(t.done?' done':'')+'"'+(st?' style="'+st+'"':'')+' onclick="event.stopPropagation();tarAbrir(\''+t.id+'\')">'+'<span class="tr-g">'+(t.done?'✓':'○')+' </span>'+(t.hora?'<b style="font-weight:600">'+t.hora+'</b> ':'')+calEsc(t.t)+'</div>';};
 var _rCalSideAR=rCalSide;
 rCalSide=function(){var r=_rCalSideAR.apply(this,arguments);
@@ -10629,7 +10630,7 @@ function calWkPost(){
     var iso=((col.getAttribute('onclick')||'').match(/'(\d{4}-\d{2}-\d{2})'/)||[])[1];if(!iso)return;
     tars.filter(function(x){return x.fecha===iso&&x.hora;}).forEach(function(x){
       var p=x.hora.split(':'),s=(+p[0])*60+(+p[1]||0);
-      var st='';try{var a=x.area?areaGet(x.area):null;if(a&&CAL_PALETA[a.c]){var pl=CAL_PALETA[a.c];st='background:'+pl.bg+';color:'+pl.tx+';border-color:'+pl.dot+';';}}catch(e){}
+      var st='background:#fff;color:#6B4A30;border:1.5px solid #D6C2B0;';try{var a=x.area?areaGet(x.area):null;if(a&&CAL_PALETA[a.c]){var pl=CAL_PALETA[a.c];st='background:#fff;color:'+pl.tx+';border:1.5px solid '+pl.dot+';';}else if(x.prio)st='background:#fff;color:#8C4F46;border:1.5px solid #E3A79C;';}catch(e){}
       var el=document.createElement('div');el.className='wk-ev wk-tar'+(x.done?' done':'');el._drg=1;
       el.setAttribute('style',st+'top:'+(calY(s)+1)+'px;height:'+Math.max(calY(s+30)-calY(s)-2,20)+'px;left:2px;width:calc(100% - 4px);z-index:2');
       el.innerHTML='<span>'+(x.done?'✓':'○')+'</span><b>'+calEsc(x.t)+'</b>';
@@ -10669,7 +10670,7 @@ var ADD2_CSS=document.createElement('style');ADD2_CSS.textContent='#view-midia .
 +'#view-midia .md-okb.on{opacity:1}';
 document.head.appendChild(ADD2_CSS);
 // ── Tareas: cada tarea con el color de su área (tiritas) ──
-var TRA_CSS=document.createElement('style');TRA_CSS.textContent='body:not(.theme-dark) .tr-row.tr-ar{border-radius:14px!important;margin:6px 8px!important;border-bottom:0!important;border-left:4px solid var(--ard)!important;background:var(--arb)!important}body:not(.theme-dark) .tr-row.tr-ar .tr-t{color:var(--art)!important}body:not(.theme-dark) .tr-row.tr-ar .ar-tag{background:#fff!important}';document.head.appendChild(TRA_CSS);
+var TRA_CSS=document.createElement('style');TRA_CSS.textContent='.tr-chip .tr-g{color:inherit!important;opacity:.75}body:not(.theme-dark) .tr-row.tr-ar{border-radius:14px!important;margin:6px 8px!important;border-bottom:0!important;border-left:4px solid var(--ard)!important;background:var(--arb)!important}body:not(.theme-dark) .tr-row.tr-ar .tr-t{color:var(--art)!important}body:not(.theme-dark) .tr-row.tr-ar .ar-tag{background:#fff!important}';document.head.appendChild(TRA_CSS);
 var _tarFilaAR=tarFila;
 tarFila=function(t,opts){var h=_tarFilaAR.apply(this,arguments);
   try{var a=t.area?areaGet(t.area):null,p=null;if(a&&CAL_PALETA[a.c])p=CAL_PALETA[a.c];else if(t.prio)p={bg:'#FBEDEA',tx:'#8C4F46',dot:'#E3A79C'};
