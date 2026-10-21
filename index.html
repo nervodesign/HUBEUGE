@@ -10210,6 +10210,7 @@ function fvParse(text){
   if(mo){var re=new RegExp('\\$?\\s*'+mo.txt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*'),'i');desc=desc.replace(re,' ');}
   desc=desc.replace(/\b(antes de ayer|anteayer|ayer|hoy)\b/ig,' ').replace(/\b(el|dia|día)\s+\d{1,2}\b/ig,' ')
     .replace(/\b(con|por|en|via|vía)\s+(la\s+|el\s+|tarjeta\s+)?(mercado ?pago|mp|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b(\s+(d[eé]bito|cr[eé]dito))?/ig,' ')
+    .replace(/\b(mercado ?pago|personal ?pay|celesol|visa|master(card)?|banco (de )?c[oó]rdoba( d[eé]bito| cr[eé]dito)?|bancor|galicia|transferencia|efectivo|cash|ual[aá])\b/ig,' ').replace(/\b(con|por|en|via|vía)\s*$/i,' ')
     .replace(/^\s*(pagu[eé]|gast[eé]|cobr[eé]|ahorr[eé]|guard[eé])\s+/i,' ').replace(/\s+/g,' ').trim();
   desc=desc.replace(/^\s*(de|en|por|del|la|el)\s+/i,'').replace(/^\s*(de|en|por|del|la|el)\s+/i,'').replace(/\s+/g,' ').trim();
   r.desc=desc?desc.charAt(0).toUpperCase()+desc.slice(1):'';
