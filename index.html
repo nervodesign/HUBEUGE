@@ -10695,7 +10695,7 @@ mdAreasPintar=function(){
   document.querySelectorAll('#view-midia .md-list .md-it').forEach(function(r){
     var b=r.querySelector('.md-chk');if(!b)return;var m=(b.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;
     var t=tl.find(function(x){return String(x.id)===m[1];});if(!t)return;
-    var imp=r.querySelector('.md-imp');if(imp)imp.setAttribute('style','background:#fff!important;color:#A9566A!important;border:1px solid #E3A7B4!important');
+    var imp=r.querySelector('.md-imp');if(imp)imp.setAttribute('style','background:#E8798F!important;color:#FFFFFF!important;border:1px solid #E8798F!important;font-weight:500');
     if(!t.area)return;var a=areaGet(t.area);if(!a)return;var p=areaPal(a);
     r.style.setProperty('background',p.bg,'important');
     if(!r.querySelector('.md-area')){var tag=document.createElement('i');tag.className='md-area';tag.textContent=a.n;var itx=r.querySelector('.md-itx');if(itx)itx.parentNode.insertBefore(tag,itx.nextSibling);}
