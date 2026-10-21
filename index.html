@@ -10325,13 +10325,13 @@ function md2Frase(){var n=new Date();var d=Math.floor((n-new Date(n.getFullYear(
 var MD2_MANGA='M8 4L4 7v12h3V10M16 4l4 3v12h-3V10M8 4c1 1.5 2.5 2 4 2s3-.5 4-2';
 var MD2_ROPA={remera:['remera','M8 4L4 7l2 3 2-1v11h8V9l2 1 2-3-4-3c-1 1.5-2.5 2-4 2s-3-.5-4-2z'],buzo:['algo liviano',MD2_MANGA+'M7 10v10h10V10'],campera:['campera',MD2_MANGA+'M7 10v10h10V10M12 6v14M10 13h0.01M14 13h0.01'],abrigo:['abrigo',MD2_MANGA+'M7 10v12h10V10M9.5 4.5L12 9l2.5-4.5M12 9v13']};
 function md2ClimaTxt(c){return c===0?'Despejado':c<=2?'Algo nublado':c===3?'Nublado':c<=48?'Niebla':c<=57?'Llovizna':c<=67?'Lluvia':c<=77?'Nieve':c<=82?'Chaparrones':'Tormenta';}
-var md2Clima=null;try{var _mc=JSON.parse(localStorage.getItem('hub_clima_cache')||'null');if(_mc&&Date.now()-_mc.at<45*60000)md2Clima=_mc;}catch(e){}
+var md2Clima=null;try{var _mc=JSON.parse(localStorage.getItem('hub_clima_cache2')||'null');if(_mc&&Date.now()-_mc.at<45*60000)md2Clima=_mc;}catch(e){}
 function md2TraerClima(){
   if(md2Clima&&Date.now()-md2Clima.at<45*60000)return;
   fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.42&longitude=-64.18&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FCordoba&forecast_days=1')
   .then(function(r){return r.json();}).then(function(c){var mx=Math.round(c.daily.temperature_2m_max[0]);
-    md2Clima={at:Date.now(),t:Math.round(c.current.temperature_2m),d:md2ClimaTxt(c.current.weather_code),ll:c.current.weather_code>=51,ropa:mx>=25?'remera':mx>=19?'buzo':mx>=12?'campera':'abrigo'};
-    try{localStorage.setItem('hub_clima_cache',JSON.stringify(md2Clima));}catch(e){}md2PintarClima();}).catch(function(){});
+    md2Clima={at:Date.now(),co:c.current.weather_code,mx:mx,mn:Math.round(c.daily.temperature_2m_min[0]),t:Math.round(c.current.temperature_2m),d:md2ClimaTxt(c.current.weather_code),ll:c.current.weather_code>=51,ropa:mx>=25?'remera':mx>=19?'buzo':mx>=12?'campera':'abrigo'};
+    try{localStorage.setItem('hub_clima_cache2',JSON.stringify(md2Clima));}catch(e){}md2PintarClima();}).catch(function(){});
 }
 function md2PintarClima(){
   var el=document.querySelector('#view-midia .md2-clima');if(!el)return;
@@ -10373,88 +10373,7 @@ function avLimpiar(){
   var p=Promise.resolve();ids.forEach(function(gid){p=p.then(function(){return gcalEnviar('delete',{id:gid});}).then(function(){delete mapa[gid];try{localStorage.setItem('hub_tar_gsync',JSON.stringify(mapa));}catch(e){}});});
 }
 setTimeout(avLimpiar,3000);
-// ── MI DÍA 2.0 (compu): encabezado compacto, tarjetas arriba (clima · mes · Parque Futura), 3 columnas ──
-var MD3_CSS=document.createElement('style');MD3_CSS.textContent=''
-+'.md3-top{display:none}'
-+'@media(min-width:901px){'
-+'#view-midia .md-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;text-align:left!important;gap:2px;margin-bottom:18px}'
-+'#view-midia .md-top>*{margin-left:0!important;text-align:left!important}'
-+'#view-midia .md-fecha{display:flex!important;align-items:baseline;justify-content:flex-start!important;gap:6px;height:auto}'
-+'#view-midia .md-dow,#view-midia .md-dia,#view-midia .md-mes{font-size:11px!important;letter-spacing:.2em!important;text-transform:uppercase;color:#8A6A55!important;font-weight:500!important;line-height:1.4!important;font-family:inherit!important}'
-+'#view-midia .md-mes:before{content:"· ";}'
-+'#view-midia .md-hola{font-size:34px!important;font-weight:300!important;color:#3E2C22!important;letter-spacing:-.02em;line-height:1.15!important;margin:0!important}'
-+'#view-midia .md-hola b{font-weight:300;color:#D9A3B6}'
-+'.md3-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:16px;margin:0 0 22px}'
-+'.md3-c{border-radius:22px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;border:0;font:inherit;text-align:left;color:#3E2C22;cursor:pointer;min-width:0;transition:transform .15s,box-shadow .15s}'
-+'.md3-c:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(62,44,34,.07)}'
-+'.md3-c .lb{font-size:10.5px;letter-spacing:.2em;font-weight:500;display:flex;justify-content:space-between;gap:8px}.md3-c .lb small{letter-spacing:0;font-weight:400;font-size:11.5px}'
-+'.md3-cl{background:#FBF1F4;flex-direction:row;align-items:center;gap:14px;cursor:default}.md3-cl:hover{transform:none;box-shadow:none}'
-+'.md3-cl .t1{font-size:15px}.md3-cl .t1 b{font-weight:300;font-size:28px}.md3-cl .t2{font-size:13px;font-style:italic;color:#A98593}'
-+'.md3-mes{background:#F2F7F2}.md3-mes .lb{color:#4E7A52}.md3-tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}'
-+'.md3-tres div{display:flex;flex-direction:column;min-width:0}.md3-tres span{font-size:12px}.md3-tres b{font-size:20px;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-+'.md3-tres .q{background:#fff;border-radius:12px;padding:3px 10px}'
-+'.md3-pf{background:#F6F2FB}.md3-pf .lb{color:#6B5490}.md3-pf .mo{display:flex;align-items:baseline;gap:8px}.md3-pf .mo span{font-size:12px;color:#8A76AB}.md3-pf .mo b{font-size:22px;font-weight:300;color:#4A355F}'
-+'.md3-bar{height:8px;border-radius:4px;background:#fff;overflow:hidden}.md3-bar i{display:block;height:8px;background:#CDBDE6;border-radius:4px}'
-+'#view-midia .md-lay{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,.95fr);gap:18px;align-items:start}'
-+'#view-midia .md-lc,#view-midia .md-rc{display:contents!important}'
-+'#view-midia .md-lay>.mdb,#view-midia .md-lc>.mdb,#view-midia .md-rc>.mdb{min-width:0}'
-+'#view-midia [data-k="hoy"],#view-midia [data-k="dia"],#view-midia [data-k="prox"],#view-midia [data-k="listas"],#view-midia [data-k="otro"]{background:#fff;border:1px solid #F3EBE3;border-radius:22px;padding:18px}'
-+'#view-midia [data-k="hoy"]{grid-column:1;grid-row:1 / span 2}'
-+'#view-midia [data-k="dia"]{grid-column:2;grid-row:1}'
-+'#view-midia [data-k="prox"]{grid-column:3;grid-row:1}'
-+'#view-midia [data-k="listas"]{grid-column:3;grid-row:3}'
-+'#view-midia [data-k="cie"]{grid-column:2;grid-row:2}#view-midia [data-k="cie"] .md-cie>summary{background:#fff;border:1px solid #F3EBE3;border-radius:22px}'+'#view-midia .md-lay:not(:has([data-k="prox"])):not(:has([data-k="listas"])) [data-k="dia"],#view-midia .md-lay:not(:has([data-k="prox"])):not(:has([data-k="listas"])) [data-k="cie"]{grid-column:2 / -1}'+'#view-midia [data-k="tools"] .md-h{gap:10px}'
-+'#view-midia [data-k="otro"]{grid-column:1 / -1}'
-+'#view-midia.md3-con [data-k="num"]{display:none}'
-+'#view-midia [data-k="num"]{grid-column:1 / -1}'
-+'#view-midia [data-k="tools"]{grid-column:3;grid-row:2;background:#fff;border:1px solid #F3EBE3;border-radius:22px;padding:16px 18px;display:block}'
-+'#view-midia [data-k="tools"] .md-h{margin:0 0 10px!important}'
-+'#view-midia [data-k="tools"] .md-tools{display:flex;flex-wrap:wrap;gap:10px}#view-midia [data-k="tools"] .md-ti{width:44px!important;height:44px!important;font-size:17px!important;border-radius:14px!important}#view-midia [data-k="tools"] .md-tn{font-size:11.5px!important}'
-+'#view-midia [data-k="hab"]{grid-column:1 / -1}'
-+'#view-midia [data-k="prox"] .md-it,#view-midia [data-k="listas"] .md-it{background:#F5EEE7!important;border:0!important;border-radius:13px!important;padding:9px 14px!important;margin:0 0 6px!important;box-shadow:none!important;display:flex;align-items:center;gap:10px}'
-+'#view-midia [data-k="prox"] .md-pd{background:#fff!important;border-radius:99px;padding:2px 9px;font-size:11px;white-space:nowrap}'
-+'#view-midia [data-k="prox"] .md-tt{background:#fff!important;border-radius:99px;padding:2px 8px;font-size:10.5px;font-style:normal}'
-+'#view-midia [data-k="prox"] .md-itx span{font-size:14px}'
-+'}';
-document.head.appendChild(MD3_CSS);
-
 function md3Plata(n){try{return fmt(n);}catch(e){return '$'+Math.round(n).toLocaleString('es-AR');}}
-function md3Pintar(){
-  var v=document.getElementById('view-midia');if(!v)return;var top=v.querySelector('.md-top');if(!top)return;
-  var hola=top.querySelector('.md-hola');if(hola&&!hola.querySelector('b'))hola.innerHTML=hola.innerHTML.replace(/Euge/,'<b>Euge</b>');
-  var MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  var hoy=new Date(),mi=hoy.getMonth(),diasRest=new Date(hoy.getFullYear(),mi+1,0).getDate()-hoy.getDate();
-  // clima
-  var c=(typeof md2Clima!=='undefined')?md2Clima:null,cl='';
-  if(c&&typeof MD2_ROPA!=='undefined'){var r=MD2_ROPA[c.ropa]||MD2_ROPA.remera;
-    cl='<svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C9A3B0" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="'+r[1]+'"></path></svg>'
-      +(c.ll?'<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7F9AC8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0zM12 12v6.5a2 2 0 0 1-4 0"></path></svg>':'')
-      +'<div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="t1"><b>'+c.t+'°</b>  Córdoba · '+r[0]+'</span><span class="t2">'+md2Frase()+'</span></div>';}
-  else cl='<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C9A3B0" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><div style="display:flex;flex-direction:column;gap:3px"><span class="t1">Córdoba</span><span class="t2">'+(typeof md2Frase==='function'?md2Frase():'')+'</span></div>';
-  // mes (datos reales de Finanzas)
-  var mes='';try{var m=calcM(mi);
-    mes='<div class="lb"><span>'+MS[mi].toUpperCase()+'</span><small>quedan '+diasRest+' días</small></div><div class="md3-tres">'
-      +'<div><span style="color:#6A8F6D">Entró</span><b style="color:#2F5A33">'+md3Plata(m.ing)+'</b></div>'
-      +'<div><span style="color:#B07A7A">Salió</span><b style="color:#7A3E3E">'+md3Plata(m.gas)+'</b></div>'
-      +'<div class="q"><span style="color:#6A8F6D">Te queda</span><b style="color:'+(m.neto>=0?'#2F5A33':'#A0463E')+'">'+md3Plata(m.neto)+'</b></div></div>';}catch(e){mes='<div class="lb"><span>'+MS[mi].toUpperCase()+'</span></div><span style="font-size:13px;color:#6A8F6D">Abrí Finanzas</span>';}
-  // Parque Futura (datos reales)
-  var pf='';try{var d=pfLoad();
-    if(d&&d.meses){var k=pfMesKey(),t=pfMesTot(d,k);
-      if(d.meses[k]&&t.tot>0){var pc=Math.max(0,Math.min(100,Math.round(t.pag/t.tot*100)));
-        pf='<div class="lb"><span>PARQUE FUTURA</span><small>'+MS[mi]+'</small></div><div class="mo"><span>Falta cobrar</span><b>'+md3Plata(t.saldo)+'</b></div><div class="md3-bar"><i style="width:'+pc+'%"></i></div><span style="font-size:12px;color:#6B5490">Cobrado '+md3Plata(t.pag)+' de '+md3Plata(t.tot)+'</span>';}
-      else pf='<div class="lb"><span>PARQUE FUTURA</span></div><span style="font-size:13.5px;color:#6B5490">'+MS[mi].charAt(0).toUpperCase()+MS[mi].slice(1)+' todavía sin cargar</span>';}
-    else pf='<div class="lb"><span>PARQUE FUTURA</span></div><span style="font-size:13.5px;color:#6B5490">Abrir</span>';}catch(e){pf='<div class="lb"><span>PARQUE FUTURA</span></div>';}
-  var row=v.querySelector('.md3-top');if(!row){row=document.createElement('div');row.className='md3-top';top.parentNode.insertBefore(row,top.nextSibling);}
-  row.innerHTML='<div class="md3-c md3-cl">'+cl+'</div>'
-    +'<button type="button" class="md3-c md3-mes" onclick="goFin(\'month\','+mi+')">'+mes+'</button>'
-    +'<button type="button" class="md3-c md3-pf" onclick="goSection(\'parque\')">'+pf+'</button>';
-  v.classList.add('md3-con');
-}
-var _rMiDiaMD3=rMiDia;
-rMiDia=function(){var r=_rMiDiaMD3.apply(this,arguments);try{md3Pintar();}catch(e){}return r;};
-var _md2PintarClimaMD3=md2PintarClima;
-md2PintarClima=function(){var r=_md2PintarClimaMD3.apply(this,arguments);try{if(document.querySelector('#view-midia .md3-top'))md3Pintar();}catch(e){}return r;};
-try{md3Pintar();}catch(e){}
 // ── CALENDARIO: arrastrar eventos (compu: arrastrás; celu: mantené apretado y arrastrá) ──
 var DRG_CSS=document.createElement('style');DRG_CSS.textContent=''
 +'.wk-ev{cursor:grab;touch-action:pan-y}.wk-ev.drg{cursor:grabbing;z-index:30!important;box-shadow:0 12px 28px rgba(62,44,34,.25)!important;opacity:.96;transform:scale(1.02);transition:none!important}'
@@ -10532,6 +10451,130 @@ function calDragInit(){
 }
 var _rCalSemanaDRG=rCalSemana;
 rCalSemana=function(){var r=_rCalSemanaDRG.apply(this,arguments);try{calDragInit();}catch(e){}return r;};
+// ── MI DÍA COMPU v2 (mockup 11): clima arriba a la derecha, tu día a la izquierda, Finanzas + Parque Futura al costado ──
+var MD4_CSS=document.createElement('style');MD4_CSS.textContent=''
++'body:not(.theme-dark){background-color:#FDFCFA!important}'
++'.md4-head-r,.md4-side,.md4-frase{display:none}'
++'@media(min-width:769px){'
++'body:not(.theme-dark) #sidebar{background:#F8F6F3!important;border-right:1px solid #EEEAE5!important;padding:22px 14px 16px!important}'
++'body:not(.theme-dark) #sidebar .brand{display:flex!important;align-items:center;gap:10px;padding:0 6px 18px!important;font-family:inherit!important;letter-spacing:0!important;text-transform:none!important}'
++'#sidebar .md4-logo{width:34px;height:34px;border-radius:11px;background:#3E2C22;color:#F6E4EA;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:400;flex-shrink:0}'
++'#sidebar .md4-bt{display:flex;flex-direction:column;line-height:1.2}#sidebar .md4-bt b{font-size:15px;font-weight:500;color:#3E2C22;letter-spacing:0}#sidebar .md4-bt small{font-size:11px;color:#A8988A;letter-spacing:0;text-transform:none;margin:0}'
++'body:not(.theme-dark) #sidebar nav a{border-radius:11px!important;padding:8px 12px!important;margin:1px 0!important;color:#5E4C40!important;font-size:14px!important;font-weight:400!important;width:100%!important;box-sizing:border-box}'
++'body:not(.theme-dark) #sidebar nav a:hover{background:#EFEAE4!important}'
++'body:not(.theme-dark) #sidebar nav a.active{background:#4A362B!important;color:#FFFFFF!important;font-weight:400!important;box-shadow:0 4px 12px rgba(62,44,34,.18)}'
++'body:not(.theme-dark) #sidebar nav a.active svg{stroke:#F6E4EA!important}'
++'body:not(.theme-dark) #sidebar nav a.active .nb{background:rgba(255,255,255,.18)!important;color:#fff!important}'
++'body:not(.theme-dark) #sidebar .sidebar-section{color:#A8988A!important;font-size:10px!important;letter-spacing:.2em!important;font-weight:500!important;padding:16px 12px 6px!important}'
++'body:not(.theme-dark) #sidebar .sidebar-bottom{border-top:1px solid #EEEAE5!important}'
++'}'
++'@media(min-width:901px){'
++'#view-midia .md-top{display:flex!important;flex-direction:row!important;justify-content:space-between!important;align-items:stretch!important;gap:24px;margin-bottom:20px}'
++'#view-midia .md4-head-l{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0}'
++'#view-midia .md-fecha{display:flex!important;align-items:baseline;justify-content:flex-start!important;gap:6px;height:auto}'
++'#view-midia .md-dow,#view-midia .md-dia,#view-midia .md-mes{font-size:11px!important;letter-spacing:.2em!important;text-transform:uppercase;color:#8A6A55!important;font-weight:500!important;line-height:1.4!important;font-family:inherit!important}'
++'#view-midia .md-mes:before{content:"· ";}'
++'#view-midia .md-hola{font-size:38px!important;font-weight:300!important;color:#3E2C22!important;letter-spacing:-.02em;line-height:1.1!important;margin:0!important;text-align:left!important}'
++'#view-midia .md-hola b{font-weight:300;color:#D9A3B6}'
++'#view-midia .md4-frase{display:block;font-size:14px;font-style:italic;color:#A98593}'
++'#view-midia .md4-head-r{display:flex;width:430px;flex-shrink:0;background:linear-gradient(135deg,#EEF4FB 0%,#F8F1F6 100%);border-radius:24px;padding:12px 20px;align-items:center;gap:16px;box-sizing:border-box}'
++'.md4-w{display:flex;flex-direction:column;flex:1;min-width:0}.md4-w b{font-size:44px;font-weight:200;line-height:1}.md4-w span{font-size:13.5px;color:#5F6F82}.md4-w small{font-size:12px;color:#8E9BAA}'
++'.md4-ropa{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,.75);border-radius:16px;padding:10px 12px;font-size:11.5px;color:#8A6A75}'
++'#view-midia .md2-week,#view-midia .md2-clima,#view-midia .md3-top{display:none!important}'
++'#view-midia .md-lay{display:grid!important;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 340px;gap:18px;align-items:start}'
++'#view-midia .md-lc,#view-midia .md-rc{display:contents!important}'
++'#view-midia .md-lay .mdb{min-width:0}'
++'#view-midia [data-k="hoy"],#view-midia [data-k="dia"],#view-midia [data-k="prox"],#view-midia [data-k="listas"],#view-midia [data-k="otro"]{background:#fff;border:1px solid #F3EBE3;border-radius:22px;padding:18px}'
++'#view-midia [data-k="hoy"]{grid-column:1;grid-row:1}'
++'#view-midia [data-k="dia"]{grid-column:2;grid-row:1}'
++'#view-midia [data-k="prox"]{grid-column:1;grid-row:2}'
++'#view-midia [data-k="cie"]{grid-column:2;grid-row:2}'
++'#view-midia .md-lay:not(:has([data-k="prox"])) [data-k="cie"]{grid-column:1 / 3}'
++'#view-midia [data-k="listas"]{grid-column:1 / 3;grid-row:3}'
++'#view-midia [data-k="otro"]{grid-column:1 / 3}'
++'#view-midia [data-k="num"]{display:none!important}'
++'#view-midia .md4-side{display:flex;flex-direction:column;gap:18px;grid-column:3;grid-row:1 / span 3;min-width:0}'
++'#view-midia .md4-side [data-k="tools"]{background:#fff;border:1px solid #F3EBE3;border-radius:22px;padding:16px 18px}'
++'#view-midia .md4-side [data-k="tools"] .md-h{margin:0 0 10px!important}'
++'#view-midia .md4-side .md-tools{display:flex;flex-wrap:wrap;gap:10px}'
++'#view-midia .md4-side .md-ti{width:42px!important;height:42px!important;font-size:16px!important;border-radius:13px!important}#view-midia .md4-side .md-tn{font-size:11px!important}'
++'#view-midia [data-k="hab"]{grid-column:1 / -1}'
++'#view-midia [data-k="cie"] .md-cie>summary{background:#FBF7F3;border-radius:22px;border:0}'
++'#view-midia [data-k="prox"] .md-it,#view-midia [data-k="listas"] .md-it{background:#F7F2EC!important;border:0!important;border-radius:13px!important;padding:9px 13px!important;margin:0 0 6px!important;box-shadow:none!important;display:flex;align-items:center;gap:10px}'
++'#view-midia [data-k="prox"] .md-pd{background:#fff!important;border-radius:99px;padding:2px 9px;font-size:11px;white-space:nowrap;color:#8A6A55}'
++'#view-midia [data-k="prox"] .md-tt{background:#fff!important;border-radius:99px;padding:2px 8px;font-size:10.5px;font-style:normal}'
++'.md4-c{border-radius:22px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0}'
++'.md4-c .lb{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;letter-spacing:.2em;font-weight:500}.md4-c .lb small{letter-spacing:0;font-weight:400;font-size:11.5px}'
++'.md4-fin{background:#F2F7F2}.md4-fin .lb{color:#5D8461}'
++'.md4-big{display:flex;flex-direction:column;cursor:pointer}.md4-big span{font-size:12.5px;color:#6A8F6D}.md4-big b{font-size:30px;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'.md4-dos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.md4-dos div{background:#fff;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;min-width:0}'
++'.md4-dos span{font-size:11.5px}.md4-dos b{font-size:16px;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
++'.md4-voz{display:flex;align-items:center;gap:6px;background:#fff;border-radius:12px;padding:4px 4px 4px 12px}'
++'.md4-voz input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:13px;color:#3E2C22;padding:6px 0}'
++'.md4-voz button{width:30px;height:30px;border-radius:15px;border:0;background:#FBEDF1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.md4-voz button.rec{background:#E6A9BD}'
++'.md4-pf{background:#F6F2FB;cursor:pointer}.md4-pf .lb{color:#7A66A0}.md4-pf .mo{display:flex;align-items:baseline;gap:8px}.md4-pf .mo span{font-size:12.5px;color:#8A76AB}.md4-pf .mo b{font-size:24px;font-weight:300;color:#4A355F}'
++'.md4-bar{height:8px;border-radius:4px;background:#fff;overflow:hidden}.md4-bar i{display:block;height:8px;background:#D8CCEC;border-radius:4px}'
++'}';
+document.head.appendChild(MD4_CSS);
+
+function md4Brand(){var b=document.querySelector('#sidebar .brand');if(!b||b.querySelector('.md4-logo'))return;
+  b.innerHTML='<span class="md4-logo">E</span><span class="md4-bt"><b>Hub Euge</b><small>panel de vida</small></span>';}
+function md4Ilus(code){
+  var sol='<g stroke="#F2C9A8" stroke-width="2.4" stroke-linecap="round"><path d="M36 6v7M36 59v-4M12 32h-7M18 14l-5-5M54 14l5-5M18 50l-5 5"></path></g><circle cx="36" cy="32" r="15" fill="#FCE6CF"></circle>';
+  var nube='<path d="M34 66h44a14 14 0 0 0 0-28 19 19 0 0 0-36.5 5A12 12 0 0 0 34 66z" fill="#FFFFFF" stroke="#D6E2F0" stroke-width="1.6"></path>';
+  var gotas='<g stroke="#9DB7D8" stroke-width="2.2" stroke-linecap="round"><path d="M44 70l-3 6M58 70l-3 6M72 70l-3 6"></path></g>';
+  var rayo='<path d="M60 64l-6 9h6l-4 7" fill="none" stroke="#E8C77E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>';
+  var g;if(code==null||code===0)g='<g transform="translate(12,6)">'+sol+'</g>';
+  else if(code<=2)g=sol+nube;
+  else if(code<=48)g='<g transform="translate(-14,-10)">'+nube+'</g>'+nube;
+  else if(code<=67||(code>=80&&code<=82))g='<g transform="translate(0,-6)">'+nube+gotas+'</g>';
+  else if(code<=77)g='<g transform="translate(0,-6)">'+nube+'</g><g fill="#D6E2F0"><circle cx="46" cy="72" r="2.5"></circle><circle cx="60" cy="74" r="2.5"></circle><circle cx="74" cy="72" r="2.5"></circle></g>';
+  else g='<g transform="translate(0,-6)">'+nube+rayo+'</g>';
+  return '<svg aria-hidden="true" width="96" height="80" viewBox="0 0 96 82">'+g+'</svg>';
+}
+function md4Pintar(){
+  md4Brand();
+  var v=document.getElementById('view-midia');if(!v)return;var top=v.querySelector('.md-top');if(!top)return;
+  var hola=top.querySelector('.md-hola');if(hola&&!hola.querySelector('b'))hola.innerHTML=hola.innerHTML.replace(/Euge/,'<b>Euge</b>');
+  var L=top.querySelector('.md4-head-l');
+  if(!L){L=document.createElement('div');L.className='md4-head-l';while(top.firstChild)L.appendChild(top.firstChild);top.appendChild(L);
+    var fr=document.createElement('span');fr.className='md4-frase';L.appendChild(fr);}
+  var fr2=L.querySelector('.md4-frase');if(fr2)fr2.textContent=(typeof md2Frase==='function')?md2Frase():'';
+  var R=top.querySelector('.md4-head-r');if(!R){R=document.createElement('div');R.className='md4-head-r';top.appendChild(R);}
+  var c=(typeof md2Clima!=='undefined')?md2Clima:null;
+  if(c){var r=(MD2_ROPA[c.ropa]||MD2_ROPA.remera);
+    R.innerHTML=md4Ilus(c.co)+'<div class="md4-w"><b>'+c.t+'°</b><span>'+c.d+' · Córdoba</span>'+(c.mx!=null?'<small>máx '+c.mx+'° · mín '+c.mn+'°</small>':'')+'</div>'
+      +'<div class="md4-ropa"><svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C9A3B0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="'+r[1]+'"></path></svg>'+r[0]+(c.ll?' + paraguas':'')+'</div>';}
+  else R.innerHTML=md4Ilus(1)+'<div class="md4-w"><span>Córdoba</span><small>cargando el clima…</small></div>';
+  // columna derecha
+  var lay=v.querySelector('.md-lay');if(!lay)return;
+  var side=lay.querySelector('.md4-side');if(!side){side=document.createElement('div');side.className='md4-side';lay.appendChild(side);}
+  var MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var hoy=new Date(),mi=hoy.getMonth(),rest=new Date(hoy.getFullYear(),mi+1,0).getDate()-hoy.getDate();
+  var fin='';try{var m=calcM(mi);
+    fin='<div class="lb"><span>FINANZAS · '+MS[mi].toUpperCase()+'</span><small>quedan '+rest+' días</small></div>'
+     +'<div class="md4-big" onclick="goFin(\'month\','+mi+')"><span>Te queda</span><b style="color:'+(m.neto>=0?'#2F5A33':'#A0463E')+'">'+md3Plata(m.neto)+'</b></div>'
+     +'<div class="md4-dos"><div><span style="color:#6A8F6D">Entró</span><b>'+md3Plata(m.ing)+'</b></div><div><span style="color:#B08484">Salió</span><b>'+md3Plata(m.gas)+'</b></div></div>';}
+  catch(e){fin='<div class="lb"><span>FINANZAS</span></div>';}
+  fin+='<div class="md4-voz"><input id="md4-voz-in" placeholder="Decime qué pagaste…" autocomplete="off"><button type="button" aria-label="Hablar">'+(typeof FV_MIC_SVG!=='undefined'?FV_MIC_SVG:'')+'</button></div>';
+  var pf='';try{var d=pfLoad();
+    if(d&&d.meses&&d.meses[pfMesKey()]){var t=pfMesTot(d,pfMesKey());var pc=t.tot>0?Math.max(0,Math.min(100,Math.round(t.pag/t.tot*100))):0;
+      pf='<div class="lb"><span>PARQUE FUTURA</span><small>'+MS[mi]+'</small></div><div class="mo"><span>Falta cobrar</span><b>'+md3Plata(t.saldo)+'</b></div><div class="md4-bar"><i style="width:'+pc+'%"></i></div><span style="font-size:12px;color:#7A66A0">Cobrado '+md3Plata(t.pag)+' de '+md3Plata(t.tot)+'</span>';}
+    else pf='<div class="lb"><span>PARQUE FUTURA</span></div><span style="font-size:13.5px;color:#7A66A0">'+MS[mi].charAt(0).toUpperCase()+MS[mi].slice(1)+' todavía sin cargar</span>';}
+  catch(e){pf='<div class="lb"><span>PARQUE FUTURA</span></div>';}
+  var tools=lay.querySelector('[data-k="tools"]');if(tools&&tools.parentNode===side)side.removeChild(tools);
+  side.innerHTML='<div class="md4-c md4-fin">'+fin+'</div><div class="md4-c md4-pf" onclick="goSection(\'parque\')">'+pf+'</div>';
+  if(tools){if(window.innerWidth>900)side.appendChild(tools);else{var hb=lay.querySelector('[data-k="hab"]');var rc=lay.querySelector('.md-rc')||lay;if(tools.parentNode!==rc)rc.appendChild(tools);}}
+  var vi=side.querySelector('#md4-voz-in'),vb=side.querySelector('.md4-voz button');
+  if(vi){vi.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var tx=vi.value.trim();if(tx&&typeof fvAbrir==='function'){fvAbrir(tx);vi.value='';}}});}
+  if(vb&&typeof fvMic==='function')vb.onclick=function(){fvMic(vb,vi,function(tx){fvAbrir(tx);vi.value='';});};
+}
+var _rMiDiaMD4=rMiDia;
+rMiDia=function(){var r=_rMiDiaMD4.apply(this,arguments);try{md4Pintar();}catch(e){}
+var md4RT;window.addEventListener('resize',function(){clearTimeout(md4RT);md4RT=setTimeout(function(){try{if(aSection==='midia')md4Pintar();}catch(e){}},250);});return r;};
+var _md2PintarClimaMD4=md2PintarClima;
+md2PintarClima=function(){var r=_md2PintarClimaMD4.apply(this,arguments);try{if(document.querySelector('#view-midia .md4-head-r'))md4Pintar();}catch(e){}return r;};
+try{md4Pintar();}catch(e){}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
