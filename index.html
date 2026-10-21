@@ -10452,6 +10452,7 @@ var _rCalSemanaDRG=rCalSemana;
 rCalSemana=function(){var r=_rCalSemanaDRG.apply(this,arguments);try{calDragInit();}catch(e){}return r;};
 // ── MI DÍA COMPU v2 (mockup 11): clima arriba a la derecha, tu día a la izquierda, Finanzas + Parque Futura al costado ──
 var MD4_CSS=document.createElement('style');MD4_CSS.textContent=''
++'@media(max-width:900px){html,body{overflow-x:hidden!important;max-width:100%;overscroll-behavior-x:none}#app-shell,#content-area,.main{max-width:100vw;overflow-x:hidden}#view-midia .md-lay>.mdb,#view-midia .md-lay .mdb{min-width:0!important;max-width:100%!important}#view-midia .md-habs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#view-midia .md-habs::-webkit-scrollbar{display:none}input,select,textarea{font-size:16px!important}}'
 +'#hub-toast{pointer-events:none!important}'
 +'body:not(.theme-dark){background-color:#FDFCFA!important}'
 +'.md4-head-r,.md4-side,.md4-frase{display:none}'
@@ -10647,6 +10648,17 @@ calClickHora=function(ev,iso){
   document.getElementById('cal-ev-hora-ini').value=String(hr).padStart(2,'0')+':00';
   document.getElementById('cal-ev-hora-fin').value=String(Math.min(hr+1,23)).padStart(2,'0')+':'+(hr===23?'59':'00');
 };
+// ── Agregar tarea: botón para guardar (celu) ──
+var MDOK_CSS=document.createElement('style');MDOK_CSS.textContent='.md-okb{display:none}@media(max-width:900px){#view-midia .md-addrow{min-width:0}#view-midia .md-addrow #md-add-in{min-width:0;flex:1 1 auto;width:auto}.md-okb{display:flex;flex-shrink:0;width:34px;height:34px;border-radius:17px;border:0;background:#3E2C22;align-items:center;justify-content:center;padding:0;margin-left:2px;opacity:.35;transition:opacity .2s,transform .15s}.md-okb.on{opacity:1}.md-okb:active{transform:scale(.92)}}';document.head.appendChild(MDOK_CSS);
+function mdOkPoner(){var row=document.querySelector('#view-midia .md-addrow');if(!row||row.querySelector('.md-okb'))return;
+  var b=document.createElement('button');b.type='button';b.className='md-okb';b.setAttribute('aria-label','Agregar');
+  b.innerHTML='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+  b.addEventListener('mousedown',function(e){e.preventDefault();});
+  b.onclick=function(){mdAgregar();setTimeout(mdOkEstado,50);};row.appendChild(b);
+  var inp=row.querySelector('#md-add-in');if(inp)inp.addEventListener('input',mdOkEstado);mdOkEstado();}
+function mdOkEstado(){var b=document.querySelector('#view-midia .md-okb'),i=document.getElementById('md-add-in');if(b&&i)b.classList.toggle('on',!!i.value.trim());}
+var _rMiDiaOK=rMiDia;rMiDia=function(){var r=_rMiDiaOK.apply(this,arguments);try{mdOkPoner();}catch(e){}return r;};
+try{mdOkPoner();}catch(e){}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
