@@ -10453,6 +10453,7 @@ var _rCalSemanaDRG=rCalSemana;
 rCalSemana=function(){var r=_rCalSemanaDRG.apply(this,arguments);try{calDragInit();}catch(e){}return r;};
 // ── MI DÍA COMPU v2 (mockup 11): clima arriba a la derecha, tu día a la izquierda, Finanzas + Parque Futura al costado ──
 var MD4_CSS=document.createElement('style');MD4_CSS.textContent=''
++'#hub-toast{pointer-events:none!important}'
 +'body:not(.theme-dark){background-color:#FDFCFA!important}'
 +'.md4-head-r,.md4-side,.md4-frase{display:none}'
 +'@media(min-width:769px){'
@@ -10575,6 +10576,23 @@ var md4RT;window.addEventListener('resize',function(){clearTimeout(md4RT);md4RT=
 var _md2PintarClimaMD4=md2PintarClima;
 md2PintarClima=function(){var r=_md2PintarClimaMD4.apply(this,arguments);try{if(document.querySelector('#view-midia .md4-head-r'))md4Pintar();}catch(e){}return r;};
 try{md4Pintar();}catch(e){}
+// ── CALENDARIO: colores reales (área del evento y de la tarea) ──
+var _calColAR=calCol;
+calCol=function(ev){var r=_calColAR.apply(this,arguments);
+  try{if(ev&&!ev.color&&ev.area){var a=areaGet(ev.area);if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];return {l:r.l,bg:p.bg,tx:p.tx,dot:p.dot};}}}catch(e){}return r;};
+tarChip=function(t){
+  var st='';try{var a=t.area?areaGet(t.area):null;
+    if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];st='background:'+p.bg+'!important;color:'+p.tx+'!important;border:1px solid '+p.dot+'!important';}
+    else if(t.prio)st='background:#FBEDEA!important;color:#8C4F46!important;border:1px solid #EFC9C1!important';}catch(e){}
+  return '<div class="nv-ev tr-chip'+(t.done?' done':'')+'"'+(st?' style="'+st+'"':'')+' onclick="event.stopPropagation();tarAbrir(\''+t.id+'\')">'+'<span class="tr-g">'+(t.done?'✓':'○')+' </span>'+(t.hora?'<b style="font-weight:600">'+t.hora+'</b> ':'')+calEsc(t.t)+'</div>';};
+var _rCalSideAR=rCalSide;
+rCalSide=function(){var r=_rCalSideAR.apply(this,arguments);
+  try{var tars=tarLoad();document.querySelectorAll('#cal-side .cs-it').forEach(function(el){var m=(el.getAttribute('onclick')||'').match(/tarAbrir\('([^']+)'\)/);if(!m)return;
+    var t=tars.filter(function(x){return String(x.id)===m[1];})[0];if(!t)return;var a=t.area?areaGet(t.area):null;
+    if(a&&CAL_PALETA[a.c]){var p=CAL_PALETA[a.c];el.style.setProperty('--c',p.dot);el.style.setProperty('--b',p.bg);var s=el.querySelector('small');if(s)s.textContent='Tarea · '+a.n;}
+    else if(t.prio){var s2=el.querySelector('small');if(s2)s2.textContent='Tarea · Importante';}
+    else{el.style.setProperty('--c','#D6C2B0');el.style.setProperty('--b','#F7F2EC');}});}catch(e){}
+  return r;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
