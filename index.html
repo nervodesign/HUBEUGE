@@ -10925,6 +10925,29 @@ var _rMiDiaHR=rMiDia;rMiDia=function(){var r=_rMiDiaHR.apply(this,arguments);
   try{var top=document.querySelector('#view-midia .md-top');var old=document.getElementById('hr-md-aviso');if(old)old.remove();
     if(top&&new Date().getHours()>=21&&hrPendienteHoy()){var a=document.createElement('div');a.id='hr-md-aviso';a.className='hr-aviso';a.innerHTML='⏰ <span style="flex:1">Son más de las 21: <b style="font-weight:500">cargá Toggl</b></span><span>Abrir →</span>';a.onclick=function(){goSection('horas');};top.parentNode.insertBefore(a,top.nextSibling);a.style.margin='0 0 16px';}}catch(e){}
   return r;};
+// ── HORAS: traducción automática al inglés para Toggl ──
+function hrTraducir(txt){
+  txt=String(txt||'').trim();if(!txt)return Promise.resolve('');
+  var u1='https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=en&dt=t&q='+encodeURIComponent(txt);
+  return fetch(u1).then(function(r){return r.json();}).then(function(j){return (j[0]||[]).map(function(p){return p[0];}).join('').trim();})
+   .catch(function(){return fetch('https://api.mymemory.translated.net/get?langpair=es|en&q='+encodeURIComponent(txt)).then(function(r){return r.json();}).then(function(j){return (j.responseData&&j.responseData.translatedText)||'';});})
+   .catch(function(){return '';});}
+function hrTraducirPendientes(){var d=hrLoad();var falta=d.items.filter(function(x){return x.d&&!x.en;});if(!falta.length)return;
+  var p=Promise.resolve();falta.forEach(function(x){p=p.then(function(){return hrTraducir(x.d).then(function(en){if(!en)return;var d2=hrLoad();var it=d2.items.filter(function(y){return y.id===x.id;})[0];if(it&&!it.en){it.en=en;hrStore(d2);}});});});
+  p.then(function(){if(aSection==='horas')rHoras();});}
+function hrEditarEn(id){var d=hrLoad();var it=d.items.filter(function(x){return x.id===id;})[0];if(!it)return;
+  var v=prompt('Texto en inglés para Toggl:',it.en||'');if(v===null)return;it.en=v.trim();hrStore(d);rHoras();}
+var _rHorasTR=rHoras;
+rHoras=function(){var r=_rHorasTR.apply(this,arguments);
+  try{var d=hrLoad();document.querySelectorAll('#hr-root .hr-it').forEach(function(row){var b=row.querySelector('button[onclick*="hrBorrar"]');if(!b)return;var id=(b.getAttribute('onclick').match(/'([^']+)'/)||[])[1];
+      var it=d.items.filter(function(x){return x.id===id;})[0];if(!it||!it.d)return;var tx=row.querySelector('.tx');if(!tx||tx.querySelector('.hr-en'))return;
+      var en=document.createElement('span');en.className='hr-en';en.style.cssText='font-size:12.5px;color:#4A6A8E;cursor:pointer';en.title='Tocá para corregir';
+      en.textContent=it.en?'🇬🇧 '+it.en:'🇬🇧 traduciendo…';en.onclick=function(){hrEditarEn(id);};tx.appendChild(en);});
+    var cb=document.querySelector('#hr-root button[onclick="hrCopiar()"]');if(cb)cb.textContent='Copiar en inglés para Toggl';}catch(e){}
+  setTimeout(hrTraducirPendientes,50);return r;};
+hrTexto=function(f){var d=hrLoad(),its=d.items.filter(function(x){return x.f===f;});
+  var p=calParse(f),tot=its.reduce(function(s,x){return s+x.m;},0);
+  return its.map(function(x){return (x.p?x.p+' · ':'')+(x.en||x.d||'')+' · '+hrFmt(x.m);}).join('\n')+'\nTotal '+(p.getMonth()+1)+'/'+p.getDate()+': '+hrFmt(tot);};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
