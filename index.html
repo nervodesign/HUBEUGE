@@ -10948,6 +10948,62 @@ rHoras=function(){var r=_rHorasTR.apply(this,arguments);
 hrTexto=function(f){var d=hrLoad(),its=d.items.filter(function(x){return x.f===f;});
   var p=calParse(f),tot=its.reduce(function(s,x){return s+x.m;},0);
   return its.map(function(x){return (x.p?x.p+' · ':'')+(x.en||x.d||'')+' · '+hrFmt(x.m);}).join('\n')+'\nTotal '+(p.getMonth()+1)+'/'+p.getDate()+': '+hrFmt(tot);};
+// ── AHORROS: "Mi plata hoy" con colores, editable y foto de cada mes ──
+var PAT_CSS=document.createElement('style');PAT_CSS.textContent=''
++'.pt{display:flex;flex-direction:column;gap:16px}'
++'.pt-hero{border-radius:24px;padding:20px 22px;background:linear-gradient(135deg,#EEF6EE 0%,#F6F2FB 55%,#FBEDF1 100%);display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}'
++'.pt-hero div{display:flex;flex-direction:column;gap:2px}.pt-hero span{font-size:11px;letter-spacing:.18em;font-weight:500;color:#7E6B5E}'
++'.pt-hero b{font-size:30px;font-weight:300;color:#2F5A33;letter-spacing:-.01em}.pt-hero b.sm{font-size:20px;color:#4A355F}.pt-hero small{font-size:12px;color:#8E7B6B}'
++'.pt-sec{font-size:11px;letter-spacing:.2em;color:#7E6B5E;font-weight:500;margin:4px 2px -4px}'
++'.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}'
++'.pt-c{border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;position:relative}'
++'body:not(.theme-dark) #ahorros-content .pt-c input:not([type=checkbox]),#ahorros-content .pt-c input{-webkit-appearance:none;border-radius:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font:inherit;color:inherit;width:100%;outline:0;padding:0!important;height:auto!important;min-height:0!important}'+'@media(max-width:768px){.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-c .mo input{font-size:18px}.pt-c .tg button{padding:2px 6px;font-size:10px}.pt-hero b{font-size:26px}}'
++'.pt-c .lb{font-size:13px;font-weight:500}.pt-c .mo{display:flex;align-items:baseline;gap:4px;background:rgba(255,255,255,.75);border-radius:12px;padding:6px 10px}'
++'.pt-c .mo span{font-size:13px;opacity:.7}.pt-c .mo input{font-size:22px;font-weight:300}.pt-c input:focus{outline:2px solid rgba(62,44,34,.18);border-radius:8px}'
++'.pt-c .x{position:absolute;top:6px;right:8px;border:0;background:transparent;cursor:pointer;font-size:15px;opacity:.35;color:inherit}.pt-c .x:hover{opacity:.8}'
++'.pt-c .tg{display:flex;gap:4px;flex-wrap:wrap}.pt-c .tg button{border:0;border-radius:99px;font:inherit;font-size:10.5px;padding:2px 8px;cursor:pointer;background:rgba(255,255,255,.6);color:inherit;opacity:.7}.pt-c .tg button.on{opacity:1;background:#fff;font-weight:500}'
++'.pt-c.ap{opacity:.6;background:repeating-linear-gradient(135deg,#F4F1EC 0 8px,#EFEAE4 8px 16px)!important;color:#6E5B4E!important}'
++'.pt-add{display:flex;gap:8px;flex-wrap:wrap}.pt-add input,.pt-add select{border:1.5px solid #EFE6DD;border-radius:12px;padding:9px 12px;font:inherit;font-size:14px;background:#fff;min-width:0}'
++'.pt-add input.l{flex:2 1 180px}.pt-add input.m{flex:1 1 100px}.pt-b{border:0;border-radius:99px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;background:#3E2C22;color:#fff}.pt-b.sec{background:#F7F1EA;color:#5B4A3F}'
++'.pt-hist{display:flex;flex-direction:column;gap:6px}.pt-h{display:flex;align-items:center;gap:10px;background:#FBF7F3;border-radius:12px;padding:8px 12px;font-size:13.5px}'
++'.pt-h b{font-weight:500}.pt-h .d{flex:1;color:#7E6B5E}.pt-h .up{color:#34603A}.pt-h .dn{color:#A0463E}';
+document.head.appendChild(PAT_CSS);
+var PAT_COL=[['#E4F0E3','#2C5029'],['#E3EEF7','#24496B'],['#F3EEFA','#4A355F'],['#FCE9EC','#7A3550'],['#FDF1E6','#7A4A1F'],['#EBDCCB','#5E3F25'],['#E9EBD6','#4E5320'],['#D9E4F5','#24406E']];
+function patTipo(p){return p.aparte?'aparte':(/recuperar|me debe|deben/i.test(p.label)?'deben':'tengo');}
+function patNum(n){return (Math.round(n*100)/100).toLocaleString('es-AR',{maximumFractionDigits:2});}
+function patTot(){var P=S.patrimonio||[],r={tengo:0,deben:0,ars:0};P.forEach(function(p){if(p.aparte)return;if(p.moneda==='ARS'){r.ars+=p.monto;return;}r[patTipo(p)]+=p.monto;});return r;}
+function patSet(i,k,v){var p=S.patrimonio[i];if(!p)return;
+  if(k==='monto'){var n=parseFloat(String(v).replace(/\./g,'').replace(',','.'));if(isNaN(n))return;p.monto=n;}
+  else if(k==='label'){if(!String(v).trim())return;p.label=String(v).trim();}
+  else if(k==='tipo'){p.aparte=(v==='aparte');if(v==='deben'&&!/recuperar/i.test(p.label))p.label='A recuperar: '+p.label.replace(/^A recuperar:\s*/i,'');if(v==='tengo')p.label=p.label.replace(/^A recuperar( de)?:?\s*/i,'');}
+  S.patrimonio_fecha=calISO(new Date());save();patPintar();}
+function patBorrar(i){if(!confirm('¿Sacar "'+S.patrimonio[i].label+'"?'))return;S.patrimonio.splice(i,1);save();patPintar();}
+function patNueva(){var l=document.getElementById('pt-nl').value.trim(),m=parseFloat(String(document.getElementById('pt-nm').value).replace(/\./g,'').replace(',','.')),mo=document.getElementById('pt-nmo').value;
+  if(!l||isNaN(m))return;if(!S.patrimonio)S.patrimonio=[];S.patrimonio.push({label:l,monto:m,moneda:mo});S.patrimonio_fecha=calISO(new Date());save();patPintar();}
+function patFoto(){var t=patTot();if(!S.patrimonio_hist)S.patrimonio_hist=[];var f=calISO(new Date()),k=f.slice(0,7);
+  S.patrimonio_hist=S.patrimonio_hist.filter(function(h){return h.f.slice(0,7)!==k;});S.patrimonio_hist.push({f:f,tengo:Math.round(t.tengo*100)/100,deben:Math.round(t.deben*100)/100});
+  S.patrimonio_hist.sort(function(a,b){return a.f<b.f?-1:1;});save();patPintar();showToast('✓ Foto del mes guardada');}
+function patPintar(){
+  var cont=document.getElementById('ahorros-content');if(!cont)return;var cards=cont.querySelectorAll(':scope > .card');var card=cards[cards.length-1];if(!card)return;
+  var P=S.patrimonio||[],t=patTot(),f=S.patrimonio_fecha||'2026-11-02',fd=calParse(f);
+  function tarjeta(p,i,ci){var c=PAT_COL[ci%PAT_COL.length],tp=patTipo(p);
+    return '<div class="pt-c'+(p.aparte?' ap':'')+'" style="background:'+c[0]+';color:'+c[1]+'"><button class="x" title="Sacar" onclick="patBorrar('+i+')">×</button>'
+     +'<input class="lb" value="'+calEsc(p.label)+'" onchange="patSet('+i+',\'label\',this.value)">'
+     +'<div class="mo"><span>'+(p.moneda==='USD'?'US$':'$')+'</span><input inputmode="decimal" value="'+patNum(p.monto)+'" onfocus="this.select()" onchange="patSet('+i+',\'monto\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()"></div>'
+     +'<div class="tg"><button class="'+(tp==='tengo'?'on':'')+'" onclick="patSet('+i+',\'tipo\',\'tengo\')">Tengo</button><button class="'+(tp==='deben'?'on':'')+'" onclick="patSet('+i+',\'tipo\',\'deben\')">Me deben</button><button class="'+(tp==='aparte'?'on':'')+'" onclick="patSet('+i+',\'tipo\',\'aparte\')">Aparte</button></div></div>';}
+  var g={tengo:[],deben:[],aparte:[]};P.forEach(function(p,i){g[patTipo(p)].push(i);});var ci=0;
+  function grupo(k,tit){if(!g[k].length)return '';return '<div class="pt-sec">'+tit+'</div><div class="pt-grid">'+g[k].map(function(i){return tarjeta(P[i],i,ci++);}).join('')+'</div>';}
+  var H=(S.patrimonio_hist||[]).slice(-12).reverse();var MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var hist=H.length?'<div class="pt-sec">CÓMO VENÍS MES A MES</div><div class="pt-hist">'+H.map(function(h,j){var prev=H[j+1];var dif=prev?h.tengo-prev.tengo:null;var d=calParse(h.f);
+      return '<div class="pt-h"><b>'+MS[d.getMonth()]+' '+d.getFullYear()+'</b><span class="d">al '+d.getDate()+'/'+(d.getMonth()+1)+'</span><span>US$ '+patNum(h.tengo)+'</span>'+(dif!=null?'<span class="'+(dif>=0?'up':'dn')+'">'+(dif>=0?'▲ +':'▼ ')+patNum(dif)+'</span>':'')+'</div>';}).join('')+'</div>':'';
+  card.innerHTML='<div class="pt"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><p class="st" style="margin:0">Mi plata hoy</p><span style="font-size:12px;color:#8E7B6B">Actualizado al '+fd.getDate()+'/'+(fd.getMonth()+1)+'/'+fd.getFullYear()+' · tocá un número para cambiarlo</span></div>'
+   +'<div class="pt-hero"><div><span>TENGO HOY</span><b>US$ '+patNum(t.tengo)+'</b></div><div><span>ME DEBEN</span><b class="sm">US$ '+patNum(t.deben)+'</b><small>Total con esto: US$ '+patNum(t.tengo+t.deben)+'</small></div>'+(t.ars?'<div><span>EN PESOS</span><b class="sm">$ '+patNum(t.ars)+'</b></div>':'')+'</div>'
+   +grupo('tengo','DÓNDE LA TENGO')+grupo('deben','ME DEBEN')+grupo('aparte','APARTE (NO SUMA)')
+   +'<div class="pt-sec">AGREGAR</div><div class="pt-add"><input class="l" id="pt-nl" placeholder="Ej: Plazo fijo"><input class="m" id="pt-nm" inputmode="decimal" placeholder="Monto"><select id="pt-nmo"><option>USD</option><option>ARS</option></select><button class="pt-b" onclick="patNueva()">Agregar</button></div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="pt-b sec" onclick="patFoto()">📸 Guardar foto de este mes</button><span style="font-size:12px;color:#A8988A">Una vez por mes, así ves cómo vas creciendo.</span></div>'
+   +hist+'</div>';
+}
+var _rAhorrosPT=rAhorros;rAhorros=function(){var r=_rAhorrosPT.apply(this,arguments);try{patPintar();}catch(e){}return r;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
