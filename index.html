@@ -10994,15 +10994,19 @@ function patPintar(){
   var g={tengo:[],deben:[],aparte:[]};P.forEach(function(p,i){g[patTipo(p)].push(i);});var ci=0;
   function grupo(k,tit){if(!g[k].length)return '';return '<div class="pt-sec">'+tit+'</div><div class="pt-grid">'+g[k].map(function(i){return tarjeta(P[i],i,ci++);}).join('')+'</div>';}
   var H=(S.patrimonio_hist||[]).slice(-12).reverse();var MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  var hist=H.length?'<div class="pt-sec">CÓMO VENÍS MES A MES</div><div class="pt-hist">'+H.map(function(h,j){var prev=H[j+1];var dif=prev?h.tengo-prev.tengo:null;var d=calParse(h.f);
-      return '<div class="pt-h"><b>'+MS[d.getMonth()]+' '+d.getFullYear()+'</b><span class="d">al '+d.getDate()+'/'+(d.getMonth()+1)+'</span><span>US$ '+patNum(h.tengo)+'</span>'+(dif!=null?'<span class="'+(dif>=0?'up':'dn')+'">'+(dif>=0?'▲ +':'▼ ')+patNum(dif)+'</span>':'')+'</div>';}).join('')+'</div>':'';
+  var hist=H.length?'<div class="pt-sec">CÓMO VENÍS MES A MES <small style="letter-spacing:0;font-weight:400">(tengo + me deben)</small></div><div class="pt-hist">'+H.map(function(h,j){var prev=H[j+1];var hT=function(x){return x.tengo+(x.deben||0);};var dif=prev?hT(h)-hT(prev):null;var d=calParse(h.f);
+      return '<div class="pt-h"><b>'+MS[d.getMonth()]+' '+d.getFullYear()+'</b><span class="d">al '+d.getDate()+'/'+(d.getMonth()+1)+'</span><span>US$ '+patNum(hT(h))+'</span>'+(dif!=null?'<span class="'+(dif>=0?'up':'dn')+'">'+(dif>=0?'▲ +':'▼ ')+patNum(dif)+'</span>':'')+'<button title="Sacar" onclick="patHistDel(\''+h.f+'\')" style="border:0;background:transparent;cursor:pointer;opacity:.4;font-size:14px">×</button></div>';}).join('')+'</div>':'';
   card.innerHTML='<div class="pt"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><p class="st" style="margin:0">Mi plata hoy</p><span style="font-size:12px;color:#8E7B6B">Actualizado al '+fd.getDate()+'/'+(fd.getMonth()+1)+'/'+fd.getFullYear()+' · tocá un número para cambiarlo</span></div>'
    +'<div class="pt-hero"><div><span>TENGO HOY</span><b>US$ '+patNum(t.tengo)+'</b></div><div><span>ME DEBEN</span><b class="sm">US$ '+patNum(t.deben)+'</b><small>Total con esto: US$ '+patNum(t.tengo+t.deben)+'</small></div>'+(t.ars?'<div><span>EN PESOS</span><b class="sm">$ '+patNum(t.ars)+'</b></div>':'')+'</div>'
    +grupo('tengo','DÓNDE LA TENGO')+grupo('deben','ME DEBEN')+grupo('aparte','APARTE (NO SUMA)')
    +'<div class="pt-sec">AGREGAR</div><div class="pt-add"><input class="l" id="pt-nl" placeholder="Ej: Plazo fijo"><input class="m" id="pt-nm" inputmode="decimal" placeholder="Monto"><select id="pt-nmo"><option>USD</option><option>ARS</option></select><button class="pt-b" onclick="patNueva()">Agregar</button></div>'
-   +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="pt-b sec" onclick="patFoto()">📸 Guardar foto de este mes</button><span style="font-size:12px;color:#A8988A">Una vez por mes, así ves cómo vas creciendo.</span></div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="pt-b sec" onclick="patFoto()">📸 Guardar hoy en el historial</button><span style="font-size:12px;color:#A8988A">Guarda el total de hoy (si ya guardaste este mes, lo reemplaza).</span></div>'
+   +'<div class="pt-sec">AGREGAR UN TOTAL AL HISTORIAL</div><div class="pt-add"><input type="date" id="pt-hf" class="m"><input class="m" id="pt-ht" inputmode="decimal" placeholder="Total US$"><button class="pt-b" onclick="patHistAdd()">Agregar</button></div>'
    +hist+'</div>';
 }
+function patHistAdd(){var f=document.getElementById('pt-hf').value,t=parseFloat(String(document.getElementById('pt-ht').value).replace(/\./g,'').replace(',','.'));if(!f||isNaN(t)){showToast('Poné fecha y total');return;}
+  if(!S.patrimonio_hist)S.patrimonio_hist=[];S.patrimonio_hist=S.patrimonio_hist.filter(function(h){return h.f!==f;});S.patrimonio_hist.push({f:f,tengo:t,deben:0});S.patrimonio_hist.sort(function(a,b){return a.f<b.f?-1:1;});save();patPintar();showToast('✓ Agregado al historial');}
+function patHistDel(f){if(!confirm('¿Sacar este total del historial?'))return;S.patrimonio_hist=(S.patrimonio_hist||[]).filter(function(h){return h.f!==f;});save();patPintar();}
 var _rAhorrosPT=rAhorros;rAhorros=function(){var r=_rAhorrosPT.apply(this,arguments);try{patPintar();}catch(e){}return r;};
 </script>
 </div><!-- /main -->
