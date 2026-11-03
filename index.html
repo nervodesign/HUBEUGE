@@ -5345,8 +5345,8 @@ function rAhorros(){
     else if(t.cat==='gasto_usd')gastado+=t.monto;
   }));
   const pat=S.patrimonio||[];
-  const totalARS=pat.filter(p=>p.moneda==='ARS').reduce((a,p)=>a+p.monto,0);
-  const totalUSDPat=pat.filter(p=>p.moneda==='USD').reduce((a,p)=>a+p.monto,0);
+  const totalARS=pat.filter(p=>p.moneda==='ARS'&&!p.aparte).reduce((a,p)=>a+p.monto,0);
+  const totalUSDPat=pat.filter(p=>p.moneda==='USD'&&!p.aparte).reduce((a,p)=>a+p.monto,0);
   el.innerHTML=`
     <div class="card">
       <p class="st">Total acumulado en USD <span class="stl"></span></p>
@@ -5370,7 +5370,7 @@ function rAhorros(){
         </select>
       </div>
       <button class="btn-p" onclick="addPatrimonio()" style="margin-bottom:16px">+ Agregar</button>
-      ${pat.length?pat.map((p,idx)=>`<div class="txrow"><span class="txdesc">${p.label}</span><span class="txamt">${p.moneda==='USD'?fmtU(p.monto):fmt(p.monto)}</span><button class="btn-del" onclick="delPatrimonio(${idx})">✕</button></div>`).join(''):'<p style="color:var(--lino4);font-size:12px">Todavía no cargaste nada.</p>'}
+      ${pat.length?pat.map((p,idx)=>`<div class="txrow"${p.aparte?' style="opacity:.55"':''}><span class="txdesc">${p.label}${p.aparte?' <small style="font-size:11px;background:#F7F1EA;border-radius:99px;padding:1px 8px">aparte · no suma</small>':''}</span><span class="txamt">${p.moneda==='USD'?fmtU(p.monto):fmt(p.monto)}</span><button class="btn-del" onclick="delPatrimonio(${idx})">✕</button></div>`).join(''):'<p style="color:var(--lino4);font-size:12px">Todavía no cargaste nada.</p>'}
       ${pat.length?`<div style="display:flex;gap:20px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div><span style="font-size:11px;color:var(--lino4)">Total ARS</span><div style="font-weight:700">${fmt(totalARS)}</div></div>
         <div><span style="font-size:11px;color:var(--lino4)">Total USD</span><div style="font-weight:700">${fmtU(totalUSDPat)}</div></div>
