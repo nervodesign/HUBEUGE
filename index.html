@@ -11050,6 +11050,39 @@ pfInqGuardar=function(){
     Object.keys(d.meses||{}).forEach(function(k){var mm=d.meses[k];if(k<desde||mm.cerrado)return;var l=mm.lin&&mm.lin[i.u];if(l&&!l.vacio&&l.inq===i.id)l.alq=ult.m;});
   });
   return r;};
+
+// ── PARQUE FUTURA: tablita de % de luz, agua y gas al final de Inquilinos ──
+var PCT_CSS=document.createElement('style');PCT_CSS.textContent=''
++'.pct-w{overflow-x:auto;margin-top:6px}.pct-tb{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:14px}'
++'.pct-tb th{font-size:11px;letter-spacing:.14em;font-weight:500;color:#7E6B5E;text-align:left;padding:0 8px}'
++'.pct-tb td{background:#FBF7F3;padding:6px 8px}.pct-tb td:first-child{border-radius:12px 0 0 12px;font-weight:500;color:#5B4A3F}.pct-tb td:last-child{border-radius:0 12px 12px 0}'
++'.pct-tb input{width:74px;border:1.5px solid #EFE6DD;border-radius:10px;padding:6px 8px;font:inherit;font-size:14px;background:#fff;text-align:right}'
++'.pct-tb tr.vac td{background:#F4F1EC;color:#9A8E84}.pct-tb small{font-size:11px;color:#A8988A;margin-left:4px}'
++'.pct-tb tr.tot td{background:#fff;border:1.5px solid #EFE6DD;border-width:1.5px 0;font-weight:500}.pct-tb tr.tot td:first-child{border-left-width:1.5px}.pct-tb tr.tot td:last-child{border-right-width:1.5px}'
++'.pct-ok{color:#34603A}.pct-no{color:#A0463E}';
+document.head.appendChild(PCT_CSS);
+function pctTabla(d){
+  var gm=[];d.unidades.forEach(function(u){if(u.gasMed&&gm.indexOf(u.gasMed)<0)gm.push(u.gasMed);});
+  var h='<div class="sec-h">Porcentajes de luz, agua y gas</div><div class="pct-w"><table class="pct-tb" id="pct-tb"><tr><th>Unidad</th><th>% Luz</th><th>% Agua</th><th>% Gas</th></tr>';
+  d.unidades.forEach(function(u){var i=pfInqAct(d,u.id);
+    var inp=function(c){return '<input inputmode="decimal" data-pu="'+u.id+'" data-pc="'+c+'" data-gm="'+(u.gasMed||'')+'" value="'+pfIn(u[c]==null?'':u[c])+'" oninput="pctSum()" onchange="pctSet(this)">';};
+    h+='<tr'+(i?'':' class="vac"')+'><td>'+u.n+'<small>'+(i?calEsc(i.n):'vacía')+'</small></td><td>'+inp('pEpec')+'</td><td>'+inp('pAgua')+'</td><td>'+(u.gasMed?inp('pGas')+'<small>'+u.gasMed+'</small>':'<small>—</small>')+'</td></tr>';});
+  h+='<tr class="tot"><td>Total</td><td id="pct-t-pEpec"></td><td id="pct-t-pAgua"></td><td id="pct-t-pGas"></td></tr></table></div>'
+   +'<p class="aum-nota">Se cambia para los meses nuevos y para el mes actual si no está cerrado. Los meses anteriores no se tocan.</p>';
+  return h;}
+function pctFmt(n){n=Math.round(n*100)/100;return '<span class="'+(Math.abs(n-100)<0.01?'pct-ok':'pct-no')+'">'+String(n).replace('.',',')+'%'+(Math.abs(n-100)<0.01?' ✓':'')+'</span>';}
+function pctSum(){var t=document.getElementById('pct-tb');if(!t)return;var s={pEpec:0,pAgua:0},g={};
+  t.querySelectorAll('input[data-pc]').forEach(function(e){var c=e.getAttribute('data-pc'),v=pfNum(String(e.value).replace('%',''));if(c==='pGas'){var m=e.getAttribute('data-gm');g[m]=(g[m]||0)+v;}else s[c]+=v;});
+  document.getElementById('pct-t-pEpec').innerHTML=pctFmt(s.pEpec);document.getElementById('pct-t-pAgua').innerHTML=pctFmt(s.pAgua);
+  var ks=Object.keys(g);document.getElementById('pct-t-pGas').innerHTML=ks.length?ks.map(function(k){return (ks.length>1?k+': ':'')+pctFmt(g[k]);}).join('<br>'):'—';}
+function pctSet(e){var uid=e.getAttribute('data-pu'),c=e.getAttribute('data-pc'),v=pfNum(String(e.value).replace('%',''));
+  var d=pfLoad();var u=pfUni(d,uid);if(!u)return;u[c]=v;
+  var k=pfMesKey(),m=d.meses&&d.meses[k];
+  if(m&&!m.cerrado&&m.lin&&m.lin[uid]){var l=m.lin[uid];var pc=pfPctDe(d,k,uid);
+    if(l.fijo&&!l.vacio){delete l.fijo;l.pGas=pc.pGas;l.pEpec=pc.pEpec;l.pAgua=pc.pAgua;delete l.gas;delete l.epec;delete l.agua;}
+    if(l.ov)delete l.ov[{pGas:'gas',pEpec:'epec',pAgua:'agua'}[c]];l[c]=v;}
+  pfStore(d);showToast('✓ Guardado');}
+var _pfInqHTMLPCT=pfInqHTML;pfInqHTML=function(d){var h=_pfInqHTMLPCT.apply(this,arguments);try{h+=pctTabla(d);setTimeout(pctSum,0);}catch(e){}return h;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
