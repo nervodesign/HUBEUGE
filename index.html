@@ -11008,6 +11008,46 @@ function patHistAdd(){var f=document.getElementById('pt-hf').value,t=parseFloat(
   if(!S.patrimonio_hist)S.patrimonio_hist=[];S.patrimonio_hist=S.patrimonio_hist.filter(function(h){return h.f!==f;});S.patrimonio_hist.push({f:f,tengo:t,deben:0});S.patrimonio_hist.sort(function(a,b){return a.f<b.f?-1:1;});save();patPintar();showToast('✓ Agregado al historial');}
 function patHistDel(f){if(!confirm('¿Sacar este total del historial?'))return;S.patrimonio_hist=(S.patrimonio_hist||[]).filter(function(h){return h.f!==f;});save();patPintar();}
 var _rAhorrosPT=rAhorros;rAhorros=function(){var r=_rAhorrosPT.apply(this,arguments);try{patPintar();}catch(e){}return r;};
+
+// ── PARQUE FUTURA: monto inicial + 4 aumentos con fecha, en la ficha del inquilino ──
+var AUM_CSS=document.createElement('style');AUM_CSS.textContent=''
++'.aum-t{display:flex;flex-direction:column;gap:8px}'
++'.aum-r{display:grid;grid-template-columns:120px 1fr 1fr 90px;gap:8px;align-items:center;background:#FBF7F3;border-radius:12px;padding:8px 10px}'
++'.aum-r b{font-size:13px;font-weight:500;color:#5B4A3F}.aum-r input{border:1.5px solid #EFE6DD;border-radius:10px;padding:7px 9px;font:inherit;font-size:14px;background:#fff;min-width:0;width:100%;box-sizing:border-box}'
++'.aum-r .pc{font-size:12px;color:#34603A;text-align:right}.aum-r.ini{background:#F3EEFA}'
++'.aum-nota{font-size:12px;color:#8E7B6B;margin:2px 2px 0}'
++'@media(max-width:600px){.aum-r{grid-template-columns:1fr 1fr}.aum-r b{grid-column:1/-1}.aum-r .pc{grid-column:1/-1;text-align:left}}';
+document.head.appendChild(AUM_CSS);
+var AUM_LBL=['Inicial','1er aumento','2do aumento','3er aumento','4to aumento'];
+function aumPct(){var rs=document.querySelectorAll('#aum-t .aum-r');if(!rs.length)return;var base=pfNum(rs[0].querySelector('[data-am]').value);
+  rs.forEach(function(r,j){var pc=r.querySelector('.pc');if(!j){pc.textContent='';return;}var v=pfNum(r.querySelector('[data-am]').value);
+    pc.textContent=(base&&v)?('+'+(Math.round((v/base-1)*1000)/10).toString().replace('.',',')+'% del inicial'):'';});}
+function aumHTML(i){var a=i.aum||[];var h='<div class="sec-h">Monto inicial y aumentos</div><div class="aum-t" id="aum-t">';
+  for(var j=0;j<5;j++){var x=a[j]||{};h+='<div class="aum-r'+(j?'':' ini')+'"><b>'+AUM_LBL[j]+'</b><input data-am="'+j+'" inputmode="decimal" placeholder="Monto $" value="'+(x.m?pfIn(x.m):'')+'" oninput="aumPct()"><input data-af="'+j+'" type="date" value="'+(x.f||'')+'"><span class="pc"></span></div>';}
+  return h+'</div><p class="aum-nota">Los meses anteriores no se tocan. El último monto que completes pasa a ser el alquiler actual, desde el mes de su fecha.</p>';}
+var _pfInqAbrirAUM=pfInqAbrir;
+pfInqAbrir=function(id){var r=_pfInqAbrirAUM.apply(this,arguments);
+  try{var d=pfLoad();var i=d.inquilinos.find(function(x){return x.id===id;});var B=document.getElementById('pf-i-body');
+    var hs=B.querySelectorAll('.sec-h'),ref=null;hs.forEach(function(e){if(!ref&&/Reparto/.test(e.textContent))ref=e;});
+    var w=document.createElement('div');w.innerHTML=aumHTML(i);
+    if(ref)while(w.firstChild)B.insertBefore(w.firstChild,ref);else while(w.firstChild)B.appendChild(w.firstChild);aumPct();}catch(e){}
+  return r;};
+var _pfInqGuardarAUM=pfInqGuardar;
+pfInqGuardar=function(){
+  var id=pf_edit,B=document.getElementById('pf-i-body'),nuevo=[];
+  if(B&&B.querySelector('#aum-t'))for(var j=0;j<5;j++){var m=pfNum(B.querySelector('[data-am="'+j+'"]').value),f=B.querySelector('[data-af="'+j+'"]').value;nuevo.push(m||f?{m:m,f:f}:null);}
+  var r=_pfInqGuardarAUM.apply(this,arguments);
+  if(!nuevo.length)return r;
+  pfMod(function(d){var i=d.inquilinos.find(function(x){return x.id===id;});if(!i)return;
+    var viejo=(i.aum||[]).filter(function(x){return x&&x.m;}).pop()||null;
+    while(nuevo.length&&!nuevo[nuevo.length-1])nuevo.pop();i.aum=nuevo;
+    var ult=null,uj=-1;nuevo.forEach(function(x,j){if(x&&x.m){ult=x;uj=j;}});if(!ult)return;
+    var cambio=!viejo||viejo.m!==ult.m||viejo.f!==ult.f;if(!cambio)return;
+    i.alq=ult.m;if(uj>0&&ult.f)i.ultAj=ult.f;
+    if(!ult.f)return;var desde=ult.f.slice(0,7);
+    Object.keys(d.meses||{}).forEach(function(k){var mm=d.meses[k];if(k<desde||mm.cerrado)return;var l=mm.lin&&mm.lin[i.u];if(l&&!l.vacio&&l.inq===i.id)l.alq=ult.m;});
+  });
+  return r;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
