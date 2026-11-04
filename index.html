@@ -11019,7 +11019,9 @@ var AUM_CSS=document.createElement('style');AUM_CSS.textContent=''
 +'@media(max-width:600px){.aum-r{grid-template-columns:1fr 1fr}.aum-r b{grid-column:1/-1}.aum-r .pc{grid-column:1/-1;text-align:left}}';
 document.head.appendChild(AUM_CSS);
 function aumLbl(j){return j?'Aumento '+j:'Inicial';}
-function aumFila(j,x){x=x||{};return '<div class="aum-r'+(j?'':' ini')+'"><b>'+aumLbl(j)+'</b><input data-am="'+j+'" inputmode="decimal" placeholder="Monto $" value="'+(x.m?pfIn(x.m):'')+'" oninput="aumPct()"><input data-af="'+j+'" type="date" value="'+(x.f||'')+'"><span class="pc"></span></div>';}
+function aumFila(j,x){x=x||{};return '<div class="aum-r'+(j?'':' ini')+'"><b>'+aumLbl(j)+'</b><input data-am="'+j+'" inputmode="decimal" placeholder="Monto $" value="'+(x.m?pfIn(x.m):'')+'" oninput="aumPct();aumSync()"><input data-af="'+j+'" type="date" onchange="aumSync()" value="'+(x.f||'')+'"><span class="pc"></span></div>';}
+function aumSync(){var B=document.getElementById('pf-i-body');if(!B)return;var ult=null,uj=-1;B.querySelectorAll('#aum-t .aum-r').forEach(function(r,j){var m=pfNum(r.querySelector('[data-am]').value);if(m){ult={m:m,f:r.querySelector('[data-af]').value};uj=j;}});if(!ult)return;
+  var a=B.querySelector('[data-k="alq"]');if(a)a.value=ult.m.toLocaleString('es-AR',{maximumFractionDigits:2});var u=B.querySelector('[data-k="ultAj"]');if(u&&uj>0&&ult.f)u.value=ult.f;}
 function aumMas(){var t=document.getElementById('aum-t');t.insertAdjacentHTML('beforeend',aumFila(t.querySelectorAll('.aum-r').length));}
 function aumPct(){var rs=document.querySelectorAll('#aum-t .aum-r');if(!rs.length)return;var base=pfNum(rs[0].querySelector('[data-am]').value);
   rs.forEach(function(r,j){var pc=r.querySelector('.pc');if(!j){pc.textContent='';return;}var v=pfNum(r.querySelector('[data-am]').value);
@@ -11044,7 +11046,6 @@ pfInqGuardar=function(){
     var viejo=(i.aum||[]).filter(function(x){return x&&x.m;}).pop()||null;
     while(nuevo.length&&!nuevo[nuevo.length-1])nuevo.pop();i.aum=nuevo;
     var ult=null,uj=-1;nuevo.forEach(function(x,j){if(x&&x.m){ult=x;uj=j;}});if(!ult)return;
-    var cambio=!viejo||viejo.m!==ult.m||viejo.f!==ult.f;if(!cambio)return;
     i.alq=ult.m;if(uj>0&&ult.f)i.ultAj=ult.f;
     if(!ult.f)return;var desde=ult.f.slice(0,7);
     Object.keys(d.meses||{}).forEach(function(k){var mm=d.meses[k];if(k<desde||mm.cerrado)return;var l=mm.lin&&mm.lin[i.u];if(l&&!l.vacio&&l.inq===i.id)l.alq=ult.m;});
