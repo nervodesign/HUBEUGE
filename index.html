@@ -9330,7 +9330,7 @@ function pfMesHTML(d){
     var inp=function(c,v){return '<input inputmode="decimal" value="'+pfIn(v)+'" onchange="pfPct(\''+u.id+'\',\''+c+'\',this.value)"'+(cer?' disabled':'')+'>';};
     return '<div class="pf-pr"><span><b>'+u.n+'</b><small>'+(l.vacio?'Vacía':calEsc(l.n||''))+'</small>'+(cer?'':'<a class="pf-red" onclick="pfRedistribuir(\''+u.id+'\')">0% y repartir</a>')+'</span><span>'+(u.gasMed?inp('pGas',pc.pGas)+'<em>% gas '+u.gasMed+'</em>':'<em>—</em>')+'</span><span>'+inp('pEpec',pc.pEpec)+'<em>% luz</em></span><span>'+inp('pAgua',pc.pAgua)+'<em>% agua</em></span></div>';}).join('');
   var ok=function(v){return Math.abs(v-100)<0.6?'#355B33':'#B0675C';};
-  h+='<details class="pf-pcts"'+(cer?'':' open')+'><summary>Porcentajes de '+pfMesLbl(k)+(cer?' (congelados)':' — editables solo para este mes')+'</summary>'+filas+
+  h+='<details class="pf-pcts"'+(cer?'':' open')+'><summary>Porcentajes de '+pfMesLbl(k)+(cer?' (congelados)':(k===pfMesKey()?' — iguales a los de Inquilinos':' — editables solo para este mes'))+'</summary>'+filas+
     '<div class="pf-pr pf-ps"><span>Suma</span><span>PA <b style="color:'+ok(sum.gPA)+'">'+sum.gPA.toFixed(1)+'%</b> · PB <b style="color:'+ok(sum.gPB)+'">'+sum.gPB.toFixed(1)+'%</b></span><span><b style="color:'+ok(sum.e)+'">'+sum.e.toFixed(2)+'%</b></span><span><b style="color:'+ok(sum.a)+'">'+sum.a.toFixed(1)+'%</b></span></div>'+
     '<div class="tr-tip" style="margin:8px 0 0">Lo que no llega al 100% queda a tu cargo (por ejemplo una unidad vacía). El mes que viene arranca con estos mismos %.</div></details>';
   return h;
@@ -11068,7 +11068,7 @@ function pctTabla(d){
     var inp=function(c){return '<input inputmode="decimal" data-pu="'+u.id+'" data-pc="'+c+'" data-gm="'+(u.gasMed||'')+'" value="'+pfIn(u[c]==null?'':u[c])+'" oninput="pctSum()" onchange="pctSet(this)">';};
     h+='<tr'+(i?'':' class="vac"')+'><td>'+u.n+'<small>'+(i?calEsc(i.n):'vacía')+'</small></td><td>'+inp('pEpec')+'</td><td>'+inp('pAgua')+'</td><td>'+(u.gasMed==='PA'?inp('pGas'):'<small>—</small>')+'</td><td>'+(u.gasMed==='PB'?inp('pGas'):'<small>—</small>')+'</td></tr>';});
   h+='<tr class="tot"><td>Total</td><td id="pct-t-pEpec"></td><td id="pct-t-pAgua"></td><td id="pct-t-gPA"></td><td id="pct-t-gPB"></td></tr></table></div>'
-   +'<p class="aum-nota">Se cambia para los meses nuevos y para el mes actual si no está cerrado. Los meses anteriores no se tocan.</p>';
+   +'<p class="aum-nota">Es la misma tabla que la de '+pfMesLbl(pfMesKey())+' en Cobros del mes: si cambiás acá, cambia allá y en la ficha. Los meses anteriores no se tocan.</p>';
   return h;}
 function pctFmt(n){n=Math.round(n*100)/100;return '<span class="'+(Math.abs(n-100)<0.01?'pct-ok':'pct-no')+'">'+String(n).replace('.',',')+'%'+(Math.abs(n-100)<0.01?' ✓':'')+'</span>';}
 function pctSum(){var t=document.getElementById('pct-tb');if(!t)return;var s={pEpec:0,pAgua:0},g={};
@@ -11103,6 +11103,28 @@ var _pfLineaGuardarINC=pfLineaGuardar;
 pfLineaGuardar=function(){var k=pf_mes,uid=pf_edit,c=document.getElementById('pfl-inc');var v=c?c.checked:null;
   var r=_pfLineaGuardarINC.apply(this,arguments);
   if(v!==null)pfMod(function(d){var l=d.meses[k]&&d.meses[k].lin[uid];if(!l)return;if(v)l.incob=true;else delete l.incob;});
+  return r;};
+
+// ── PARQUE FUTURA: los % quedan iguales en la tabla de Inquilinos, la ficha y el mes actual ──
+function pctMesAplicar(d,uid,c,v){var k=pfMesKey(),m=d.meses&&d.meses[k];if(!m||m.cerrado||!m.lin||!m.lin[uid])return;var l=m.lin[uid];var pc=pfPctDe(d,k,uid);
+  if(l.fijo&&!l.vacio){delete l.fijo;l.pGas=pc.pGas;l.pEpec=pc.pEpec;l.pAgua=pc.pAgua;delete l.gas;delete l.epec;delete l.agua;}
+  if(l.ov)delete l.ov[{pGas:'gas',pEpec:'epec',pAgua:'agua'}[c]];l[c]=v;}
+// desde la ficha del inquilino
+var _pfInqGuardarSYNC=pfInqGuardar;
+pfInqGuardar=function(){var B=document.getElementById('pf-i-body'),vals={},uid=null;
+  try{var d0=pfLoad();var i0=d0.inquilinos.find(function(x){return x.id===pf_edit;});uid=i0&&i0.u;
+    B.querySelectorAll('[data-u]').forEach(function(e){vals[e.getAttribute('data-u')]=pfNum(String(e.value).replace('%',''));});}catch(e){}
+  var r=_pfInqGuardarSYNC.apply(this,arguments);
+  if(uid&&Object.keys(vals).length)pfMod(function(d){Object.keys(vals).forEach(function(c){pctMesAplicar(d,uid,c,vals[c]);});});
+  return r;};
+// desde la tabla del mes: si es el mes actual, también cambia la ficha y la tabla de Inquilinos
+var _pfPctSYNC=pfPct;
+pfPct=function(uid,campo,v){var r=_pfPctSYNC.apply(this,arguments);
+  if(pf_mes===pfMesKey()){var d=pfLoad();var u=pfUni(d,uid);if(u){u[campo]=pfNum(String(v).replace('%',''));pfStore(d);}}
+  return r;};
+var _pfRedistSYNC=pfRedistribuir;
+pfRedistribuir=function(uid){var r=_pfRedistSYNC.apply(this,arguments);
+  if(pf_mes===pfMesKey()){var d=pfLoad();var m=d.meses[pf_mes];if(m){d.unidades.forEach(function(u){var pc=pfPctDe(d,pf_mes,u.id);u.pGas=pc.pGas;u.pEpec=pc.pEpec;u.pAgua=pc.pAgua;});pfStore(d);}}
   return r;};
 </script>
 </div><!-- /main -->
