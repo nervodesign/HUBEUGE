@@ -11059,11 +11059,11 @@ var PCT_CSS=document.createElement('style');PCT_CSS.textContent=''
 +'.pct-tb input{width:74px;border:1.5px solid #EFE6DD;border-radius:10px;padding:6px 8px;font:inherit;font-size:14px;background:#fff;text-align:right}'
 +'.pct-tb tr.vac td{background:#F4F1EC;color:#9A8E84}.pct-tb small{font-size:11px;color:#A8988A;margin-left:4px}'
 +'.pct-tb tr.tot td{background:#fff;border:1.5px solid #EFE6DD;border-width:1.5px 0;font-weight:500}.pct-tb tr.tot td:first-child{border-left-width:1.5px}.pct-tb tr.tot td:last-child{border-right-width:1.5px}'
-+'.pct-ok{color:#34603A}.pct-no{color:#A0463E}';
++'.pct-tb td:nth-child(2){background:#FBF3D9}.pct-tb td:nth-child(3){background:#E3EEF7}.pct-tb td:nth-child(4){background:#FCE9EC}.pct-tb td:nth-child(5){background:#F0EAF8}'+'.pct-tb th:nth-child(2){color:#8A6A12}.pct-tb th:nth-child(3){color:#24496B}.pct-tb th:nth-child(4){color:#7A3550}.pct-tb th:nth-child(5){color:#4A355F}'+'.pct-tb td:first-child{background:#EBDCCB!important;color:#5E3F25}.pct-tb tr.vac td{opacity:.55}'+'.pct-tb tr.tot td{background:#fff!important}.pct-ok{color:#34603A;background:#E4F0E3;border-radius:99px;padding:2px 8px}.pct-no{color:#A0463E;background:#FBE6E3;border-radius:99px;padding:2px 8px}';
 document.head.appendChild(PCT_CSS);
 function pctTabla(d){
   var gm=[];d.unidades.forEach(function(u){if(u.gasMed&&gm.indexOf(u.gasMed)<0)gm.push(u.gasMed);});
-  var h='<div class="sec-h">Porcentajes de luz, agua y gas</div><div class="pct-w"><table class="pct-tb" id="pct-tb"><tr><th>Unidad</th><th>% Luz</th><th>% Agua</th><th>% Gas planta alta</th><th>% Gas planta baja</th></tr>';
+  var h='<div class="sec-h">Porcentajes de luz, agua y gas</div><div class="pct-w"><table class="pct-tb" id="pct-tb"><tr><th>Unidad</th><th>💡 % Luz</th><th>💧 % Agua</th><th>🔥 % Gas planta alta</th><th>🔥 % Gas planta baja</th></tr>';
   d.unidades.forEach(function(u){var i=pfInqAct(d,u.id);
     var inp=function(c){return '<input inputmode="decimal" data-pu="'+u.id+'" data-pc="'+c+'" data-gm="'+(u.gasMed||'')+'" value="'+pfIn(u[c]==null?'':u[c])+'" oninput="pctSum()" onchange="pctSet(this)">';};
     h+='<tr'+(i?'':' class="vac"')+'><td>'+u.n+'<small>'+(i?calEsc(i.n):'vacía')+'</small></td><td>'+inp('pEpec')+'</td><td>'+inp('pAgua')+'</td><td>'+(u.gasMed==='PA'?inp('pGas'):'<small>—</small>')+'</td><td>'+(u.gasMed==='PB'?inp('pGas'):'<small>—</small>')+'</td></tr>';});
@@ -11083,6 +11083,27 @@ function pctSet(e){var uid=e.getAttribute('data-pu'),c=e.getAttribute('data-pc')
     if(l.ov)delete l.ov[{pGas:'gas',pEpec:'epec',pAgua:'agua'}[c]];l[c]=v;}
   pfStore(d);showToast('✓ Guardado');}
 var _pfInqHTMLPCT=pfInqHTML;pfInqHTML=function(d){var h=_pfInqHTMLPCT.apply(this,arguments);try{h+=pctTabla(d);setTimeout(pctSum,0);}catch(e){}return h;};
+
+// ── PARQUE FUTURA: marcar una deuda como "Incobrable" (no suma como pendiente) ──
+var _pfLineaINC=pfLinea;
+pfLinea=function(d,k,uid){var x=_pfLineaINC.apply(this,arguments);if(!x||!x.l||!x.l.incob)return x;
+  x.deudaInc=Math.max(0,x.saldo);x.saldo=Math.min(0,x.saldo);x.est='Incobrable';return x;};
+var _pfMesTotINC=pfMesTot;
+pfMesTot=function(d,k){var r=_pfMesTotINC.apply(this,arguments);r.incob=0;(r.lineas||[]).forEach(function(x){if(x.deudaInc){r.incob+=x.deudaInc;r.tot-=x.deudaInc;}});return r;};
+var _pfEstTagINC=pfEstTag;
+pfEstTag=function(e){if(e==='Incobrable')return '<span class="tg" style="background:#EDE8E3;color:#6E5B4E;text-decoration:line-through">Incobrable</span>';return _pfEstTagINC.apply(this,arguments);};
+var _pfLineaAbrirINC=pfLineaAbrir;
+pfLineaAbrir=function(uid){var r=_pfLineaAbrirINC.apply(this,arguments);
+  try{var d=pfLoad();var l=d.meses[pf_mes].lin[uid];var x=_pfLineaINC(d,pf_mes,uid);var B=document.getElementById('pf-l-body');
+    var w=document.createElement('label');w.id='pfl-incw';w.style.cssText='display:flex;gap:8px;align-items:center;background:#F4F1EC;border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px;color:#5B4A3F;cursor:pointer';
+    w.innerHTML='<input type="checkbox" id="pfl-inc" '+(l.incob?'checked':'')+' style="width:18px;height:18px"><span><b style="font-weight:500">Incobrable</b> · no se suma como pendiente'+(x&&x.saldo>0?' (deuda '+$m(x.saldo)+')':'')+'</span>';
+    B.insertBefore(w,B.firstChild);}catch(e){}
+  return r;};
+var _pfLineaGuardarINC=pfLineaGuardar;
+pfLineaGuardar=function(){var k=pf_mes,uid=pf_edit,c=document.getElementById('pfl-inc');var v=c?c.checked:null;
+  var r=_pfLineaGuardarINC.apply(this,arguments);
+  if(v!==null)pfMod(function(d){var l=d.meses[k]&&d.meses[k].lin[uid];if(!l)return;if(v)l.incob=true;else delete l.incob;});
+  return r;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
