@@ -9318,7 +9318,7 @@ function pfMesHTML(d){
   d.unidades.forEach(function(u){
     var x=pfLinea(d,k,u.id);
     if(!x){var vs=pfVacio(d,k,u.id);h+='<div class="pf-tr vacio"><span><b>'+u.n+'</b><small>Vacía este mes</small></span><span style="grid-column:2/-2;color:#9A8E84">Servicios a tu cargo: <b style="color:#7D6F65">'+$m(vs)+'</b></span>'+(cer?'<span></span>':'<span class="pf-acc"><button class="nt-ib" onclick="pfOcupar(\''+u.id+'\')">+ Ocupar</button></span>')+'</div>';return;}
-    h+='<div class="pf-tr" onclick="pfLineaAbrir(\''+u.id+'\')"><span><b>'+u.n+'</b><small>'+calEsc(x.n||'')+'</small></span><span data-l="Gas">'+(u.gasMed?$m(x.gas):'—')+'</span><span data-l="Luz">'+$m(x.epec)+'</span><span data-l="Agua">'+$m(x.agua)+'</span><span data-l="Alquiler">'+$m(x.alq)+'</span><span data-l="Total"><b>'+$m(x.tot)+'</b></span><span data-l="Pagado">'+$m(x.pag)+'</span><span>'+pfEstTag(x.est)+'</span>'+
+    h+='<div class="pf-tr" onclick="pfLineaAbrir(\''+u.id+'\')"><span><b>'+u.n+'</b><small>'+calEsc(x.n||'')+'</small></span><span data-l="Gas">'+(u.gasMed?$m(x.gas):'—')+'</span><span data-l="Luz">'+$m(x.epec)+'</span><span data-l="Agua">'+$m(x.agua)+'</span><span data-l="Alquiler">'+$m(x.alq)+'</span><span data-l="Total"><b>'+$m(x.tot)+'</b></span><span data-l="Pagado">'+$m(x.pag)+'</span><span style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">'+pfEstTag(x.est)+pfEnvBtn(k,u.id,x)+'</span>'+
       '<span class="pf-acc"><button class="nt-ib" title="PDF" onclick="event.stopPropagation();pfPDF(\''+k+'\',\''+u.id+'\')">📄</button><button class="nt-ib" title="Imagen" onclick="event.stopPropagation();pfImagen(\''+k+'\',\''+u.id+'\')">🖼</button><button class="nt-ib" title="WhatsApp" onclick="event.stopPropagation();pfWhats(\''+k+'\',\''+u.id+'\')">💬</button></span></div>';
   });
   h+='<div class="pf-tr pf-tf"><span><b>Total</b></span><span></span><span></span><span></span><span>'+$m(r.alq)+'</span><span><b>'+$m(r.tot)+'</b></span><span>'+$m(r.pag)+'</span><span>'+(r.saldo?'Falta '+$m(r.saldo):'✓')+'</span><span></span></div></div>';
@@ -11144,6 +11144,13 @@ function pfImagen(k,uid){
   s.onerror=function(){fr.remove();showToast('No se pudo armar la imagen (sin internet)');};
   doc.head.appendChild(s);
 }
+
+// ── PARQUE FUTURA: marcar el detalle como "Enviado" ──
+var ENV_CSS=document.createElement('style');ENV_CSS.textContent='.pf-env{border:0;border-radius:99px;font:inherit;font-size:11.5px;padding:4px 9px;cursor:pointer;background:#F3EFEA;color:#7D6F65;white-space:nowrap}.pf-env.on{background:#E4F0E3;color:#355B33;font-weight:500}';document.head.appendChild(ENV_CSS);ENV_CSS.textContent+='@media(min-width:901px){.pf-tr{grid-template-columns:minmax(140px,1.5fr) repeat(6,minmax(0,1fr)) 116px 112px!important}}';
+function pfEnvTxt(f){if(!f)return '';var p=f.split('-');return +p[2]+'/'+(+p[1]);}
+function pfEnvBtn(k,uid,x){var l=x&&x.l||{};return '<button class="pf-env'+(l.env?' on':'')+'" title="'+(l.env?'Enviado el '+pfFecha(l.env)+' · tocá para desmarcar':'Marcar que ya le mandaste el resumen')+'" onclick="event.stopPropagation();pfEnv(\''+k+'\',\''+uid+'\')">'+(l.env?'✓ Enviado '+pfEnvTxt(l.env):'✉️ Enviar')+'</button>';}
+function pfEnv(k,uid){pfMod(function(d){var l=d.meses[k]&&d.meses[k].lin[uid];if(!l)return;if(l.env)delete l.env;else l.env=calISO(new Date());});}
+var _pfLineaAbrirENV=pfLineaAbrir;pfLineaAbrir=function(uid){var r=_pfLineaAbrirENV.apply(this,arguments);try{var b=document.getElementById('pfl-envb');var l=pfLoad().meses[pf_mes].lin[uid];if(b)b.textContent=l.env?'✓ Enviado':'✉️ Marcar enviado';}catch(e){}return r;};
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
@@ -11278,7 +11285,7 @@ function pfImagen(k,uid){
 
 <div class="nv-modal" id="pf-lmodal" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="nv-sheet pf-sheet"><h3 id="pf-l-tit" style="padding:20px 24px 0"></h3><div class="pf-sb" id="pf-l-body"></div>
-    <div class="pf-sf"><button class="nv-btn ghost" onclick="pfPDF(pf_mes,pf_edit)">📄 PDF</button><button class="nv-btn ghost" onclick="pfImagen(pf_mes,pf_edit)">🖼 Imagen</button><button class="nv-btn ghost" onclick="pfWhats(pf_mes,pf_edit)">💬 WhatsApp</button><div style="flex:1"></div><button class="nv-btn ghost" onclick="document.getElementById('pf-lmodal').classList.remove('on')">Cancelar</button><button class="nv-btn" onclick="pfLineaGuardar()">Guardar</button></div></div>
+    <div class="pf-sf"><button class="nv-btn ghost" onclick="pfPDF(pf_mes,pf_edit)">📄 PDF</button><button class="nv-btn ghost" onclick="pfImagen(pf_mes,pf_edit)">🖼 Imagen</button><button class="nv-btn ghost" onclick="pfWhats(pf_mes,pf_edit)">💬 WhatsApp</button><button class="nv-btn ghost" id="pfl-envb" onclick="pfEnv(pf_mes,pf_edit);var d=pfLoad();var l=d.meses[pf_mes].lin[pf_edit];this.textContent=l.env?'✓ Enviado':'✉️ Marcar enviado'">✉️ Marcar enviado</button><div style="flex:1"></div><button class="nv-btn ghost" onclick="document.getElementById('pf-lmodal').classList.remove('on')">Cancelar</button><button class="nv-btn" onclick="pfLineaGuardar()">Guardar</button></div></div>
 </div>
 <div class="nv-modal" id="pf-imodal" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="nv-sheet pf-sheet"><h3 id="pf-i-tit" style="padding:20px 24px 0"></h3><div class="pf-sb" id="pf-i-body"></div>
