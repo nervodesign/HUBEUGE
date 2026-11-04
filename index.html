@@ -11063,18 +11063,18 @@ var PCT_CSS=document.createElement('style');PCT_CSS.textContent=''
 document.head.appendChild(PCT_CSS);
 function pctTabla(d){
   var gm=[];d.unidades.forEach(function(u){if(u.gasMed&&gm.indexOf(u.gasMed)<0)gm.push(u.gasMed);});
-  var h='<div class="sec-h">Porcentajes de luz, agua y gas</div><div class="pct-w"><table class="pct-tb" id="pct-tb"><tr><th>Unidad</th><th>% Luz</th><th>% Agua</th><th>% Gas</th></tr>';
+  var h='<div class="sec-h">Porcentajes de luz, agua y gas</div><div class="pct-w"><table class="pct-tb" id="pct-tb"><tr><th>Unidad</th><th>% Luz</th><th>% Agua</th><th>% Gas planta alta</th><th>% Gas planta baja</th></tr>';
   d.unidades.forEach(function(u){var i=pfInqAct(d,u.id);
     var inp=function(c){return '<input inputmode="decimal" data-pu="'+u.id+'" data-pc="'+c+'" data-gm="'+(u.gasMed||'')+'" value="'+pfIn(u[c]==null?'':u[c])+'" oninput="pctSum()" onchange="pctSet(this)">';};
-    h+='<tr'+(i?'':' class="vac"')+'><td>'+u.n+'<small>'+(i?calEsc(i.n):'vacía')+'</small></td><td>'+inp('pEpec')+'</td><td>'+inp('pAgua')+'</td><td>'+(u.gasMed?inp('pGas')+'<small>'+u.gasMed+'</small>':'<small>—</small>')+'</td></tr>';});
-  h+='<tr class="tot"><td>Total</td><td id="pct-t-pEpec"></td><td id="pct-t-pAgua"></td><td id="pct-t-pGas"></td></tr></table></div>'
+    h+='<tr'+(i?'':' class="vac"')+'><td>'+u.n+'<small>'+(i?calEsc(i.n):'vacía')+'</small></td><td>'+inp('pEpec')+'</td><td>'+inp('pAgua')+'</td><td>'+(u.gasMed==='PA'?inp('pGas'):'<small>—</small>')+'</td><td>'+(u.gasMed==='PB'?inp('pGas'):'<small>—</small>')+'</td></tr>';});
+  h+='<tr class="tot"><td>Total</td><td id="pct-t-pEpec"></td><td id="pct-t-pAgua"></td><td id="pct-t-gPA"></td><td id="pct-t-gPB"></td></tr></table></div>'
    +'<p class="aum-nota">Se cambia para los meses nuevos y para el mes actual si no está cerrado. Los meses anteriores no se tocan.</p>';
   return h;}
 function pctFmt(n){n=Math.round(n*100)/100;return '<span class="'+(Math.abs(n-100)<0.01?'pct-ok':'pct-no')+'">'+String(n).replace('.',',')+'%'+(Math.abs(n-100)<0.01?' ✓':'')+'</span>';}
 function pctSum(){var t=document.getElementById('pct-tb');if(!t)return;var s={pEpec:0,pAgua:0},g={};
   t.querySelectorAll('input[data-pc]').forEach(function(e){var c=e.getAttribute('data-pc'),v=pfNum(String(e.value).replace('%',''));if(c==='pGas'){var m=e.getAttribute('data-gm');g[m]=(g[m]||0)+v;}else s[c]+=v;});
   document.getElementById('pct-t-pEpec').innerHTML=pctFmt(s.pEpec);document.getElementById('pct-t-pAgua').innerHTML=pctFmt(s.pAgua);
-  var ks=Object.keys(g);document.getElementById('pct-t-pGas').innerHTML=ks.length?ks.map(function(k){return (ks.length>1?k+': ':'')+pctFmt(g[k]);}).join('<br>'):'—';}
+  ['PA','PB'].forEach(function(k){var el=document.getElementById('pct-t-g'+k);if(el)el.innerHTML=g[k]!=null?pctFmt(g[k]):'—';});}
 function pctSet(e){var uid=e.getAttribute('data-pu'),c=e.getAttribute('data-pc'),v=pfNum(String(e.value).replace('%',''));
   var d=pfLoad();var u=pfUni(d,uid);if(!u)return;u[c]=v;
   var k=pfMesKey(),m=d.meses&&d.meses[k];
