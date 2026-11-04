@@ -9319,7 +9319,7 @@ function pfMesHTML(d){
     var x=pfLinea(d,k,u.id);
     if(!x){var vs=pfVacio(d,k,u.id);h+='<div class="pf-tr vacio"><span><b>'+u.n+'</b><small>Vacía este mes</small></span><span style="grid-column:2/-2;color:#9A8E84">Servicios a tu cargo: <b style="color:#7D6F65">'+$m(vs)+'</b></span>'+(cer?'<span></span>':'<span class="pf-acc"><button class="nt-ib" onclick="pfOcupar(\''+u.id+'\')">+ Ocupar</button></span>')+'</div>';return;}
     h+='<div class="pf-tr" onclick="pfLineaAbrir(\''+u.id+'\')"><span><b>'+u.n+'</b><small>'+calEsc(x.n||'')+'</small></span><span data-l="Gas">'+(u.gasMed?$m(x.gas):'—')+'</span><span data-l="Luz">'+$m(x.epec)+'</span><span data-l="Agua">'+$m(x.agua)+'</span><span data-l="Alquiler">'+$m(x.alq)+'</span><span data-l="Total"><b>'+$m(x.tot)+'</b></span><span data-l="Pagado">'+$m(x.pag)+'</span><span>'+pfEstTag(x.est)+'</span>'+
-      '<span class="pf-acc"><button class="nt-ib" title="PDF" onclick="event.stopPropagation();pfPDF(\''+k+'\',\''+u.id+'\')">📄</button><button class="nt-ib" title="WhatsApp" onclick="event.stopPropagation();pfWhats(\''+k+'\',\''+u.id+'\')">💬</button></span></div>';
+      '<span class="pf-acc"><button class="nt-ib" title="PDF" onclick="event.stopPropagation();pfPDF(\''+k+'\',\''+u.id+'\')">📄</button><button class="nt-ib" title="Imagen" onclick="event.stopPropagation();pfImagen(\''+k+'\',\''+u.id+'\')">🖼</button><button class="nt-ib" title="WhatsApp" onclick="event.stopPropagation();pfWhats(\''+k+'\',\''+u.id+'\')">💬</button></span></div>';
   });
   h+='<div class="pf-tr pf-tf"><span><b>Total</b></span><span></span><span></span><span></span><span>'+$m(r.alq)+'</span><span><b>'+$m(r.tot)+'</b></span><span>'+$m(r.pag)+'</span><span>'+(r.saldo?'Falta '+$m(r.saldo):'✓')+'</span><span></span></div></div>';
   h+='<div class="tr-tip" style="margin-top:12px">Tocá un renglón para registrar pagos, corregir un monto o agregar un cargo extra.'+(r.saldo>0?' <a style="color:#A35E70;text-decoration:underline;cursor:pointer" onclick="pfMarcarCobrado(\''+k+'\')">Marcar todo el mes como cobrado</a>':'')+'</div>';
@@ -9377,7 +9377,7 @@ function pfHoyTxt(){var n=new Date();return String(n.getDate()).padStart(2,'0')+
 function pfMembrete(sub){return '<div class="mb"><div class="mb-l"><div class="mb-n">PARQUE FUTURA</div><div class="mb-s">Administración de alquileres · Córdoba</div></div><div class="mb-r">'+sub+'</div></div>';}
 function pfDetalleHTML(d,k,uid){
   var x=pfLinea(d,k,uid);if(!x)return '';
-  var filas=(x.u.gasMed?[['Gas natural','Servicio · proporcional',x.gas]]:[]).concat([['Energía eléctrica (EPEC)','Servicio · proporcional',x.epec],['Agua','Servicio · proporcional',x.agua],['Alquiler','Canon locativo del período',x.alq]]).concat(x.extras.map(function(e){return[e.c||'Otro concepto','Cargo adicional',pfNum(e.m)];}));
+  var filas=(x.u.gasMed?[['Gas natural','Servicio',x.gas]]:[]).concat([['Energía eléctrica (EPEC)','Servicio',x.epec],['Agua','Servicio',x.agua],['Alquiler','Canon locativo del período',x.alq]]).concat(x.extras.map(function(e){return[e.c||'Otro concepto','Cargo adicional',pfNum(e.m)];}));
   return '<div class="pg">'+pfMembrete('Liquidación N.º '+k.replace('-','')+'-'+uid.replace('_',''))+
     '<h1>Liquidación mensual</h1><div class="per">Período: '+pfMesLbl(k)+'</div>'+
     '<table class="dat"><tr><th>Unidad</th><td>'+x.u.n+'</td><th>Fecha de emisión</th><td>'+pfHoyTxt()+'</td></tr><tr><th>Locatario/a</th><td colspan="3">'+calEsc(x.n||'')+'</td></tr></table>'+
@@ -11126,6 +11126,24 @@ var _pfRedistSYNC=pfRedistribuir;
 pfRedistribuir=function(uid){var r=_pfRedistSYNC.apply(this,arguments);
   if(pf_mes===pfMesKey()){var d=pfLoad();var m=d.meses[pf_mes];if(m){d.unidades.forEach(function(u){var pc=pfPctDe(d,pf_mes,u.id);u.pGas=pc.pGas;u.pEpec=pc.pEpec;u.pAgua=pc.pAgua;});pfStore(d);}}
   return r;};
+
+// ── PARQUE FUTURA: el detalle también como imagen (para quien no puede abrir el PDF) ──
+function pfImagen(k,uid){
+  var d=pfLoad();var x=pfLinea(d,k,uid);if(!x)return;showToast('Armando la imagen…');
+  var nombre='Parque Futura '+x.u.n.replace(/"/g,'')+' '+pfMesLbl(k)+'.png';
+  var fr=document.createElement('iframe');fr.style.cssText='position:fixed;left:-9999px;top:0;width:720px;height:1200px;border:0';document.body.appendChild(fr);
+  var doc=fr.contentDocument;doc.open();
+  doc.write('<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><style>'+PF_PDF_CSS+'.pg{margin:0 auto;padding:28px 32px;page-break-after:auto}body{background:#fff}</style></head><body>'+pfDetalleHTML(d,k,uid)+'</body></html>');doc.close();
+  var s=doc.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload=function(){fr.contentWindow.html2canvas(doc.querySelector('.pg'),{scale:2,backgroundColor:'#ffffff'}).then(function(c){
+    c.toBlob(function(b){fr.remove();if(!b){showToast('No se pudo armar la imagen');return;}
+      var f=null;try{f=new File([b],nombre,{type:'image/png'});}catch(e){}
+      if(f&&navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:nombre}).catch(function(){});return;}
+      var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nombre;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);showToast('✓ Imagen descargada');},'image/png');
+  }).catch(function(){fr.remove();showToast('No se pudo armar la imagen');});};
+  s.onerror=function(){fr.remove();showToast('No se pudo armar la imagen (sin internet)');};
+  doc.head.appendChild(s);
+}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
@@ -11260,7 +11278,7 @@ pfRedistribuir=function(uid){var r=_pfRedistSYNC.apply(this,arguments);
 
 <div class="nv-modal" id="pf-lmodal" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="nv-sheet pf-sheet"><h3 id="pf-l-tit" style="padding:20px 24px 0"></h3><div class="pf-sb" id="pf-l-body"></div>
-    <div class="pf-sf"><button class="nv-btn ghost" onclick="pfPDF(pf_mes,pf_edit)">📄 PDF</button><button class="nv-btn ghost" onclick="pfWhats(pf_mes,pf_edit)">💬 WhatsApp</button><div style="flex:1"></div><button class="nv-btn ghost" onclick="document.getElementById('pf-lmodal').classList.remove('on')">Cancelar</button><button class="nv-btn" onclick="pfLineaGuardar()">Guardar</button></div></div>
+    <div class="pf-sf"><button class="nv-btn ghost" onclick="pfPDF(pf_mes,pf_edit)">📄 PDF</button><button class="nv-btn ghost" onclick="pfImagen(pf_mes,pf_edit)">🖼 Imagen</button><button class="nv-btn ghost" onclick="pfWhats(pf_mes,pf_edit)">💬 WhatsApp</button><div style="flex:1"></div><button class="nv-btn ghost" onclick="document.getElementById('pf-lmodal').classList.remove('on')">Cancelar</button><button class="nv-btn" onclick="pfLineaGuardar()">Guardar</button></div></div>
 </div>
 <div class="nv-modal" id="pf-imodal" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="nv-sheet pf-sheet"><h3 id="pf-i-tit" style="padding:20px 24px 0"></h3><div class="pf-sb" id="pf-i-body"></div>
