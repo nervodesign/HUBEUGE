@@ -11018,13 +11018,15 @@ var AUM_CSS=document.createElement('style');AUM_CSS.textContent=''
 +'.aum-nota{font-size:12px;color:#8E7B6B;margin:2px 2px 0}'
 +'@media(max-width:600px){.aum-r{grid-template-columns:1fr 1fr}.aum-r b{grid-column:1/-1}.aum-r .pc{grid-column:1/-1;text-align:left}}';
 document.head.appendChild(AUM_CSS);
-var AUM_LBL=['Inicial','1er aumento','2do aumento','3er aumento','4to aumento'];
+function aumLbl(j){return j?'Aumento '+j:'Inicial';}
+function aumFila(j,x){x=x||{};return '<div class="aum-r'+(j?'':' ini')+'"><b>'+aumLbl(j)+'</b><input data-am="'+j+'" inputmode="decimal" placeholder="Monto $" value="'+(x.m?pfIn(x.m):'')+'" oninput="aumPct()"><input data-af="'+j+'" type="date" value="'+(x.f||'')+'"><span class="pc"></span></div>';}
+function aumMas(){var t=document.getElementById('aum-t');t.insertAdjacentHTML('beforeend',aumFila(t.querySelectorAll('.aum-r').length));}
 function aumPct(){var rs=document.querySelectorAll('#aum-t .aum-r');if(!rs.length)return;var base=pfNum(rs[0].querySelector('[data-am]').value);
   rs.forEach(function(r,j){var pc=r.querySelector('.pc');if(!j){pc.textContent='';return;}var v=pfNum(r.querySelector('[data-am]').value);
     pc.textContent=(base&&v)?('+'+(Math.round((v/base-1)*1000)/10).toString().replace('.',',')+'% del inicial'):'';});}
 function aumHTML(i){var a=i.aum||[];var h='<div class="sec-h">Monto inicial y aumentos</div><div class="aum-t" id="aum-t">';
-  for(var j=0;j<5;j++){var x=a[j]||{};h+='<div class="aum-r'+(j?'':' ini')+'"><b>'+AUM_LBL[j]+'</b><input data-am="'+j+'" inputmode="decimal" placeholder="Monto $" value="'+(x.m?pfIn(x.m):'')+'" oninput="aumPct()"><input data-af="'+j+'" type="date" value="'+(x.f||'')+'"><span class="pc"></span></div>';}
-  return h+'</div><p class="aum-nota">Los meses anteriores no se tocan. El último monto que completes pasa a ser el alquiler actual, desde el mes de su fecha.</p>';}
+  var n=Math.max(8,a.length+1);for(var j=0;j<n;j++)h+=aumFila(j,a[j]);
+  return h+'</div><button class="nt-ib" style="margin-top:8px" onclick="aumMas()">+ Agregar otro aumento</button><p class="aum-nota">Los meses anteriores no se tocan. El último monto que completes pasa a ser el alquiler actual, desde el mes de su fecha.</p>';}
 var _pfInqAbrirAUM=pfInqAbrir;
 pfInqAbrir=function(id){var r=_pfInqAbrirAUM.apply(this,arguments);
   try{var d=pfLoad();var i=d.inquilinos.find(function(x){return x.id===id;});var B=document.getElementById('pf-i-body');
@@ -11035,7 +11037,7 @@ pfInqAbrir=function(id){var r=_pfInqAbrirAUM.apply(this,arguments);
 var _pfInqGuardarAUM=pfInqGuardar;
 pfInqGuardar=function(){
   var id=pf_edit,B=document.getElementById('pf-i-body'),nuevo=[];
-  if(B&&B.querySelector('#aum-t'))for(var j=0;j<5;j++){var m=pfNum(B.querySelector('[data-am="'+j+'"]').value),f=B.querySelector('[data-af="'+j+'"]').value;nuevo.push(m||f?{m:m,f:f}:null);}
+  if(B&&B.querySelector('#aum-t'))var nr=B.querySelectorAll('#aum-t .aum-r').length;for(var j=0;j<nr;j++){var m=pfNum(B.querySelector('[data-am="'+j+'"]').value),f=B.querySelector('[data-af="'+j+'"]').value;nuevo.push(m||f?{m:m,f:f}:null);}
   var r=_pfInqGuardarAUM.apply(this,arguments);
   if(!nuevo.length)return r;
   pfMod(function(d){var i=d.inquilinos.find(function(x){return x.id===id;});if(!i)return;
