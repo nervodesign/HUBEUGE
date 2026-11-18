@@ -11232,6 +11232,62 @@ function renderMetasActivas(data){
   return '<div class="mf">'+izq+(der||'<div></div>')+'</div>';
 }
 var _metaActivaAddMF=metaActivaAdd;metaActivaAdd=function(){var r=_metaActivaAddMF.apply(this,arguments);try{var d=metasLoad();var n=(d.metasActivas||[]).length;if(n){mfSel='m'+(n-1);rMetas();}}catch(e){}return r;};
+
+// ── FINANZAS: lista de fijos para elegir y ponerle el monto ──
+var FX2_CSS=document.createElement('style');FX2_CSS.textContent=''
++'.fx-row{cursor:pointer;border-radius:14px;padding:10px 10px!important;margin:0 -6px;transition:background .15s}'
++'.fx-row.sel{background:#FBEEF1}'
++'.fx-row .fx-chk input{width:20px;height:20px;accent-color:#C9667A}'
++'.fx-mp{height:38px;border:1px solid #EFE6DD;border-radius:12px;background:#fff;font:inherit;font-size:12px;color:#5B4A3F;padding:0 6px;max-width:120px}'
++'.fx-ya2{font-size:11.5px;color:#6E8B62}'
++'.fx-open{background:#C9667A!important;color:#fff!important;border:0!important;height:34px!important;padding:0 14px!important;font-size:12px!important;font-weight:600!important;border-radius:99px!important}'
++'@media(max-width:600px){.fx-row{flex-wrap:wrap}.fx-row .fx-c{flex:1 1 60%}.fx-mp{max-width:none;flex:1}}';
+document.head.appendChild(FX2_CSS);
+function fx2Limpio(d){return String(d||'').replace(/\s*\(reconstruido de PDF\)\s*/i,'').trim();}
+function fx2MesTot(f,i){var s=0;((S.meses[i]&&S.meses[i].txns)||[]).forEach(function(t){if(t.cat===f.cat)s+=t.monto;});return s;}
+function fx2UltMp(cat,i){for(var k=i;k>=0;k--){var tx=(S.meses[k]&&S.meses[k].txns)||[];for(var j=tx.length-1;j>=0;j--){if(tx[j].cat===cat&&tx[j].mp)return tx[j].mp;}}return '';}
+function fx2Sel(row,on){var c=row.querySelector('.fx-sel,.fx-selc');if(!c)return;if(on===undefined)on=!c.checked;c.checked=on;row.classList.toggle('sel',on);}
+var _renderFijosRapidosFX2=renderFijosRapidos;
+renderFijosRapidos=function(i){
+  try{var a=fxLoad();if(a){var cambio=false;a.forEach(function(f){var l=fx2Limpio(f.desc);if(l!==f.desc){f.desc=l;cambio=true;}});if(cambio)fxStore(a);}}catch(e){}
+  var h=_renderFijosRapidosFX2(i);
+  var w=document.createElement('div');w.innerHTML=h;
+  var lista=fxLista(i);
+  var mpOpts=Object.keys(MP).map(function(k){return '<option value="'+k+'">'+MP[k].l+'</option>';}).join('');
+  w.querySelectorAll('.fx-row').forEach(function(r){
+    var c=r.querySelector('.fx-sel,.fx-selc');if(c){c.removeAttribute('checked');c.checked=false;}
+    var id=r.getAttribute('data-id');var f=id&&lista.find(function(x){return x.id===id;});
+    if(r.classList.contains('ya')&&f){ // se puede volver a cargar (ej: dos líneas de celular)
+      r.classList.remove('ya');if(c){c.disabled=false;c.removeAttribute('disabled');}
+      var ya=r.querySelector('.fx-ya');var u=fxUltimo(f,i);
+      if(ya)ya.outerHTML='<input type="number" inputmode="decimal" class="fi fx-m" value="" placeholder="Monto" oninput="fxTotal('+i+')">';
+    }
+    if(f){var t=fx2MesTot(f,i);var s=r.querySelector('.fx-s');if(s&&t>0)s.innerHTML+=' · <span class="fx-ya2">este mes ya: '+fmt(t)+'</span>';
+      var m=r.querySelector('.fx-m');if(m){var sel=document.createElement('select');sel.className='fx-mp';sel.innerHTML='<option value="">Medio de pago</option>'+mpOpts;m.insertAdjacentElement('afterend',sel);sel.setAttribute('data-def',f.mp||fx2UltMp(f.cat,i));}}
+  });
+  var tip=w.querySelector('.fx-tip');if(tip)tip.innerHTML='Tocá los que pagaste, cambiá el monto si vino distinto y tocá <b>Cargar</b>. El monto que aparece es el del mes anterior.';
+  return w.innerHTML;
+};
+var _toggleFijosRapidosFX2=toggleFijosRapidos;
+toggleFijosRapidos=function(i){var r=_toggleFijosRapidosFX2.apply(this,arguments);fx2Prep(i);return r;};
+function fx2Prep(i){
+  var cont=document.getElementById('fijos-rapidos-'+i);if(!cont||cont._fx2)return fxTotal(i);cont._fx2=1;
+  cont.addEventListener('click',function(e){var r=e.target.closest('.fx-row');if(!r||e.target.closest('input,select,button,label'))return;fx2Sel(r);fxTotal(i);});
+  cont.addEventListener('change',function(e){if(e.target.matches('.fx-sel,.fx-selc')){e.target.closest('.fx-row').classList.toggle('sel',e.target.checked);fxTotal(i);}});
+  cont.addEventListener('input',function(e){if(e.target.matches('.fx-m')){var r=e.target.closest('.fx-row');fx2Sel(r,parseFloat(e.target.value)>0);fxTotal(i);}});
+  fx2Defaults(i);fxTotal(i);
+}
+function fx2Defaults(i){var cont=document.getElementById('fijos-rapidos-'+i);if(!cont)return;cont.querySelectorAll('.fx-mp').forEach(function(s){var d=s.getAttribute('data-def');if(d)s.value=d;});}
+var _agregarFijosRapidosFX2=agregarFijosRapidos;
+agregarFijosRapidos=function(i){
+  var cont=document.getElementById('fijos-rapidos-'+i);var mps={};
+  if(cont){var a=fxLoad()||[];cont.querySelectorAll('.fx-row[data-id]').forEach(function(r){var s=r.querySelector('.fx-mp');var c=r.querySelector('.fx-sel');if(s&&c&&c.checked){var f=a.find(function(x){return x.id===r.getAttribute('data-id');});if(f){mps[f.id]=f.mp;f.mp=s.value;}}});fxStore(a);}
+  var antes=S.meses[i].txns.length;var r=_agregarFijosRapidosFX2.apply(this,arguments);
+  return r;
+};
+// el botón se ve más
+var _rMonthFX2=typeof rMonth==='function'?rMonth:null;
+if(_rMonthFX2){rMonth=function(i){var r=_rMonthFX2.apply(this,arguments);try{document.querySelectorAll('button[onclick^="toggleFijosRapidos"]').forEach(function(b){b.classList.add('fx-open');b.textContent='📋 Cargar mis fijos';});}catch(e){}return r;};}
 </script>
 </div><!-- /main -->
 </div><!-- /content-area -->
