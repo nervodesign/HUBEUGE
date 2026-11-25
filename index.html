@@ -11763,5 +11763,14 @@ setTimeout(function(){try{csSync();}catch(e){}},8000);
 })();
 
 </script>
+<script>// ══ AVISO DE ACTUALIZACIÓN ══
+(function(){var base=null;
+var st=document.createElement('style');st.textContent='#upd-pill{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:100000;border:0;border-radius:99px;background:#4A362B;color:#fff;font:inherit;font-size:14px;padding:11px 20px;box-shadow:0 10px 28px rgba(46,33,26,.28);cursor:pointer;display:flex;gap:8px;align-items:center;animation:updIn .4s cubic-bezier(.2,.7,.2,1)}#upd-pill b{font-weight:500;color:#F6D5DF}@keyframes updIn{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}';document.head.appendChild(st);
+async function firma(){try{var t=await (await fetch(location.pathname+'?upd='+Date.now(),{cache:'no-store'})).text();var d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(d)).slice(0,8).join('.');}catch(e){return null;}}
+async function chk(){var x=await firma();if(!x)return;if(base===null){base=x;return;}if(x!==base)mostrar();}
+function mostrar(){if(document.getElementById('upd-pill'))return;var b=document.createElement('button');b.id='upd-pill';b.innerHTML='✨ Hay una actualización · <b>Actualizar</b>';b.onclick=function(){location.reload();};document.body.appendChild(b);}
+setTimeout(chk,3000);setInterval(chk,120000);document.addEventListener('visibilitychange',function(){if(!document.hidden)chk();});window.addEventListener('focus',chk);
+})();
+</script>
 </body>
 </html>
