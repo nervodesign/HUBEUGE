@@ -11580,6 +11580,8 @@ var CS=document.createElement('style');CS.textContent=''
 +'.cs-bar{height:10px;border-radius:99px;background:#FAF8F6;overflow:hidden}.cs-bar i{display:block;height:100%;border-radius:99px}'
 +'.cs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.cs-grid{grid-template-columns:1fr}}'
 +'.cs-step{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:3px 0}.cs-step input{width:17px;height:17px;accent-color:#4F7CB3}'
++'.gc-tk{width:38px;height:38px;object-fit:cover;border-radius:10px;flex-shrink:0;cursor:zoom-in;border:1px solid #F0EBE6}.cs-foto img{cursor:zoom-in}'
++'.cs-ver{position:fixed;inset:0;z-index:100001;background:rgba(46,33,26,.82);display:flex;align-items:center;justify-content:center;padding:24px;animation:csUp .2s}.cs-ver img{max-width:min(92vw,560px);max-height:80vh;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.35)}.cs-ver button{position:absolute;top:18px;right:18px;border:0;width:40px;height:40px;border-radius:20px;background:#fff;font-size:18px;cursor:pointer}'
 +'.cs-x{border:0;background:none;color:#C2B3A8;cursor:pointer;font-size:13px}';
 document.head.appendChild(CS);
 try{if(SB_SYNC_KEYS.indexOf(CASA_K)<0)SB_SYNC_KEYS.push(CASA_K);}catch(e){}
@@ -11642,7 +11644,7 @@ function vGastos(d){var L=vivos(d.g).map(function(g){return {t:'g',x:g,f:g.fecha
     if(e.t==='p'){var p=e.x;h+='<div class="gc-it" onclick="csSaldarAbrir(\''+p.id+'\')"><span class="cs-ic" style="background:#EAF2FA;color:#3F6C95">$</span><div class="c"><div>'+(p.de==='euge'?'Le pagaste a Gon':'Gon te pagó')+'</div><small>'+fd(p.fecha)+' · pago para saldar</small></div><div class="m"><b style="color:#8C7B6E">'+$(p.monto)+'</b></div></div>';return;}
     var g=e.x,pt=partes(g),tc=tint(g.desc),yo=g.pago==='euge';var mt=yo?pt[1]:pt[0];
     var div={mitad:'mitad y mitad',euge:'todo tuyo',gon:'todo de Gon',montos:'montos distintos'}[g.div]||'';
-    h+='<div class="gc-it" onclick="csGastoAbrir(\''+g.id+'\')"><span class="cs-ic" style="background:'+tc[0]+';color:'+tc[1]+'">'+esc((g.desc||'?')[0].toUpperCase())+'</span><div class="c"><div>'+esc(g.desc)+'</div><small>'+fd(g.fecha)+' · '+(yo?'Pagaste ':'Gon pagó ')+$(g.monto)+' · '+div+(g.foto?' · 📎':'')+'</small></div>'
+    h+='<div class="gc-it" onclick="csGastoAbrir(\''+g.id+'\')"><span class="cs-ic" style="background:'+tc[0]+';color:'+tc[1]+'">'+esc((g.desc||'?')[0].toUpperCase())+'</span><div class="c"><div>'+esc(g.desc)+'</div><small>'+fd(g.fecha)+' · '+(yo?'Pagaste ':'Gon pagó ')+$(g.monto)+' · '+div+'</small></div>'+(g.foto?'<img class="gc-tk" src="'+g.foto+'" onclick="event.stopPropagation();csVer(this.src)">':'')
       +(mt>0?'<div class="m"><small class="'+(yo?'cs-up':'cs-dn')+'">'+(yo?'te debe':'le debés')+'</small><b class="'+(yo?'cs-up':'cs-dn')+'">'+$(mt)+'</b></div>':'<div class="m"><small style="color:#8C7B6E">sin deuda</small></div>')+'</div>';});
   var si=+((d.cfg||{}).saldoIni)||0;if(si)h+='</div><div class="cs-card" style="padding:12px 16px;margin-top:12px;color:#8C7B6E;font-size:13.5px">Saldo anterior (de Splitwise, hasta octubre): '+(si<0?'le debías a Gon '+$(-si):'Gon te debía '+$(si))+'</div>';else h+='</div>';
   return h;}
@@ -11691,7 +11693,7 @@ window.csGastoAbrir=function(id){var d=csLoad();var g=id?Object.assign({},d.g[id
   var mpOpts=Object.keys(MP).map(function(k){return '<option value="'+k+'"'+(g.mp===k?' selected':'')+'>'+MP[k].l+'</option>';}).join('');
   var CGR=[['Comida',['super_casa','verduleria','carniceria','polleria','delivery']],['Servicios',['expensas','epec','ecogas','internet','mariana']],['Depto',['arreglos_dpto','incorp_dpto']],['Otros',['salidas','farmacia','regalos','otros']]];var catOpts=CGR.map(function(gr){return '<div style="width:100%;font-size:11.5px;color:#B0A194;margin:4px 0 -2px">'+gr[0]+'</div>'+gr[1].map(function(k){return '<button class="'+(g.cat===k?'on':'')+'" onclick="csGc(\''+k+'\',this)">'+catL(k)+'</button>';}).join('');}).join('');
   sheet('<h3>'+(id?'Editar gasto':'Nuevo gasto')+'<button onclick="csCerrar()">✕</button></h3>'
-   +'<div class="cs-foto"><label>📷 '+(g.foto?'Cambiar ticket':'Foto del ticket')+'<input type="file" accept="image/*" style="display:none" onchange="csTicket(this)"></label>'+(g.foto?'<img id="cs-tk" src="'+g.foto+'" onclick="window.open(this.src)">':'<img id="cs-tk" style="display:none">')+'</div>'
+   +'<div class="cs-foto"><label>📷 '+(g.foto?'Cambiar ticket':'Foto del ticket')+'<input type="file" accept="image/*" style="display:none" onchange="csTicket(this)"></label>'+(g.foto?'<img id="cs-tk" src="'+g.foto+'" onclick="csVer(this.src)">':'<img id="cs-tk" style="display:none">')+'</div>'
    +'<input class="cs-in" id="cs-desc" placeholder="Concepto (ej: Super casa)" value="'+esc(g.desc)+'">'
    +'<input class="cs-in big" id="cs-monto" inputmode="decimal" placeholder="$ 0" value="'+(g.monto||'')+'" oninput="csCalc()">'
    +'<div><div class="cs-k" style="margin-bottom:6px">FECHA</div><div style="display:flex;gap:8px;align-items:center"><div class="cs-chips"><button class="'+(g.fecha===hy?'on':'')+'" onclick="csFecha(\''+hy+'\',this)">Hoy · '+fd(hy)+'</button><button class="'+(g.fecha===ay?'on':'')+'" onclick="csFecha(\''+ay+'\',this)">Ayer</button></div><input type="date" class="cs-in" style="width:auto;padding:8px 10px!important;font-size:13px!important" id="cs-fecha" value="'+g.fecha+'" onchange="gEd.fecha=this.value;csCalc()"></div></div>'
@@ -11705,6 +11707,7 @@ window.csGastoAbrir=function(id){var d=csLoad();var g=id?Object.assign({},d.g[id
    +(id?'<button class="cs-b g" onclick="csGastoBorrar(\''+id+'\')">Borrar gasto</button>':''));csCalc();};
 window.csG=function(k,v,b){gEd[k]=v;Array.from(b.parentNode.children).forEach(function(x){x.classList.toggle('on',x===b);});if(k==='div')document.getElementById('cs-parte').style.display=v==='montos'?'block':'none';csCalc();};
 window.csGc=function(k,b){gEd.cat=k;b.closest('.cs-chips').querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});};
+window.csVer=function(src){var o=document.createElement('div');o.className='cs-ver';o.innerHTML='<img src="'+src+'"><button>✕</button>';o.onclick=function(){o.remove();};document.body.appendChild(o);};
 window.csFecha=function(v,b){gEd.fecha=v;document.getElementById('cs-fecha').value=v;Array.from(b.parentNode.children).forEach(function(x){x.classList.toggle('on',x===b);});csCalc();};
 function num(v){return parseFloat(String(v||'').replace(/\$/g,'').replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.'))||0;}
 window.csCalc=function(){var g=Object.assign({},gEd,{monto:num(document.getElementById('cs-monto').value),partE:num((document.getElementById('cs-parte')||{}).value)});var pt=partes(g);var el=document.getElementById('cs-calc');if(!el)return;
