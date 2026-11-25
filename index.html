@@ -11581,7 +11581,7 @@ var CS=document.createElement('style');CS.textContent=''
 +'.cs-step{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:3px 0}.cs-step input{width:17px;height:17px;accent-color:#4F7CB3}'
 +'.cs-x{border:0;background:none;color:#C2B3A8;cursor:pointer;font-size:13px}';
 document.head.appendChild(CS);
-try{if(SB_SYNC_KEYS.indexOf(CASA_K)>=0)SB_SYNC_KEYS.splice(SB_SYNC_KEYS.indexOf(CASA_K),1);}catch(e){}
+try{if(SB_SYNC_KEYS.indexOf(CASA_K)<0)SB_SYNC_KEYS.push(CASA_K);}catch(e){}
 
 // ── datos ──
 function vacio(){return {g:{},p:{},o:{},pf:{},cfg:{}};}
@@ -11601,7 +11601,7 @@ window.csSync=async function(){if(csBusy)return;csBusy=true;
   try{var r=await fetch(SB_URL+'/rest/v1/hub_data?id=eq.'+CASA_ROW+'&select=data',{headers:SB_H});var nube=vacio();
     if(r.ok){var j=await r.json();if(j&&j[0]&&j[0].data)nube=j[0].data;}
     var m=merge(csLoad(),nube);csStoreLocal(m);
-    await fetch(SB_URL+'/rest/v1/hub_data',{method:'POST',headers:Object.assign({},SB_H,{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({id:CASA_ROW,data:m})});
+    var pr=await fetch(SB_URL+'/rest/v1/hub_data',{method:'POST',headers:Object.assign({},SB_H,{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({id:CASA_ROW,data:m})});if(!pr.ok){try{markUpdated(CASA_K);sbSchedulePush();}catch(e){}}
     try{csMirror();}catch(e){}if(aSection==='casa')csRender();
   }catch(e){console.warn('casa sync',e);}csBusy=false;};
 // ── cálculos ──
