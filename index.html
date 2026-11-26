@@ -3055,7 +3055,8 @@ function finMonthSwitchHTML(cls){
       +`<button class="${cls} ${aV==='month'?'on':''}" id="fin-month-chip" onclick="toggleFinMonthPopover(event)" style="flex-shrink:0">${MS[aM]}${anioVer!==new Date().getFullYear()?' '+anioVer:''}${curDone?' ✓':''} <span style="font-size:9px;opacity:.7">▾</span></button>`
       +`<div id="fin-month-popover" class="fin-month-popover">${grid}</div>`
     +`</span>`
-    +`<button class="${cls}" onclick="finMonthStep(1)" aria-label="Mes siguiente" style="flex-shrink:0">›</button>`;
+    +`<button class="${cls}" onclick="finMonthStep(1)" aria-label="Mes siguiente" style="flex-shrink:0">›</button>`
+    +`<span style="display:inline-flex;gap:4px;margin-left:6px;padding-left:8px;border-left:1px solid var(--border2);flex-shrink:0">`+aniosDisp().map(y=>`<button class="${cls} ${y===anioVer?'on':''}" style="flex-shrink:0;font-weight:${y===anioVer?600:400}" onclick="finAnio(${y})">${y}</button>`).join('')+`</span>`;
 }
 function finMonthStep(delta){
   let m=aM+delta;
@@ -4771,7 +4772,7 @@ function finParaGuardar(){if(anioVer===ANIO_BASE||!M26)return S;var o=Object.ass
 function mesesDe(y){y=+y;if(y<ANIO_BASE)return null;if(y===anioVer)return S.meses;if(y===ANIO_BASE)return M26;if(!S.anios[y])S.anios[y]=mesesVacios();return S.anios[y];}
 function todosAnios(){var r=[[ANIO_BASE,M26||S.meses]];Object.keys(S.anios||{}).forEach(function(k){if(+k!==ANIO_BASE)r.push([+k,S.anios[k]]);});return r;}
 function aniosDisp(){var a={};a[ANIO_BASE]=1;a[new Date().getFullYear()+1]=1;a[new Date().getFullYear()]=1;Object.keys(S.anios||{}).forEach(function(k){a[k]=1;});return Object.keys(a).map(Number).filter(function(y){return y>=ANIO_BASE;}).sort();}
-function finAnio(y,m){y=+y;if(y===anioVer)return;S.meses=M26;anioVer=y;anioAplicar();if(typeof m==='number')aM=m;try{goFin('month',aM);}catch(e){try{renderAll();}catch(e2){}}}
+function finAnio(y,m){y=+y;if(y===anioVer)return;S.meses=M26;anioVer=y;anioAplicar();if(typeof m==='number')aM=m;try{goFin(aV||'month',aM);}catch(e){try{renderAll();}catch(e2){}}}
 function finLoad(){
   try{const v=localStorage.getItem('hub_fin');if(v){const p=JSON.parse(v);
     S={...DB,...p,meses:DB.meses.map((dm,i)=>{const pm=p.meses&&p.meses[i];return pm?{...dm,...pm,txns:pm.txns||dm.txns}:dm;})};
