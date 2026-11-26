@@ -226,14 +226,15 @@ var CAT_RAP=['super_casa','verduleria','carniceria','polleria','expensas','epec'
 var TINT=[['#2F5E9E','#fff'],['#7B57C2','#fff'],['#3E9B5A','#fff'],['#C9476E','#fff'],['#9A6A3C','#fff']];
 function tint(s){var h=0;String(s).split('').forEach(function(c){h=(h*31+c.charCodeAt(0))%997;});return TINT[h%TINT.length];}
 // ── espejo en mis Finanzas: solo mi parte, solo gastos nuevos (no importados) ──
-window.csMirror=function(){if(typeof S==='undefined'||!S.meses)return;var d=csLoad(),cambio=false,vistos={};
+window.csMirror=function(){if(typeof S==='undefined'||!S.meses)return;var d=csLoad(),cambio=false,vistos={};var LA=(typeof todosAnios==='function')?todosAnios():[[2026,S.meses]];
   Object.values(d.g).forEach(function(g){if(g.imp)return;var y=+String(g.fecha).slice(0,4),mi=+String(g.fecha).slice(5,7)-1;
-    var esta=null,mesEsta=-1;S.meses.forEach(function(M,i){(M.txns||[]).forEach(function(t){if(t.casaId===g.id){esta=t;mesEsta=i;}});});
-    var parte=partes(g)[0];var debe=!g.del&&parte>0&&y===2026&&mi>=0&&mi<12;
-    if(!debe){if(esta){S.meses[mesEsta].txns=S.meses[mesEsta].txns.filter(function(t){return t.casaId!==g.id;});cambio=true;}return;}
+    var esta=null,mEsta=null;LA.forEach(function(p){(p[1]||[]).forEach(function(M){(M.txns||[]).forEach(function(t){if(t.casaId===g.id){esta=t;mEsta=M;}});});});
+    var parte=partes(g)[0];var debe=!g.del&&parte>0&&y>=2026&&mi>=0&&mi<12;
+    if(!debe){if(esta){mEsta.txns=mEsta.txns.filter(function(t){return t.casaId!==g.id;});cambio=true;}return;}
     var txn={casaId:g.id,fecha:fd(g.fecha).split('/').map(function(x){return String(x).padStart(2,'0');}).join('/'),desc:g.desc+(g.div==='mitad'?' (mitad)':''),monto:Math.round(parte*100)/100,cat:g.cat||'otros',mp:g.mp||'galicia',mpLabel:(MP[g.mp||'galicia']||{}).l||'Galicia'};
-    if(esta&&mesEsta===mi){var dif=['fecha','desc','monto','cat','mp'].some(function(k){return esta[k]!==txn[k];});if(dif){Object.assign(esta,txn);cambio=true;}}
-    else{if(esta)S.meses[mesEsta].txns=S.meses[mesEsta].txns.filter(function(t){return t.casaId!==g.id;});S.meses[mi].txns.push(txn);cambio=true;}});
+    var dest=(typeof mesesDe==='function')?mesesDe(y):(y===2026?S.meses:null);if(!dest||!dest[mi])return;var MD=dest[mi];
+    if(esta&&mEsta===MD){var dif=['fecha','desc','monto','cat','mp'].some(function(k){return esta[k]!==txn[k];});if(dif){Object.assign(esta,txn);cambio=true;}}
+    else{if(esta)mEsta.txns=mEsta.txns.filter(function(t){return t.casaId!==g.id;});MD.txns.push(txn);cambio=true;}});
   if(cambio){try{save();}catch(e){}}};
 // ── vista ──
 var csTab='gastos',csMes=null;
