@@ -18,6 +18,39 @@
 <!-- Manifest inline -->
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22HubEuge%22%2C%22short_name%22%3A%22HubEuge%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23C9667A%22%2C%22theme_color%22%3A%22%23C9667A%22%2C%22orientation%22%3A%22portrait%22%7D"/>
 <title>Hub · Euge 2026</title>
+<script>window.HUB_PERMITIDOS=['eugeabdon@gmail.com'];</script>
+<script>// ══ LOGIN (código por mail, sin contraseña) ══
+(function(){var HOST='https://syupcxljrwfbmdgpnzjx.supabase.co',KEY='sb_publishable_qMHY4nMt7kwQIoVIIMO0pA_N5m5pMeN',AK='hub_auth';
+var _f=window.fetch.bind(window);
+function ses(){try{return JSON.parse(localStorage.getItem(AK)||'null');}catch(e){return null;}}
+function guardar(j){var s={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Math.floor(Date.now()/1000)+(j.expires_in||3600),email:(j.user&&j.user.email)||(ses()||{}).email};localStorage.setItem(AK,JSON.stringify(s));return s;}
+var refrescando=null;
+async function token(){var s=ses();if(!s)return null;if(s.expires_at-Date.now()/1000>90)return s.access_token;
+  if(!refrescando)refrescando=(async function(){try{var r=await _f(HOST+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.refresh_token})});if(r.ok){return guardar(await r.json()).access_token;}if(r.status===400||r.status===401){localStorage.removeItem(AK);pedirLogin();}}catch(e){}return s.access_token;})();
+  var t=await refrescando;refrescando=null;return t;}
+window.fetch=async function(u,o){try{var url=typeof u==='string'?u:(u&&u.url)||'';if(url.indexOf(HOST)===0&&url.indexOf('/auth/v1/')<0){var t=await token();if(t){o=Object.assign({},o||{});var h={};var oh=o.headers||{};if(oh instanceof Headers)oh.forEach(function(v,k){h[k]=v;});else Object.assign(h,oh);delete h.authorization;h.Authorization='Bearer '+t;o.headers=h;}}}catch(e){}return _f(u,o);};
+window.hubSesion=ses;window.hubSalir=function(){localStorage.removeItem(AK);location.reload();};
+var css='#hub-login{position:fixed;inset:0;z-index:2147483000;background:linear-gradient(160deg,#FCEEF2,#FAF7F4 45%,#EAF2FA);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Jost,system-ui,sans-serif}#hub-login .bx{background:#fff;border-radius:28px;padding:30px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(46,33,26,.12);display:flex;flex-direction:column;gap:14px}#hub-login .lg{width:52px;height:52px;border-radius:16px;background:#4A362B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px}#hub-login h2{margin:4px 0 0;font-weight:400;font-size:26px;color:#2E211A}#hub-login p{margin:0;color:#8C7B6E;font-size:14.5px;line-height:1.45}#hub-login input{border:1px solid #F0EBE6;border-radius:14px;padding:14px 16px;font:inherit;font-size:16px;outline:0;color:#2E211A}#hub-login input:focus{border-color:#E8B7C4;box-shadow:0 0 0 3px rgba(226,138,160,.15)}#hub-login input.cod{letter-spacing:.5em;text-align:center;font-size:24px}#hub-login button{border:0;border-radius:14px;padding:15px;font:inherit;font-size:16px;font-weight:500;background:#4A362B;color:#fff;cursor:pointer}#hub-login button.ln{background:none;color:#8C7B6E;padding:4px;font-weight:400;font-size:14px}#hub-login .er{color:#B4566F;font-size:13.5px;min-height:18px}';
+function pedirLogin(){if(document.getElementById('hub-login'))return;var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);var d=document.createElement('div');d.id='hub-login';document.body.appendChild(d);paso1();}
+function q(s){return document.querySelector('#hub-login '+s);}
+function paso1(e){var d=document.getElementById('hub-login');d.innerHTML='<div class="bx"><div class="lg">'+(window.HUB_LOGO||'E')+'</div><h2>'+(window.HUB_TITULO||'Hub Euge')+'</h2><p>Poné tu mail y te mandamos un código para entrar. Lo hacés una sola vez en este dispositivo.</p><input type="email" id="hl-m" placeholder="tu@mail.com" autocomplete="email" value="'+(e||'')+'"><div class="er" id="hl-e"></div><button id="hl-b">Mandame el código</button></div>';
+  q('#hl-b').onclick=mandar;q('#hl-m').onkeydown=function(ev){if(ev.key==='Enter')mandar();};setTimeout(function(){q('#hl-m').focus();},100);}
+async function mandar(){var m=q('#hl-m').value.trim().toLowerCase();if(!/.+@.+\..+/.test(m)){q('#hl-e').textContent='Revisá el mail';return;}
+  if(window.HUB_PERMITIDOS&&window.HUB_PERMITIDOS.indexOf(m)<0){q('#hl-e').textContent='Este mail no tiene acceso acá.';return;}
+  q('#hl-b').textContent='Enviando…';q('#hl-b').disabled=true;
+  try{var r=await _f(HOST+'/auth/v1/otp',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:m,create_user:true})});
+    if(!r.ok){var t=await r.text();q('#hl-e').textContent=r.status===429?'Muchos intentos. Esperá unos minutos y probá de nuevo.':'No se pudo mandar ('+r.status+').';q('#hl-b').textContent='Mandame el código';q('#hl-b').disabled=false;return;}
+    paso2(m);}catch(e){q('#hl-e').textContent='Sin conexión. Probá de nuevo.';q('#hl-b').textContent='Mandame el código';q('#hl-b').disabled=false;}}
+function paso2(m){var d=document.getElementById('hub-login');d.innerHTML='<div class="bx"><div class="lg">✉️</div><h2>Revisá tu mail</h2><p>Te mandamos un código a <b>'+m+'</b>. Copialo acá (si no llega, mirá en spam).</p><input class="cod" id="hl-c" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="······"><div class="er" id="hl-e"></div><button id="hl-b">Entrar</button><button class="ln" id="hl-v">Usar otro mail</button></div>';
+  q('#hl-b').onclick=function(){verificar(m);};q('#hl-c').onkeydown=function(ev){if(ev.key==='Enter')verificar(m);};q('#hl-v').onclick=function(){paso1(m);};setTimeout(function(){q('#hl-c').focus();},100);}
+async function verificar(m){var c=q('#hl-c').value.replace(/\D/g,'');if(c.length<6){q('#hl-e').textContent='Poné el código completo';return;}
+  q('#hl-b').textContent='Entrando…';q('#hl-b').disabled=true;
+  try{var r=await _f(HOST+'/auth/v1/verify',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({type:'email',email:m,token:c})});
+    if(!r.ok){q('#hl-e').textContent='Código incorrecto o vencido.';q('#hl-b').textContent='Entrar';q('#hl-b').disabled=false;return;}
+    guardar(await r.json());location.reload();}catch(e){q('#hl-e').textContent='Sin conexión. Probá de nuevo.';q('#hl-b').textContent='Entrar';q('#hl-b').disabled=false;}}
+if(!ses()){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pedirLogin);else pedirLogin();}
+})();
+</script>
 <script>
 const SB_URL='https://syupcxljrwfbmdgpnzjx.supabase.co';
 const SB_KEY='sb_publishable_qMHY4nMt7kwQIoVIIMO0pA_N5m5pMeN';
